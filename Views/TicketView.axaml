@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 x:Class="ADIapp.Views.TicketView"
+			 xmlns:views="using:ADIapp.Views"
+			 >
+
+	<Grid >
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="20*"/>
+			<ColumnDefinition Width="80*"/>
+		</Grid.ColumnDefinitions>
+
+		<!-- ===================== SIDEBAR ===================== -->
+		<views:SidebarView Grid.Column="0"/>
+
+
+
+		<!-- ===================== MAIN ===================== -->
+		<Grid Grid.Column="1">
+
+			<!-- Background -->
+			<Image Source="avares://ADIapp/Assets/main_background.png"
+				   Stretch="UniformToFill"/>
+
+			<!-- TOP RIGHT USER SECTION (overlay) -->
+			<views:TopUserPanelView
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			Margin="0,18,18,0"/>
+
+			<!-- ================= CONTENT ================= -->
+			<StackPanel HorizontalAlignment="Center"
+						VerticalAlignment="Center"
+						Spacing="24">
+
+				<TextBlock Text="Tickets"
+						   FontSize="36"
+						   FontWeight="Bold"
+						   Foreground="White"
+						   HorizontalAlignment="Center"/>
+
+				<StackPanel Spacing="18"
+							HorizontalAlignment="Center">
+
+					<StackPanel>
+						<TextBlock Text="Request new tickets"
+								   FontSize="20"
+
+								   Foreground="White"
+								   HorizontalAlignment="Center"/>
+
+						<Button Content="Request new tickets"
+								FontSize="18"
+								FontWeight="Bold"
+								Background="White"
+								Foreground="Black"
+								Margin="0,30,0,0"
+								HorizontalAlignment="Center"
+								HorizontalContentAlignment="Center"
+								VerticalContentAlignment="Center"
+								Width="250"
+								Height="50"/>
+					</StackPanel>
+
+
+				</StackPanel>
+			</StackPanel>
+
+		</Grid>
+	</Grid>
+</UserControl>
+

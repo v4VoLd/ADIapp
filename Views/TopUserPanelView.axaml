@@ -1,0 +1,83 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ADIapp.Views.TopUserPanelView">
+
+    <Grid>
+        <!-- MAIN ROW -->
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Spacing="12">
+
+            <!-- 🔔 BELL -->
+            <Border Width="44"
+                    Height="44"
+                    CornerRadius="12"
+                    Background="#2A2A2A"
+                    PointerPressed="Bell_Click">
+                <TextBlock Text="🔔"
+                           FontSize="18"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- USER CARD -->
+            <Border CornerRadius="14"
+                    Background="#2A2A2A"
+                    Padding="12"
+                    PointerPressed="User_Click">
+
+                <Grid ColumnDefinitions="Auto,Auto">
+                    <!-- Avatar -->
+                    <Border Width="34"
+                            Height="34"
+                            CornerRadius="17"
+                            Background="#4A4A4A"
+                            Margin="0,0,10,0"/>
+
+                    <!-- Text -->
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Hello,"
+                                   FontSize="11"
+                                   Foreground="#CFCFCF"/>
+                        <TextBlock Text="John Doe"
+                                   FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="White"/>
+                        <Border Background="#1F1F1F"
+                                CornerRadius="8"
+                                Padding="8,3"
+                                Margin="0,4,0,0">
+                            <TextBlock Text="Token: 8"
+                                       FontSize="11"
+                                       Foreground="White"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- EXPANDED MENU -->
+        <Border x:Name="Menu"
+                IsVisible="False"
+                Margin="0,60,0,0"
+                HorizontalAlignment="Right"
+                CornerRadius="16"
+                Background="#1E1E1E"
+                Padding="20">
+
+            <StackPanel Spacing="18">
+                <TextBlock Text="Account"
+                           FontSize="16"
+                           Foreground="White"/>
+                <TextBlock Text="Token"
+                           FontSize="16"
+                           Foreground="White"/>
+                <TextBlock Text="Logout"
+                           FontSize="16"
+                           Foreground="White"/>
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</UserControl>

@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 x:Class="ADIapp.Views.SidebarView">
+
+	<Grid>
+		<Image Source="avares://ADIapp/Assets/Sidebar_background.png"
+			   Stretch="UniformToFill"/>
+
+		<StackPanel VerticalAlignment="Center"
+					HorizontalAlignment="Stretch"
+					Margin="20">
+
+			<Image Source="avares://ADIapp/Assets/sidebar_logo.png"
+				   Width="222"
+				   Height="120"
+				   HorizontalAlignment="Center"
+				   Margin="0,20,0,30"/>
+
+			<!-- MENU -->
+			<Button Content="Home"
+					Click="Home_Click"
+					Classes="sidebar"/>
+
+			<Button Content="Settings"
+					Click="Settings_Click"
+					Classes="sidebar"/>
+
+			<Button Content="Tickets"
+					Click="Tickets_Click"
+					Classes="sidebar"/>
+
+			<Button Content="Info"
+					Click="Info_Click"
+					Classes="sidebar"/>
+
+			<Button Content="Logout"
+					Click="Logout_Click"
+					Classes="sidebar"/>
+
+			<TextBlock Text="License Expiration Date"
+					   FontSize="12"
+					   Foreground="#BEBEBE"
+					   HorizontalAlignment="Center"
+					   Margin="0,40,0,0"/>
+
+			<TextBlock Text="01/01/2026"
+					   FontSize="12"
+					   FontWeight="Bold"
+					   Foreground="White"
+					   HorizontalAlignment="Center"/>
+		</StackPanel>
+
+		<!-- STYLES -->
+		<Grid.Styles>
+
+			<!-- Default -->
+			<Style Selector="Button.sidebar">
+				<Setter Property="FontSize" Value="32"/>
+				<Setter Property="Foreground" Value="Gray"/>
+				<Setter Property="FontWeight" Value="Normal"/>
+				<Setter Property="Background" Value="Transparent"/>
+				<Setter Property="BorderThickness" Value="0"/>
+				<Setter Property="HorizontalAlignment" Value="Stretch"/>
+				<Setter Property="HorizontalContentAlignment" Value="Center"/>
+				<Setter Property="Margin" Value="0,8"/>
+			</Style>
+
+			<!-- Selected -->
+			<Style Selector="Button.sidebar.selected">
+				<Setter Property="Foreground" Value="White"/>
+				<Setter Property="FontWeight" Value="Bold"/>
+			</Style>
+
+		</Grid.Styles>
+
+
+	</Grid>
+</UserControl>

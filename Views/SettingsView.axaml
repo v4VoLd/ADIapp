@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:views="using:ADIapp.Views"
+			 x:Class="ADIapp.Views.SettingsView">
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="20*"/>
+			<ColumnDefinition Width="80*"/>
+		</Grid.ColumnDefinitions>
+
+		<!-- SIDEBAR -->
+		<views:SidebarView Grid.Column="0"/>
+
+		<!-- MAIN -->
+		<Grid Grid.Column="1">
+
+			<!-- BACKGROUND -->
+			<Image Source="avares://ADIapp/Assets/main_background.png"
+				   Stretch="UniformToFill"/>
+
+			<!-- TOP USER PANEL -->
+			<views:TopUserPanelView
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			Margin="0,18,18,0"/>
+
+			<!-- CONTENT -->
+			<StackPanel HorizontalAlignment="Center"
+						VerticalAlignment="Center"
+						Width="500"
+						Spacing="28">
+
+				<!-- TITLE -->
+				<TextBlock Text="Settings"
+						   FontSize="36"
+						   FontWeight="Bold"
+						   Foreground="White"
+						   HorizontalAlignment="Center"/>
+
+				<!-- DARK MODE -->
+				<StackPanel Spacing="10">
+					<TextBlock Text="Dark mode"
+							   FontSize="16"
+							   FontWeight="Bold"
+							   Foreground="White"/>
+
+					<Border Background="#1F1F1F"
+							CornerRadius="10"
+							Padding="14">
+						<Grid ColumnDefinitions="*,Auto">
+							<TextBlock Text="Dark mode"
+									   Foreground="#CFCFCF"
+									   VerticalAlignment="Center"/>
+							<ToggleSwitch Grid.Column="1"/>
+						</Grid>
+					</Border>
+				</StackPanel>
+
+				<!-- LANGUAGE -->
+				<StackPanel Spacing="10">
+					<TextBlock Text="Language"
+							   FontSize="16"
+							   FontWeight="Bold"
+							   Foreground="White"/>
+
+					<Border Background="#1F1F1F"
+							CornerRadius="10"
+							Padding="14">
+						<ComboBox SelectedIndex="0">
+							<ComboBoxItem Content="English"/>
+							<ComboBoxItem Content="Arabic"/>
+							<ComboBoxItem Content="French"/>
+						</ComboBox>
+					</Border>
+				</StackPanel>
+
+			</StackPanel>
+
+		</Grid>
+	</Grid>
+</UserControl>
+

@@ -1,0 +1,159 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 x:Class="ADIapp.Views.TuneView"
+			 xmlns:views="using:ADIapp.Views"
+			 >
+
+	<Grid Width="1500" Height="900">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="20*"/>
+			<ColumnDefinition Width="80*"/>
+		</Grid.ColumnDefinitions>
+
+		<!-- ===================== SIDEBAR ===================== -->
+		<views:SidebarView Grid.Column="0"/>
+
+
+		<!-- ===================== MAIN ===================== -->
+		<Grid Grid.Column="1">
+
+			<!-- Background image -->
+			<Image Source="avares://ADIapp/Assets/main_background.png"
+				   Stretch="Fill"/>
+
+			<!-- TOP RIGHT USER SECTION (overlay) -->
+			<StackPanel Orientation="Horizontal"
+						HorizontalAlignment="Right"
+						VerticalAlignment="Top"
+						Margin="0,18,18,0"
+						Spacing="12">
+
+				<!-- Bell -->
+				<Border Width="44"
+						Height="44"
+						CornerRadius="12"
+						Background="#2A2A2A">
+					<TextBlock Text="🔔"
+							   FontSize="18"
+							   HorizontalAlignment="Center"
+							   VerticalAlignment="Center"/>
+				</Border>
+
+				<!-- User Card -->
+				<Border CornerRadius="14"
+						Background="#2A2A2A"
+						Padding="12,10">
+					<Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto">
+
+						<!-- Avatar placeholder -->
+						<Border Width="30"
+								Height="30"
+								CornerRadius="15"
+								Background="#4A4A4A"
+								Grid.RowSpan="2"
+								Margin="0,0,10,0"/>
+
+						<TextBlock Grid.Column="1"
+								   Text="Hello,"
+								   FontSize="11"
+								   Foreground="#CFCFCF"/>
+
+						<StackPanel Grid.Column="1"
+									Grid.Row="1"
+									Orientation="Horizontal"
+									Spacing="8">
+							<TextBlock Text="John Doe"
+									   FontSize="13"
+									   FontWeight="Bold"
+									   Foreground="White"/>
+
+							<Border Background="#1F1F1F"
+									CornerRadius="8"
+									Padding="8,3">
+								<TextBlock Text="Token: 1"
+										   FontSize="11"
+										   Foreground="White"/>
+							</Border>
+						</StackPanel>
+
+					</Grid>
+				</Border>
+
+			</StackPanel>
+
+			<!-- MAIN CARD CONTENT -->
+			<Border CornerRadius="22"
+					Background="#1C1C1C"
+					Opacity="0.92"
+					Margin="120"
+					Padding="30">
+
+				<StackPanel Orientation="Horizontal"
+							HorizontalAlignment="Stretch"
+							Spacing="60">
+
+					<!-- LEFT OPTIONS -->
+					<StackPanel Spacing="14">
+						<TextBlock Text="Stage 1" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="Stage 2" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="Stage 3" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+					</StackPanel>
+
+					<!-- RIGHT OPTIONS -->
+					<StackPanel Spacing="14">
+						<TextBlock Foreground="White"><![CDATA[Pop & Bang]]></TextBlock>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="EGR Off" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="DPF Off" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+					</StackPanel>
+
+				</StackPanel>
+
+			</Border>
+			<!-- MAIN CARD CONTENT -->
+			<Border CornerRadius="22"
+					Background="#1C1C1C"
+					Opacity="0.9"
+					Margin="120"
+					Padding="30">
+
+				<StackPanel Orientation="Horizontal"
+							HorizontalAlignment="Stretch"
+							Spacing="60">
+
+					<!-- LEFT OPTIONS -->
+					<StackPanel Spacing="14">
+						<TextBlock Text="Stage 1" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="Stage 2" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="Stage 3" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+					</StackPanel>
+
+					<!-- RIGHT OPTIONS -->
+					<StackPanel Spacing="14">
+						<TextBlock Foreground="White"><![CDATA[Pop & Bang]]></TextBlock>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="EGR Off" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+						<TextBlock Text="DPF Off" Foreground="White"/>
+						<ToggleSwitch Foreground="White"/>
+					</StackPanel>
+
+				</StackPanel>
+
+			</Border>
+
+
+
+
+		</Grid>
+	</Grid>
+</UserControl>
+

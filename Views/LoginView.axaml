@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ADIapp.Views.LoginView">
+
+    <Grid  Background="Black">
+
+        <!-- Background -->
+        <Image Source="avares://ADIapp/Assets/login_background.png"
+               Stretch="UniformToFill"/>
+
+        <!-- Centered Login Panel -->
+        <Border Width="420"
+                Padding="30"
+                Background="#CC000000"
+                CornerRadius="16"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+
+            <StackPanel>
+
+                <Image Source="avares://ADIapp/Assets/login_logo.png"
+                       Width="320"
+                       HorizontalAlignment="Center"/>
+
+                <TextBlock Text="Welcome"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           Margin="0,15"/>
+
+                <TextBlock Text="Username"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           Foreground="White"/>
+
+                <TextBox FontSize="18"
+                         Padding="12"
+                         Foreground="White"
+                         Background="#101010"
+                         BorderThickness="0"/>
+
+                <TextBlock Text="Password"
+                           FontSize="14"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0,12,0,0"/>
+
+                <TextBox FontSize="16"
+                         Padding="12"
+                         Foreground="White"
+                         Background="#101010"
+                         BorderThickness="0"
+                         PasswordChar="*"/>
+
+                <Button Content="Login"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Background="White"
+                        Foreground="Black"
+                        Margin="0,30,0,0"
+                        HorizontalAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Width="160"
+                        Click="Login_Click"/>
+            </StackPanel>
+
+        </Border>
+
+    </Grid>
+</UserControl>
