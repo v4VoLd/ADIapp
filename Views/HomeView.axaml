@@ -30,8 +30,8 @@
 			<!-- CENTER CONTENT -->
 			<StackPanel Width="800"
 						HorizontalAlignment="Left"
-						VerticalAlignment="Top"
-						Margin="30">
+						VerticalAlignment="Stretch"
+						Margin="120">
 
 				<TextBlock Text="Welcome to ADI Performance"
 						   FontSize="64"

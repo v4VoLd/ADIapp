@@ -1,159 +1,183 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 x:Class="ADIapp.Views.TuneView"
-			 xmlns:views="using:ADIapp.Views"
-			 >
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:ADIapp.Views"
+             x:Class="ADIapp.Views.TuneView">
 
-	<Grid Width="1500" Height="900">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="20*"/>
-			<ColumnDefinition Width="80*"/>
-		</Grid.ColumnDefinitions>
+    <!-- ================= TOGGLE STYLES ================= -->
+    <UserControl.Styles>
 
-		<!-- ===================== SIDEBAR ===================== -->
-		<views:SidebarView Grid.Column="0"/>
+        <!-- Toggle OFF -->
+        <Style Selector="ToggleSwitch /template/ Border#PART_Track">
+            <Setter Property="Background" Value="#2A2A2A"/>
+            <Setter Property="CornerRadius" Value="20"/>
+        </Style>
 
+        <!-- Toggle ON -->
+        <Style Selector="ToggleSwitch:checked /template/ Border#PART_Track">
+            <Setter Property="Background" Value="#4DFF8A"/>
+        </Style>
 
-		<!-- ===================== MAIN ===================== -->
-		<Grid Grid.Column="1">
+        <!-- Toggle thumb -->
+        <Style Selector="ToggleSwitch /template/ Border#PART_Thumb">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="20"/>
+        </Style>
 
-			<!-- Background image -->
-			<Image Source="avares://ADIapp/Assets/main_background.png"
-				   Stretch="Fill"/>
+    </UserControl.Styles>
 
-			<!-- TOP RIGHT USER SECTION (overlay) -->
-			<StackPanel Orientation="Horizontal"
-						HorizontalAlignment="Right"
-						VerticalAlignment="Top"
-						Margin="0,18,18,0"
-						Spacing="12">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20*"/>
+            <ColumnDefinition Width="80*"/>
+        </Grid.ColumnDefinitions>
 
-				<!-- Bell -->
-				<Border Width="44"
-						Height="44"
-						CornerRadius="12"
-						Background="#2A2A2A">
-					<TextBlock Text="🔔"
-							   FontSize="18"
-							   HorizontalAlignment="Center"
-							   VerticalAlignment="Center"/>
-				</Border>
+        <!-- ================= SIDEBAR ================= -->
+        <views:SidebarView Grid.Column="0"/>
 
-				<!-- User Card -->
-				<Border CornerRadius="14"
-						Background="#2A2A2A"
-						Padding="12,10">
-					<Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto">
+        <!-- ================= MAIN AREA ================= -->
+        <Grid Grid.Column="1"
+              RowDefinitions="Auto,*">
 
-						<!-- Avatar placeholder -->
-						<Border Width="30"
-								Height="30"
-								CornerRadius="15"
-								Background="#4A4A4A"
-								Grid.RowSpan="2"
-								Margin="0,0,10,0"/>
+            <!-- BACKGROUND -->
+            <Image Grid.RowSpan="2"
+                   Source="avares://ADIapp/Assets/main_background.png"
+                   Stretch="UniformToFill"/>
 
-						<TextBlock Grid.Column="1"
-								   Text="Hello,"
-								   FontSize="11"
-								   Foreground="#CFCFCF"/>
+            <!-- TOP BAR -->
+            <views:TopUserPanelView
+                Grid.Row="0"
+                HorizontalAlignment="Right"
+                Margin="0,18,18,12"/>
 
-						<StackPanel Grid.Column="1"
-									Grid.Row="1"
-									Orientation="Horizontal"
-									Spacing="8">
-							<TextBlock Text="John Doe"
-									   FontSize="13"
-									   FontWeight="Bold"
-									   Foreground="White"/>
+            <!-- CONTENT -->
+            <Grid Grid.Row="1">
 
-							<Border Background="#1F1F1F"
-									CornerRadius="8"
-									Padding="8,3">
-								<TextBlock Text="Token: 1"
-										   FontSize="11"
-										   Foreground="White"/>
-							</Border>
-						</StackPanel>
+                <!-- TITLE -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Margin="80,20,0,0"
+                            Spacing="12">
 
-					</Grid>
-				</Border>
+                    <Image Source="avares://ADIapp/Assets/carLogo_icon.png"
+                           Width="36"
+                           Height="36"/>
 
-			</StackPanel>
+                    <TextBlock Text="BMW G20 320i"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
 
-			<!-- MAIN CARD CONTENT -->
-			<Border CornerRadius="22"
-					Background="#1C1C1C"
-					Opacity="0.92"
-					Margin="120"
-					Padding="30">
+                <!-- MAIN CARD -->
+                <Border Margin="80,80,80,80"
+                        Padding="40"
+                        CornerRadius="22"
+                        Background="#1C1C1C"
+                        Opacity="0.92"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
 
-				<StackPanel Orientation="Horizontal"
-							HorizontalAlignment="Stretch"
-							Spacing="60">
+                    <Grid RowDefinitions="*,Auto"
+                          ColumnDefinitions="*,*">
 
-					<!-- LEFT OPTIONS -->
-					<StackPanel Spacing="14">
-						<TextBlock Text="Stage 1" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="Stage 2" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="Stage 3" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-					</StackPanel>
+                        <!-- LEFT COLUMN -->
+                        <StackPanel Spacing="12">
 
-					<!-- RIGHT OPTIONS -->
-					<StackPanel Spacing="14">
-						<TextBlock Foreground="White"><![CDATA[Pop & Bang]]></TextBlock>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="EGR Off" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="DPF Off" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-					</StackPanel>
+                            <TextBlock Text="Stage 1" Foreground="White"/>
+                            <ToggleSwitch/>
 
-				</StackPanel>
+                            <TextBlock Text="Stage 2" Foreground="White"/>
+                            <ToggleSwitch/>
 
-			</Border>
-			<!-- MAIN CARD CONTENT -->
-			<Border CornerRadius="22"
-					Background="#1C1C1C"
-					Opacity="0.9"
-					Margin="120"
-					Padding="30">
+                            <TextBlock Text="Stage 3" Foreground="White"/>
+                            <ToggleSwitch/>
 
-				<StackPanel Orientation="Horizontal"
-							HorizontalAlignment="Stretch"
-							Spacing="60">
+                            <TextBlock Text="Stage 4" Foreground="White"/>
+                            <ToggleSwitch/>
 
-					<!-- LEFT OPTIONS -->
-					<StackPanel Spacing="14">
-						<TextBlock Text="Stage 1" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="Stage 2" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="Stage 3" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-					</StackPanel>
+                            <TextBlock Text="Stage 5" Foreground="White"/>
+                            <ToggleSwitch/>
 
-					<!-- RIGHT OPTIONS -->
-					<StackPanel Spacing="14">
-						<TextBlock Foreground="White"><![CDATA[Pop & Bang]]></TextBlock>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="EGR Off" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-						<TextBlock Text="DPF Off" Foreground="White"/>
-						<ToggleSwitch Foreground="White"/>
-					</StackPanel>
+                            <TextBlock Text="Stock" Foreground="White"/>
+                            <ProgressBar Height="8"
+                                         Value="60"
+                                         Background="#333"
+                                         Foreground="#4DFF8A"/>
 
-				</StackPanel>
+                            <TextBlock Text="147 hp"
+                                       FontSize="12"
+                                       Foreground="#AAAAAA"/>
+                        </StackPanel>
 
-			</Border>
+                        <!-- RIGHT COLUMN -->
+                        <StackPanel Grid.Column="1" Spacing="12">
 
+                            <TextBlock Text="Pop &amp; Bang" Foreground="White"/>
+                            <ToggleSwitch/>
 
+                            <TextBlock Text="EGR Off" Foreground="White"/>
+                            <ToggleSwitch/>
 
+                            <TextBlock Text="DPF Off" Foreground="White"/>
+                            <ToggleSwitch/>
 
-		</Grid>
-	</Grid>
+                            <TextBlock Text="Cold Start Off" Foreground="White"/>
+                            <ToggleSwitch/>
+
+                            <TextBlock Text="Rev Limiter" Foreground="White"/>
+                            <ToggleSwitch/>
+
+                            <TextBlock Text="Stock" Foreground="White"/>
+                            <ProgressBar Height="8"
+                                         Value="60"
+                                         Background="#333"
+                                         Foreground="#4DFF8A"/>
+
+                            <TextBlock Text="147 hp"
+                                       FontSize="12"
+                                       Foreground="#AAAAAA"/>
+                        </StackPanel>
+
+                        <!-- BUTTONS -->
+                        <StackPanel Grid.Row="1"
+                                    Grid.ColumnSpan="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,30,0,0"
+                                    Spacing="18">
+
+                            <Button Width="160"
+                                    Height="44"
+                                    Background="#2B2B2B"
+                                    Foreground="White"
+                                    Content="Original file"/>
+
+                            <Button Width="160"
+                                    Height="44"
+                                    Background="White"
+                                    Foreground="Black"
+                                    FontWeight="Bold"
+                                    Content="Save"
+                                    Click="Save_Click"/>
+
+                            <Button Width="160"
+                                    Height="44"
+                                    Background="#2B2B2B"
+                                    Foreground="White"
+                                    Content="DTC Off"/>
+
+                        </StackPanel>
+
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </Grid>
+    </Grid>
 </UserControl>
+
+
+
 

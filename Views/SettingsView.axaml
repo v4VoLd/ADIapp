@@ -38,7 +38,7 @@
 						   Foreground="White"
 						   HorizontalAlignment="Center"/>
 
-				<!-- DARK MODE -->
+				<!-- DARK MODE 
 				<StackPanel Spacing="10">
 					<TextBlock Text="Dark mode"
 							   FontSize="16"
@@ -55,18 +55,21 @@
 							<ToggleSwitch Grid.Column="1"/>
 						</Grid>
 					</Border>
-				</StackPanel>
+				</StackPanel> -->
 
 				<!-- LANGUAGE -->
 				<StackPanel Spacing="10">
 					<TextBlock Text="Language"
 							   FontSize="16"
 							   FontWeight="Bold"
-							   Foreground="White"/>
+							   Foreground="White"
+							   Height="18"
+							   />
 
 					<Border Background="#1F1F1F"
 							CornerRadius="10"
-							Padding="14">
+							Padding="14"
+							BorderThickness="0">
 						<ComboBox SelectedIndex="0">
 							<ComboBoxItem Content="English"/>
 							<ComboBoxItem Content="Arabic"/>

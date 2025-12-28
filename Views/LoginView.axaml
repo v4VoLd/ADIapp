@@ -63,6 +63,7 @@
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
                         Width="160"
+                        Height="48"
                         Click="Login_Click"/>
             </StackPanel>
 

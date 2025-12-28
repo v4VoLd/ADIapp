@@ -43,7 +43,7 @@
 							HorizontalAlignment="Center">
 
 					<StackPanel>
-						<TextBlock Text="Request new tickets"
+						<TextBlock Text="New tickets"
 								   FontSize="20"
 
 								   Foreground="White"

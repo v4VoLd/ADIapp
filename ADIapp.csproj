@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\avatar.png" />
+    <None Remove="Assets\carLogo_icon.png" />
     <None Remove="Assets\login_background.png" />
     <None Remove="Assets\login_icon.png" />
     <None Remove="Assets\login_logo.png" />
@@ -17,6 +18,9 @@
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\avatar.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\carLogo_icon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\login_background.png">

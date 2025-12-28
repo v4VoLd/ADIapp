@@ -29,11 +29,17 @@
 
 				<Grid ColumnDefinitions="Auto,Auto">
 					<!-- Avatar -->
-					<Border Width="34"
-							Height="34"
+					<Border Width="40"
+							Height="40"
 							CornerRadius="17"
 							Background="#4A4A4A"
-							Margin="0,0,10,0"/>
+							Margin="0,0,10,0"
+							ClipToBounds="True">
+
+						<Image Source="avares://ADIapp/Assets/avatar.png"
+							   Stretch="UniformToFill"/>
+					</Border>
+
 
 					<!-- Text -->
 					<StackPanel Grid.Column="1">

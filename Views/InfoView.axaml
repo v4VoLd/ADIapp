@@ -39,7 +39,7 @@
 						   Foreground="White"
 						   HorizontalAlignment="Center"/>
 
-				<StackPanel Spacing="18"
+				<StackPanel Spacing="32"
 							HorizontalAlignment="Center">
 
 					<StackPanel>
