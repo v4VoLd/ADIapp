@@ -1,8 +1,10 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+
+using ADIapp.Services;
 
 namespace ADIapp.Views;
 
@@ -11,6 +13,24 @@ public partial class TopUserPanelView : UserControl
     public TopUserPanelView()
     {
         InitializeComponent();
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (ApiService.CurrentUser != null)
+        {
+            var nameBlock = this.FindControl<TextBlock>("UserNameBlock");
+            if (nameBlock != null)
+            {
+                nameBlock.Text = ApiService.CurrentUser.Name;
+            }
+            var tokenBlock = this.FindControl<TextBlock>("UserTokenBlock");
+            if (tokenBlock != null)
+            {
+                tokenBlock.Text = $"Token: {ApiService.CurrentUser.AvailableCredit}";
+            }
+        }
     }
 
     private MainWindow? Window =>

@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 x:Class="ADIapp.Views.TopUserPanelView">
 
@@ -46,7 +46,8 @@
 						<TextBlock Text="Hello,"
 								   FontSize="11"
 								   Foreground="#CFCFCF"/>
-						<TextBlock Text="John Doe"
+						<TextBlock x:Name="UserNameBlock"
+								   Text="John Doe"
 								   FontSize="13"
 								   FontWeight="Bold"
 								   Foreground="White"/>
@@ -54,7 +55,8 @@
 								CornerRadius="8"
 								Padding="8,3"
 								Margin="0,4,0,0">
-							<TextBlock Text="Token: 8"
+							<TextBlock x:Name="UserTokenBlock"
+									   Text="Token: 8"
 									   FontSize="11"
 									   Foreground="White"/>
 						</Border>

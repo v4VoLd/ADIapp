@@ -34,7 +34,8 @@
                            FontWeight="Bold"
                            Foreground="White"/>
 
-                <TextBox FontSize="18"
+                <TextBox x:Name="EmailBox"
+                         FontSize="18"
                          Padding="12"
                          Foreground="White"
                          Background="#101010"
@@ -46,19 +47,31 @@
                            Foreground="White"
                            Margin="0,12,0,0"/>
 
-                <TextBox FontSize="16"
+                <TextBox x:Name="PasswordBox"
+                         FontSize="16"
                          Padding="12"
                          Foreground="White"
                          Background="#101010"
                          BorderThickness="0"
                          PasswordChar="*"/>
 
-                <Button Content="Login"
+                <TextBlock x:Name="ErrorLabel"
+                           Foreground="#FF4D4D"
+                           FontSize="14"
+                           FontWeight="Medium"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,15,0,0"
+                           IsVisible="False"/>
+
+                <Button x:Name="LoginButton"
+                        Content="Login"
                         FontSize="18"
                         FontWeight="Bold"
                         Background="White"
                         Foreground="Black"
-                        Margin="0,30,0,0"
+                        Margin="0,20,0,0"
                         HorizontalAlignment="Center"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"

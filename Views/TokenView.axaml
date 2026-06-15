@@ -45,7 +45,8 @@
 					<Border Background="#1F1F1F"
 							CornerRadius="10"
 							Padding="14">
-											<TextBlock Text="8 Token"
+											<TextBlock x:Name="TokenText"
+							   Text="8 Token"
 							   FontSize="16"
 							   FontWeight="Bold"
 							   Foreground="White"/>

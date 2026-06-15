@@ -43,7 +43,8 @@
 					   HorizontalAlignment="Center"
 					   Margin="0,40,0,0"/>
 
-			<TextBlock Text="01/01/2026"
+			<TextBlock x:Name="LicenseExpirationText"
+					   Text="01/01/2026"
 					   FontSize="12"
 					   FontWeight="Bold"
 					   Foreground="White"

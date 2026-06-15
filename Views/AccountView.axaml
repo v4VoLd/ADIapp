@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 xmlns:views="using:ADIapp.Views"
 			 x:Class="ADIapp.Views.AccountView">
@@ -66,7 +66,8 @@
 					</Border>
 				</Grid>
 
-				<TextBlock Text="Hello, John Doe."
+				<TextBlock x:Name="HelloUserBlock"
+						   Text="Hello, John Doe."
 						   FontSize="16"
 						   Foreground="#CFCFCF"
 						   HorizontalAlignment="Center"/>
@@ -83,7 +84,8 @@
 								   Foreground="White"
 								   FontWeight="Bold"
 								   />
-						<TextBox Text="ADI performance"
+						<TextBox x:Name="FirstNameBox"
+								 Text="ADI performance"
 								 Background="#1F1F1F"
 								 Foreground="White"
 								 BorderThickness="0"
@@ -95,23 +97,26 @@
 						<TextBlock Text="Last name"
 								   Foreground="White"
 								   FontWeight="Bold"/>
-						<TextBox Text="Mohamed"
+						<TextBox x:Name="LastNameBox"
+								 Text="Mohamed"
 								 Background="#1F1F1F"
 								 Foreground="White"
 								 BorderThickness="0"
 								 Height="24"/>
 					</StackPanel>
 
-					<!-- COMPANY -->
+					<!-- EMAIL -->
 					<StackPanel Grid.Row="1">
-						<TextBlock Text="Company name"
+						<TextBlock Text="Email address"
 								   Foreground="White"
 								   FontWeight="Bold"/>
-						<TextBox Text="ADI performance"
+						<TextBox x:Name="EmailBox"
+								 Text="email@domain.com"
 								 Background="#1F1F1F"
 								 Foreground="White"
 								 BorderThickness="0"
-								 Height="24"/>
+								 Height="24"
+								 IsReadOnly="True"/>
 					</StackPanel>
 
 					<!-- PHONE -->
@@ -120,7 +125,8 @@
 						<TextBlock Text="Phone number"
 								   Foreground="White"
 								   FontWeight="Bold"/>
-						<TextBox Text="123456789"
+						<TextBox x:Name="PhoneBox"
+								 Text="123456789"
 								 Background="#1F1F1F"
 								 Foreground="White"
 								 BorderThickness="0"
