@@ -1,168 +1,137 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:views="using:ADIapp.Views"
-			 x:Class="ADIapp.Views.AccountView">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ADIapp.Views.AccountView">
 
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="20*"/>
-			<ColumnDefinition Width="80*"/>
-		</Grid.ColumnDefinitions>
+    <StackPanel HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="700"
+                Spacing="24">
 
-		<!-- SIDEBAR -->
-		<views:SidebarView Grid.Column="0"/>
+        <!-- TITLE -->
+        <TextBlock Text="Account"
+                   FontSize="36"
+                   FontWeight="Bold"
+                   Foreground="White"
+                   HorizontalAlignment="Center"/>
 
-		<!-- MAIN -->
-		<Grid Grid.Column="1">
+        <!-- AVATAR -->
+        <Grid HorizontalAlignment="Center">
+            <Border Width="120"
+                    Height="120"
+                    CornerRadius="60"
+                    ClipToBounds="True">
+                <Image Source="avares://ADIapp/Assets/avatar.png"
+                       Stretch="UniformToFill"/>
+            </Border>
 
-			<!-- BACKGROUND -->
-			<Image Source="avares://ADIapp/Assets/main_background.png"
-				   Stretch="UniformToFill"/>
+            <!-- EDIT ICON -->
+            <Border Width="32"
+                    Height="32"
+                    CornerRadius="16"
+                    Background="White"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Margin="0,0,6,6">
+                <TextBlock Text="✎"
+                           Foreground="Black"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Border>
+        </Grid>
 
-			<!-- TOP USER PANEL -->
-			<views:TopUserPanelView
-			HorizontalAlignment="Right"
-			VerticalAlignment="Top"
-			Margin="0,18,18,0"/>
+        <TextBlock x:Name="HelloUserBlock"
+                   Text="Hello, John Doe."
+                   FontSize="16"
+                   Foreground="#CFCFCF"
+                   HorizontalAlignment="Center"/>
 
-			<!-- CONTENT -->
-			<StackPanel HorizontalAlignment="Center"
-						VerticalAlignment="Center"
-						Width="700"
-						Spacing="24">
+        <!-- FORM -->
+        <Grid ColumnDefinitions="*,*"
+              RowDefinitions="Auto,Auto"
+              ColumnSpacing="20"
+              RowSpacing="20">
 
-				<!-- TITLE -->
-				<TextBlock Text="Account"
-						   FontSize="36"
-						   FontWeight="Bold"
-						   Foreground="White"
-						   HorizontalAlignment="Center"/>
+            <!-- FIRST NAME -->
+            <StackPanel>
+                <TextBlock Text="First name"
+                           Foreground="White"
+                           FontWeight="Bold"/>
+                <TextBox x:Name="FirstNameBox"
+                         Text="ADI performance"
+                         Background="#1F1F1F"
+                         Foreground="White"
+                         BorderThickness="0"
+                         Height="24"/>
+            </StackPanel>
 
-				<!-- AVATAR -->
-				<Grid HorizontalAlignment="Center">
-					<Border Width="120"
-							Height="120"
-							CornerRadius="60"
+            <!-- LAST NAME -->
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="Last name"
+                           Foreground="White"
+                           FontWeight="Bold"/>
+                <TextBox x:Name="LastNameBox"
+                         Text="Mohamed"
+                         Background="#1F1F1F"
+                         Foreground="White"
+                         BorderThickness="0"
+                         Height="24"/>
+            </StackPanel>
 
-							ClipToBounds="True">
+            <!-- EMAIL -->
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Email address"
+                           Foreground="White"
+                           FontWeight="Bold"/>
+                <TextBox x:Name="EmailBox"
+                         Text="email@domain.com"
+                         Background="#1F1F1F"
+                         Foreground="White"
+                         BorderThickness="0"
+                         Height="24"
+                         IsReadOnly="True"/>
+            </StackPanel>
 
-						<Image Source="avares://ADIapp/Assets/avatar.png"
-							   Stretch="UniformToFill"/>
-					</Border>
+            <!-- PHONE -->
+            <StackPanel Grid.Row="1"
+                        Grid.Column="1">
+                <TextBlock Text="Phone number"
+                           Foreground="White"
+                           FontWeight="Bold"/>
+                <TextBox x:Name="PhoneBox"
+                         Text="123456789"
+                         Background="#1F1F1F"
+                         Foreground="White"
+                         BorderThickness="0"
+                         Height="24"/>
+            </StackPanel>
+        </Grid>
 
+        <!-- SAVE -->
+        <Button Width="160"
+                Height="44"
+                Background="White"
+                Foreground="Black"
+                FontWeight="Bold"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Margin="0,10,0,0">
 
-					<!-- EDIT ICON -->
-					<Border Width="32"
-							Height="32"
-							CornerRadius="16"
-							Background="White"
-							HorizontalAlignment="Right"
-							VerticalAlignment="Bottom"
-							Margin="0,0,6,6">
-						<TextBlock Text="✎"
-								   Foreground="Black"
-								   HorizontalAlignment="Center"
-								   VerticalAlignment="Center"/>
-					</Border>
-				</Grid>
+            <Grid ColumnDefinitions="Auto,Auto"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Center">
 
-				<TextBlock x:Name="HelloUserBlock"
-						   Text="Hello, John Doe."
-						   FontSize="16"
-						   Foreground="#CFCFCF"
-						   HorizontalAlignment="Center"/>
+                <TextBlock Text="💾"
+                           FontSize="16"
+                           VerticalAlignment="Center"
+                           Margin="0,0,6,0"/>
 
-				<!-- FORM -->
-				<Grid ColumnDefinitions="*,*"
-					  RowDefinitions="Auto,Auto"
-					  ColumnSpacing="20"
-					  RowSpacing="20">
+                <TextBlock Grid.Column="1"
+                           Text="Save"
+                           VerticalAlignment="Center"/>
+            </Grid>
 
-					<!-- FIRST NAME -->
-					<StackPanel>
-						<TextBlock Text="First name"
-								   Foreground="White"
-								   FontWeight="Bold"
-								   />
-						<TextBox x:Name="FirstNameBox"
-								 Text="ADI performance"
-								 Background="#1F1F1F"
-								 Foreground="White"
-								 BorderThickness="0"
-								 Height="24"/>
-					</StackPanel>
+        </Button>
 
-					<!-- LAST NAME -->
-					<StackPanel Grid.Column="1">
-						<TextBlock Text="Last name"
-								   Foreground="White"
-								   FontWeight="Bold"/>
-						<TextBox x:Name="LastNameBox"
-								 Text="Mohamed"
-								 Background="#1F1F1F"
-								 Foreground="White"
-								 BorderThickness="0"
-								 Height="24"/>
-					</StackPanel>
+    </StackPanel>
 
-					<!-- EMAIL -->
-					<StackPanel Grid.Row="1">
-						<TextBlock Text="Email address"
-								   Foreground="White"
-								   FontWeight="Bold"/>
-						<TextBox x:Name="EmailBox"
-								 Text="email@domain.com"
-								 Background="#1F1F1F"
-								 Foreground="White"
-								 BorderThickness="0"
-								 Height="24"
-								 IsReadOnly="True"/>
-					</StackPanel>
-
-					<!-- PHONE -->
-					<StackPanel Grid.Row="1"
-								Grid.Column="1">
-						<TextBlock Text="Phone number"
-								   Foreground="White"
-								   FontWeight="Bold"/>
-						<TextBox x:Name="PhoneBox"
-								 Text="123456789"
-								 Background="#1F1F1F"
-								 Foreground="White"
-								 BorderThickness="0"
-								 Height="24"/>
-					</StackPanel>
-				</Grid>
-
-				<!-- SAVE -->
-				<Button Width="160"
-						Height="44"
-						Background="White"
-						Foreground="Black"
-						FontWeight="Bold"
-						HorizontalAlignment="Center"
-						VerticalAlignment="Center"
-						Margin="0,10,0,0">
-
-					<Grid ColumnDefinitions="Auto,Auto"
-						  VerticalAlignment="Center"
-						  HorizontalAlignment="Center">
-
-						<TextBlock Text="💾"
-								   FontSize="16"
-								   VerticalAlignment="Center"
-								   Margin="0,0,6,0"/>
-
-						<TextBlock Grid.Column="1"
-								   Text="Save"
-								   VerticalAlignment="Center"/>
-					</Grid>
-
-				</Button>
-
-
-			</StackPanel>
-
-		</Grid>
-	</Grid>
 </UserControl>

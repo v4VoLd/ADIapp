@@ -1,6 +1,5 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:views="using:ADIapp.Views"
              x:Class="ADIapp.Views.TuneView">
 
     <!-- ================= TOGGLE STYLES ================= -->
@@ -25,159 +24,131 @@
 
     </UserControl.Styles>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="20*"/>
-            <ColumnDefinition Width="80*"/>
-        </Grid.ColumnDefinitions>
+    <Grid RowDefinitions="Auto,*">
 
-        <!-- ================= SIDEBAR ================= -->
-        <views:SidebarView Grid.Column="0"/>
+        <!-- TITLE -->
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Margin="80,20,0,0"
+                    Spacing="12">
 
-        <!-- ================= MAIN AREA ================= -->
-        <Grid Grid.Column="1"
-              RowDefinitions="Auto,*">
+            <Image Source="avares://ADIapp/Assets/carLogo_icon.png"
+                   Width="36"
+                   Height="36"/>
 
-            <!-- BACKGROUND -->
-            <Image Grid.RowSpan="2"
-                   Source="avares://ADIapp/Assets/main_background.png"
-                   Stretch="UniformToFill"/>
+            <TextBlock Text="BMW G20 320i"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="White"
+                       VerticalAlignment="Center"/>
+        </StackPanel>
 
-            <!-- TOP BAR -->
-            <views:TopUserPanelView
-                Grid.Row="0"
-                HorizontalAlignment="Right"
-                Margin="0,18,18,12"/>
+        <!-- MAIN CARD -->
+        <Border Grid.Row="1"
+                Margin="80,20,80,80"
+                Padding="40"
+                CornerRadius="22"
+                Background="#1C1C1C"
+                Opacity="0.92"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
 
-            <!-- CONTENT -->
-            <Grid Grid.Row="1">
+            <Grid RowDefinitions="*,Auto"
+                  ColumnDefinitions="*,*">
 
-                <!-- TITLE -->
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Margin="80,20,0,0"
-                            Spacing="12">
+                <!-- LEFT COLUMN -->
+                <StackPanel Spacing="12">
 
-                    <Image Source="avares://ADIapp/Assets/carLogo_icon.png"
-                           Width="36"
-                           Height="36"/>
+                    <TextBlock Text="Stage 1" Foreground="White"/>
+                    <ToggleSwitch/>
 
-                    <TextBlock Text="BMW G20 320i"
-                               FontSize="28"
-                               FontWeight="Bold"
-                               Foreground="White"
-                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Stage 2" Foreground="White"/>
+                    <ToggleSwitch/>
+
+                    <TextBlock Text="Stage 3" Foreground="White"/>
+                    <ToggleSwitch/>
+
+                    <TextBlock Text="Stage 4" Foreground="White"/>
+                    <ToggleSwitch/>
+
+                    <TextBlock Text="Stage 5" Foreground="White"/>
+                    <ToggleSwitch/>
+
+                    <TextBlock Text="Stock" Foreground="White"/>
+                    <ProgressBar Height="8"
+                                 Value="60"
+                                 Background="#333"
+                                 Foreground="#4DFF8A"/>
+
+                    <TextBlock Text="147 hp"
+                               FontSize="12"
+                               Foreground="#AAAAAA"/>
                 </StackPanel>
 
-                <!-- MAIN CARD -->
-                <Border Margin="80,80,80,80"
-                        Padding="40"
-                        CornerRadius="22"
-                        Background="#1C1C1C"
-                        Opacity="0.92"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch">
+                <!-- RIGHT COLUMN -->
+                <StackPanel Grid.Column="1" Spacing="12">
 
-                    <Grid RowDefinitions="*,Auto"
-                          ColumnDefinitions="*,*">
+                    <TextBlock Text="Pop &amp; Bang" Foreground="White"/>
+                    <ToggleSwitch/>
 
-                        <!-- LEFT COLUMN -->
-                        <StackPanel Spacing="12">
+                    <TextBlock Text="EGR Off" Foreground="White"/>
+                    <ToggleSwitch/>
 
-                            <TextBlock Text="Stage 1" Foreground="White"/>
-                            <ToggleSwitch/>
+                    <TextBlock Text="DPF Off" Foreground="White"/>
+                    <ToggleSwitch/>
 
-                            <TextBlock Text="Stage 2" Foreground="White"/>
-                            <ToggleSwitch/>
+                    <TextBlock Text="Cold Start Off" Foreground="White"/>
+                    <ToggleSwitch/>
 
-                            <TextBlock Text="Stage 3" Foreground="White"/>
-                            <ToggleSwitch/>
+                    <TextBlock Text="Rev Limiter" Foreground="White"/>
+                    <ToggleSwitch/>
 
-                            <TextBlock Text="Stage 4" Foreground="White"/>
-                            <ToggleSwitch/>
+                    <TextBlock Text="Stock" Foreground="White"/>
+                    <ProgressBar Height="8"
+                                 Value="60"
+                                 Background="#333"
+                                 Foreground="#4DFF8A"/>
 
-                            <TextBlock Text="Stage 5" Foreground="White"/>
-                            <ToggleSwitch/>
+                    <TextBlock Text="147 hp"
+                               FontSize="12"
+                               Foreground="#AAAAAA"/>
+                </StackPanel>
 
-                            <TextBlock Text="Stock" Foreground="White"/>
-                            <ProgressBar Height="8"
-                                         Value="60"
-                                         Background="#333"
-                                         Foreground="#4DFF8A"/>
+                <!-- BUTTONS -->
+                <StackPanel Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Margin="0,30,0,0"
+                            Spacing="18">
 
-                            <TextBlock Text="147 hp"
-                                       FontSize="12"
-                                       Foreground="#AAAAAA"/>
-                        </StackPanel>
+                    <Button Width="160"
+                            Height="44"
+                            Background="#2B2B2B"
+                            Foreground="White"
+                            Content="Original file"/>
 
-                        <!-- RIGHT COLUMN -->
-                        <StackPanel Grid.Column="1" Spacing="12">
+                    <Button Width="160"
+                            Height="44"
+                            Background="White"
+                            Foreground="Black"
+                            FontWeight="Bold"
+                            Content="Save"
+                            Click="Save_Click"/>
 
-                            <TextBlock Text="Pop &amp; Bang" Foreground="White"/>
-                            <ToggleSwitch/>
+                    <Button Width="160"
+                            Height="44"
+                            Background="#2B2B2B"
+                            Foreground="White"
+                            Content="DTC Off"/>
 
-                            <TextBlock Text="EGR Off" Foreground="White"/>
-                            <ToggleSwitch/>
-
-                            <TextBlock Text="DPF Off" Foreground="White"/>
-                            <ToggleSwitch/>
-
-                            <TextBlock Text="Cold Start Off" Foreground="White"/>
-                            <ToggleSwitch/>
-
-                            <TextBlock Text="Rev Limiter" Foreground="White"/>
-                            <ToggleSwitch/>
-
-                            <TextBlock Text="Stock" Foreground="White"/>
-                            <ProgressBar Height="8"
-                                         Value="60"
-                                         Background="#333"
-                                         Foreground="#4DFF8A"/>
-
-                            <TextBlock Text="147 hp"
-                                       FontSize="12"
-                                       Foreground="#AAAAAA"/>
-                        </StackPanel>
-
-                        <!-- BUTTONS -->
-                        <StackPanel Grid.Row="1"
-                                    Grid.ColumnSpan="2"
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,30,0,0"
-                                    Spacing="18">
-
-                            <Button Width="160"
-                                    Height="44"
-                                    Background="#2B2B2B"
-                                    Foreground="White"
-                                    Content="Original file"/>
-
-                            <Button Width="160"
-                                    Height="44"
-                                    Background="White"
-                                    Foreground="Black"
-                                    FontWeight="Bold"
-                                    Content="Save"
-                                    Click="Save_Click"/>
-
-                            <Button Width="160"
-                                    Height="44"
-                                    Background="#2B2B2B"
-                                    Foreground="White"
-                                    Content="DTC Off"/>
-
-                        </StackPanel>
-
-                    </Grid>
-                </Border>
+                </StackPanel>
 
             </Grid>
-        </Grid>
+        </Border>
+
     </Grid>
+
 </UserControl>
-
-
-
-
