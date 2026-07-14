@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using PusherClient;
 
@@ -6,30 +7,42 @@ namespace ADIapp.Services;
 /// <summary>
 /// Manages the Pusher WebSocket connection and channel subscriptions.
 /// Call InitializeAsync() once after a successful login.
+/// Both Client and UserChannel are guaranteed non-null after initialization.
 /// </summary>
 public static class WebSocketManager
 {
-    public static Pusher Client { get; private set; }
-    public static Channel UserChannel { get; private set; }
+    private static Pusher? _client;
+    private static Channel? _userChannel;
+
+    /// <summary>Non-null after InitializeAsync() has been called.</summary>
+    public static Pusher Client
+        => _client ?? throw new InvalidOperationException("WebSocketManager is not initialized. Call InitializeAsync() after login.");
+
+    /// <summary>Non-null after InitializeAsync() has been called.</summary>
+    public static Channel UserChannel
+        => _userChannel ?? throw new InvalidOperationException("WebSocketManager is not initialized. Call InitializeAsync() after login.");
+
+    public static bool IsConnected
+        => _client?.State == ConnectionState.Connected;
 
     public static async Task InitializeAsync(int userId)
     {
         // Prevent initializing twice
-        if (Client != null && Client.State == ConnectionState.Connected)
+        if (_client != null && _client.State == ConnectionState.Connected)
             return;
 
         var authorizer = new HttpAuthorizer(AppConfig.BroadcastingAuthUrl);
 
-        Client = new Pusher(AppConfig.PusherAppKey, new PusherOptions
+        _client = new Pusher(AppConfig.PusherAppKey, new PusherOptions
         {
-            Host = AppConfig.WebSocketHost,
+            Host      = AppConfig.WebSocketHost,
             Encrypted = false,
-            Cluster = null,
+            Cluster   = null,
             Authorizer = authorizer
         });
 
-        await Client.ConnectAsync();
+        await _client.ConnectAsync();
 
-        UserChannel = await Client.SubscribeAsync($"App.Models.User.{userId}");
+        _userChannel = await _client.SubscribeAsync($"App.Models.User.{userId}");
     }
 }
