@@ -53,12 +53,16 @@ public partial class LoginView : UserControl
 
         try
         {
-            var (success, message) = await ApiService.LoginAsync(email, password);
+            var (success, message, currentUser) = await ApiService.LoginAsync(email, password);
 
             if (success)
             {
                 var window = this.FindAncestorOfType<MainWindow>();
                 window?.Navigate(new HomeView());
+                if(currentUser != null) {
+                    await WebSocketManager.InitializeAsync(currentUser.Id);
+                }
+                
             }
             else
             {

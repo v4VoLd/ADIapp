@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ADIapp.Helpers;
+using PusherClient;
 
 namespace ADIapp.Services
 {
@@ -17,7 +18,7 @@ namespace ADIapp.Services
         public static string? AccessToken { get; private set; }
         public static UserDto? CurrentUser { get; private set; }
 
-        public static async Task<(bool Success, string Message)> LoginAsync(string email, string password)
+        public static async Task<(bool Success, string Message, UserDto? currentUser)> LoginAsync(string email, string password)
         {
             try
             {
@@ -67,14 +68,14 @@ namespace ADIapp.Services
                     // Set authorization header for future requests
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
                     
-                    return (true, "Login successful");
+                    return (true, "Login successful", CurrentUser);
                 }
                 
-                return (false, apiResponse?.Message ?? "Login failed. Please check your credentials.");
+                return (false, apiResponse?.Message ?? "Login failed. Please check your credentials.",null);
             }
             catch (Exception ex)
             {
-                return (false, $"Connection error: {ex.Message}");
+                return (false, $"Connection error: {ex.Message}", null);
             }
         }
 
@@ -207,4 +208,35 @@ namespace ADIapp.Services
         [JsonPropertyName("subscriptionEndDate")]
         public string? SubscriptionEndDate { get; set; }
     }
+
+
+    public static class WebSocketManager
+    {
+        // These properties are accessible from anywhere in your app
+        public static Pusher Client { get; private set; }
+        public static Channel UserChannel { get; private set; }
+
+        public static async Task InitializeAsync(int userId)
+        {
+            // Prevent initializing twice
+            if (Client != null && Client.State == ConnectionState.Connected) 
+                return;
+
+            var authorizer = new HttpAuthorizer("http://localhost/api/broadcasting/auth");
+
+            Client = new Pusher("c05340c18ec069708baaqcsqscz", new PusherOptions 
+            { 
+                Host = "localhost:6001", 
+                Encrypted = false, 
+                Cluster = null,
+                Authorizer = authorizer
+            });
+
+            await Client.ConnectAsync();
+            
+            UserChannel = await Client.SubscribeAsync($"App.Models.User.{userId}");
+            
+        }
+    }
+
 }

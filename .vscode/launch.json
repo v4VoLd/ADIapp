@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C#: ADIapp",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Debug/net9.0/ADIapp.dll",
+            // CHANGE THIS PROPERTY:
+            "console": "internalConsole" ,
+            "logging": {
+                "moduleLoad": false
+            }
+        }
+    ]
+}
