@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ADIapp.Services;
+namespace ADIapp.Models;
 
 public class ApiResponseWrapper
 {

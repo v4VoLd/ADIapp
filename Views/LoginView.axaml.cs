@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using ADIapp.Services;
+using ADIapp.Models;
 
 namespace ADIapp.Views;
 

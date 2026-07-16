@@ -40,7 +40,7 @@ public partial class AccountView : UserControl
             var lastNameBox = this.FindControl<TextBox>("LastNameBox");
             if (firstNameBox != null && lastNameBox != null)
             {
-                string name = ApiService.CurrentUser.Name;
+                string name = ApiService.CurrentUser.Name ?? string.Empty;
                 int lastSpaceIndex = name.LastIndexOf(' ');
                 if (lastSpaceIndex >= 0)
                 {

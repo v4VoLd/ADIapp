@@ -1,4 +1,4 @@
-namespace ADIapp.Services;
+namespace ADIapp.Config;
 
 /// <summary>
 /// Central place for all environment/configuration constants.
