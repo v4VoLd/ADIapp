@@ -3,14 +3,10 @@ using System.Threading.Tasks;
 using PusherClient;
 using ADIapp.Models;
 using ADIapp.Config;
+using ADIapp.Helpers;
 
 namespace ADIapp.Services;
 
-/// <summary>
-/// Manages the Pusher WebSocket connection and channel subscriptions.
-/// Call InitializeAsync() once after a successful login.
-/// Both Client and UserChannel are guaranteed non-null after initialization.
-/// </summary>
 public static class WebSocketManager
 {
     private static Pusher? _client;
@@ -33,7 +29,10 @@ public static class WebSocketManager
         if (_client != null && _client.State == ConnectionState.Connected)
             return;
 
-        var authorizer = new HttpAuthorizer(AppConfig.BroadcastingAuthUrl);
+        var authorizer = new HttpAuthorizer(AppConfig.BroadcastingAuthUrl)
+        {
+            AuthenticationHeader = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiService.AccessToken)
+        };
 
         _client = new Pusher(AppConfig.PusherAppKey, new PusherOptions
         {
@@ -43,10 +42,18 @@ public static class WebSocketManager
             Authorizer = authorizer
         });
 
-        await _client.ConnectAsync();
+        try
+        {
+            await _client.ConnectAsync();
 
-        _userChannel = await _client.SubscribeAsync($"App.Models.User.{userId}");
-        _userChannel.Bind("Illuminate\\Notifications\\Events\\BroadcastNotificationCreated", OnNotificationReceived);
+            _userChannel = await _client.SubscribeAsync($"private-App.Models.User.{userId}");
+            _userChannel.Bind("Illuminate\\Notifications\\Events\\BroadcastNotificationCreated", OnNotificationReceived);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[WebSocket] Exception during initialization: {ex.Message}", ex);
+            throw;
+        }
     }
 
     private static void OnNotificationReceived(PusherEvent eventData)
@@ -116,7 +123,7 @@ public static class WebSocketManager
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error parsing notification payload: {ex.Message}");
+            Logger.Error($"Error parsing notification payload: {ex.Message}", ex);
             NotificationService.AddNotification(Guid.NewGuid().ToString(), "New notification received.", "Info");
         }
     }
