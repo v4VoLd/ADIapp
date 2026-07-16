@@ -17,6 +17,11 @@ public class ApiService
 {
     private static readonly HttpClient _httpClient = new HttpClient();
 
+    static ApiService()
+    {
+        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    }
+
     public static string? AccessToken { get; private set; }
     public static UserDto? CurrentUser { get; private set; }
 
@@ -120,6 +125,71 @@ public class ApiService
         catch (Exception ex)
         {
             return (false, $"Connection error: {ex.Message}");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ECU Identification
+    // ─────────────────────────────────────────────────────────────
+
+    public static async Task<EcuIdentifyResponse> UploadAndIdentifyEcuAsync(string filePath)
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+        {
+            return new EcuIdentifyResponse
+            {
+                Success = false,
+                Message = "Not authenticated."
+            };
+        }
+
+        try
+        {
+            if (!System.IO.File.Exists(filePath))
+            {
+                return new EcuIdentifyResponse
+                {
+                    Success = false,
+                    Message = "File does not exist."
+                };
+            }
+
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "file/identify");
+            
+            using var form = new MultipartFormDataContent();
+            
+            byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            
+            form.Add(fileContent, "file", System.IO.Path.GetFileName(filePath));
+
+            var response = await _httpClient.PostAsync(requestUri, form);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var apiResponse = JsonSerializer.Deserialize<EcuIdentifyResponse>(responseString, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (apiResponse != null)
+            {
+                return apiResponse;
+            }
+
+            return new EcuIdentifyResponse
+            {
+                Success = false,
+                Message = "Failed to deserialize server response."
+            };
+        }
+        catch (Exception ex)
+        {
+            return new EcuIdentifyResponse
+            {
+                Success = false,
+                Message = $"Upload error: {ex.Message}"
+            };
         }
     }
 }

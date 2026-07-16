@@ -23,6 +23,8 @@ public static class WebSocketManager
     public static bool IsConnected
         => _client?.State == ConnectionState.Connected;
 
+    public static event Action<string, EcuIdentifyData>? EcuIdentified;
+
     public static async Task InitializeAsync(int userId)
     {
         // Prevent initializing twice
@@ -48,6 +50,7 @@ public static class WebSocketManager
 
             _userChannel = await _client.SubscribeAsync($"private-App.Models.User.{userId}");
             _userChannel.Bind("Illuminate\\Notifications\\Events\\BroadcastNotificationCreated", OnNotificationReceived);
+            _userChannel.Bind("EcuIdentified", OnEcuIdentifiedEvent);
         }
         catch (Exception ex)
         {
@@ -125,6 +128,40 @@ public static class WebSocketManager
         {
             Logger.Error($"Error parsing notification payload: {ex.Message}", ex);
             NotificationService.AddNotification(Guid.NewGuid().ToString(), "New notification received.", "Info");
+        }
+    }
+
+    private static void OnEcuIdentifiedEvent(PusherEvent eventData)
+    {
+        try
+        {
+            Logger.Info($"[WebSocket] Received EcuIdentified event: {eventData.Data}");
+            using var doc = System.Text.Json.JsonDocument.Parse(eventData.Data);
+            var root = doc.RootElement;
+
+            string fileHash = "";
+            if (root.TryGetProperty("hash", out var hashProp))
+            {
+                fileHash = hashProp.GetString() ?? "";
+            }
+
+            if (root.TryGetProperty("info", out var infoProp))
+            {
+                var options = new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                var ecuData = System.Text.Json.JsonSerializer.Deserialize<EcuIdentifyData>(infoProp.GetRawText(), options);
+                if (ecuData != null)
+                {
+                    ecuData.FileHash = fileHash;
+                    EcuIdentified?.Invoke(fileHash, ecuData);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[WebSocket] Error parsing EcuIdentified event: {ex.Message}", ex);
         }
     }
 }

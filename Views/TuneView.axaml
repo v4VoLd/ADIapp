@@ -55,69 +55,114 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
 
-            <Grid RowDefinitions="*,Auto"
+            <Grid RowDefinitions="*,Auto,Auto"
                   ColumnDefinitions="*,*">
 
-                <!-- LEFT COLUMN -->
-                <StackPanel Spacing="12">
+                <!-- SERVICES CONTAINER (Hidden by default, shown after ECU identification) -->
+                <Grid x:Name="ServicesContainer"
+                      Grid.Row="0"
+                      Grid.ColumnSpan="2"
+                      ColumnDefinitions="*,*"
+                      IsVisible="False">
 
-                    <TextBlock Text="Stage 1" Foreground="White"/>
-                    <ToggleSwitch/>
+                    <!-- LEFT COLUMN -->
+                    <StackPanel Spacing="12" Margin="0,0,10,0">
+                        <TextBlock Text="Stage 1" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Stage 2" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="Stage 2" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Stage 3" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="Stage 3" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Stage 4" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="Stage 4" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Stage 5" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="Stage 5" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Stock" Foreground="White"/>
-                    <ProgressBar Height="8"
-                                 Value="60"
-                                 Background="#333"
-                                 Foreground="#4DFF8A"/>
+                        <TextBlock Text="Stock" Foreground="White"/>
+                        <ProgressBar Height="8"
+                                     Value="60"
+                                     Background="#333"
+                                     Foreground="#4DFF8A"/>
 
-                    <TextBlock Text="147 hp"
-                               FontSize="12"
-                               Foreground="#AAAAAA"/>
-                </StackPanel>
+                        <TextBlock Text="147 hp"
+                                   FontSize="12"
+                                   Foreground="#AAAAAA"/>
+                    </StackPanel>
 
-                <!-- RIGHT COLUMN -->
-                <StackPanel Grid.Column="1" Spacing="12">
+                    <!-- RIGHT COLUMN -->
+                    <StackPanel Grid.Column="1" Spacing="12" Margin="10,0,0,0">
+                        <TextBlock Text="Pop &amp; Bang" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Pop &amp; Bang" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="EGR Off" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="EGR Off" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="DPF Off" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="DPF Off" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="Cold Start Off" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Cold Start Off" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="Rev Limiter" Foreground="White"/>
+                        <ToggleSwitch/>
 
-                    <TextBlock Text="Rev Limiter" Foreground="White"/>
-                    <ToggleSwitch/>
+                        <TextBlock Text="Stock" Foreground="White"/>
+                        <ProgressBar Height="8"
+                                     Value="60"
+                                     Background="#333"
+                                     Foreground="#4DFF8A"/>
 
-                    <TextBlock Text="Stock" Foreground="White"/>
-                    <ProgressBar Height="8"
-                                 Value="60"
-                                 Background="#333"
-                                 Foreground="#4DFF8A"/>
+                        <TextBlock Text="147 hp"
+                                   FontSize="12"
+                                   Foreground="#AAAAAA"/>
+                    </StackPanel>
+                </Grid>
 
-                    <TextBlock Text="147 hp"
-                               FontSize="12"
-                               Foreground="#AAAAAA"/>
-                </StackPanel>
+                <!-- ECU INFO CARD -->
+                <Border Grid.Row="1"
+                        Grid.ColumnSpan="2"
+                        Background="#181818"
+                        BorderBrush="#2D2D2D"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="16,12"
+                        Margin="0,20,0,0"
+                        HorizontalAlignment="Stretch">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <!-- Details -->
+                        <StackPanel Orientation="Horizontal" Spacing="24" VerticalAlignment="Center">
+                            <StackPanel>
+                                <TextBlock Text="ECU BRAND" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                <TextBlock x:Name="EcuBrandText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="ECU MODEL" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                <TextBlock x:Name="EcuModelText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="HARDWARE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                <TextBlock x:Name="EcuHardwareText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="SOFTWARE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                <TextBlock x:Name="EcuSoftwareText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Status -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Border x:Name="StatusDot" Width="8" Height="8" CornerRadius="4" Background="Gray" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="StatusText" Text="Ready" FontSize="12" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
                 <!-- BUTTONS -->
-                <StackPanel Grid.Row="1"
+                <StackPanel Grid.Row="2"
                             Grid.ColumnSpan="2"
                             Orientation="Horizontal"
                             HorizontalAlignment="Center"
@@ -128,7 +173,8 @@
                             Height="44"
                             Background="#2B2B2B"
                             Foreground="White"
-                            Content="Original file"/>
+                            Content="Original file"
+                            Click="OriginalFile_Click"/>
 
                     <Button Width="160"
                             Height="44"

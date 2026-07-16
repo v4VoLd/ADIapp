@@ -49,3 +49,39 @@ public class UserDto
     [JsonPropertyName("subscriptionEndDate")]
     public string? SubscriptionEndDate { get; set; }
 }
+
+public class EcuIdentifyResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = string.Empty;
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("data")]
+    public EcuIdentifyData? Data { get; set; }
+}
+
+public class EcuIdentifyData
+{
+    [JsonPropertyName("ecu_brand")]
+    public string EcuBrand { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecu_model")]
+    public string EcuModel { get; set; } = string.Empty;
+
+    [JsonPropertyName("hardware_id")]
+    public string HardwareId { get; set; } = string.Empty;
+
+    [JsonPropertyName("software_id")]
+    public string SoftwareId { get; set; } = string.Empty;
+
+    [JsonPropertyName("file_name")]
+    public string FileName { get; set; } = string.Empty;
+
+    [JsonPropertyName("file_hash")]
+    public string FileHash { get; set; } = string.Empty;
+}
