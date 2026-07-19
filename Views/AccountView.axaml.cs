@@ -33,25 +33,18 @@ public partial class AccountView : UserControl
             var helloUserBlock = this.FindControl<TextBlock>("HelloUserBlock");
             if (helloUserBlock != null)
             {
-                helloUserBlock.Text = $"Hello, {ApiService.CurrentUser.Name}.";
+                helloUserBlock.Text = $"Hello, {ApiService.CurrentUser.FirstName} {ApiService.CurrentUser.LastName}.".Trim();
             }
 
             var firstNameBox = this.FindControl<TextBox>("FirstNameBox");
             var lastNameBox = this.FindControl<TextBox>("LastNameBox");
-            if (firstNameBox != null && lastNameBox != null)
+            if (firstNameBox != null)
             {
-                string name = ApiService.CurrentUser.Name ?? string.Empty;
-                int lastSpaceIndex = name.LastIndexOf(' ');
-                if (lastSpaceIndex >= 0)
-                {
-                    firstNameBox.Text = name.Substring(0, lastSpaceIndex).Trim();
-                    lastNameBox.Text = name.Substring(lastSpaceIndex + 1).Trim();
-                }
-                else
-                {
-                    firstNameBox.Text = name;
-                    lastNameBox.Text = string.Empty;
-                }
+                firstNameBox.Text = ApiService.CurrentUser.FirstName;
+            }
+            if (lastNameBox != null)
+            {
+                lastNameBox.Text = ApiService.CurrentUser.LastName;
             }
 
             var emailBox = this.FindControl<TextBox>("EmailBox");

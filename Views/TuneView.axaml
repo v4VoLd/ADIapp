@@ -24,10 +24,11 @@
 
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="280,*">
 
         <!-- TITLE -->
         <StackPanel Grid.Row="0"
+                    Grid.ColumnSpan="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
@@ -45,9 +46,49 @@
                        VerticalAlignment="Center"/>
         </StackPanel>
 
+        <!-- SIDEBAR TASKS LIST -->
+        <Border Grid.Row="1"
+                Grid.Column="0"
+                Margin="80,20,10,80"
+                Padding="20"
+                CornerRadius="22"
+                Background="#141414"
+                Opacity="0.92"
+                VerticalAlignment="Stretch">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <TextBlock Grid.Row="0"
+                           Text="Active Tasks"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0,0,0,15"/>
+                <Button Grid.Row="1"
+                        x:Name="NewFileButton"
+                        Content="+ New Upload"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Background="#252525"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        Margin="0,0,0,15"
+                        Padding="0,8"
+                        Click="NewFileButton_Click"/>
+                <ScrollViewer Grid.Row="2">
+                    <StackPanel x:Name="ActiveFilesList" Spacing="8">
+                        <TextBlock Text="No active tasks" 
+                                   Foreground="Gray" 
+                                   FontSize="12" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,20,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
         <!-- MAIN CARD -->
         <Border Grid.Row="1"
-                Margin="80,20,80,80"
+                Grid.Column="1"
+                Margin="10,20,80,80"
                 Padding="40"
                 CornerRadius="22"
                 Background="#1C1C1C"
@@ -59,68 +100,15 @@
                   ColumnDefinitions="*,*">
 
                 <!-- SERVICES CONTAINER (Hidden by default, shown after ECU identification) -->
-                <Grid x:Name="ServicesContainer"
-                      Grid.Row="0"
-                      Grid.ColumnSpan="2"
-                      ColumnDefinitions="*,*"
-                      IsVisible="False">
-
-                    <!-- LEFT COLUMN -->
-                    <StackPanel Spacing="12" Margin="0,0,10,0">
-                        <TextBlock Text="Stage 1" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Stage 2" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Stage 3" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Stage 4" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Stage 5" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Stock" Foreground="White"/>
-                        <ProgressBar Height="8"
-                                     Value="60"
-                                     Background="#333"
-                                     Foreground="#4DFF8A"/>
-
-                        <TextBlock Text="147 hp"
-                                   FontSize="12"
-                                   Foreground="#AAAAAA"/>
-                    </StackPanel>
-
-                    <!-- RIGHT COLUMN -->
-                    <StackPanel Grid.Column="1" Spacing="12" Margin="10,0,0,0">
-                        <TextBlock Text="Pop &amp; Bang" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="EGR Off" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="DPF Off" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Cold Start Off" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Rev Limiter" Foreground="White"/>
-                        <ToggleSwitch/>
-
-                        <TextBlock Text="Stock" Foreground="White"/>
-                        <ProgressBar Height="8"
-                                     Value="60"
-                                     Background="#333"
-                                     Foreground="#4DFF8A"/>
-
-                        <TextBlock Text="147 hp"
-                                   FontSize="12"
-                                   Foreground="#AAAAAA"/>
-                    </StackPanel>
-                </Grid>
+                <ScrollViewer x:Name="ServicesContainer"
+                              Grid.Row="0"
+                              Grid.ColumnSpan="2"
+                              IsVisible="False"
+                              VerticalScrollBarVisibility="Auto">
+                    <WrapPanel x:Name="DynamicServicesPanel" 
+                               Orientation="Horizontal" 
+                               Margin="0,0,0,10"/>
+                </ScrollViewer>
 
                 <!-- ECU INFO CARD -->
                 <Border Grid.Row="1"

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace ADIapp.Models;
 
@@ -31,8 +32,11 @@ public class UserDto
     [JsonPropertyName("id")]
     public int Id { get; set; }
 
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
+    [JsonPropertyName("firstName")]
+    public string FirstName { get; set; } = string.Empty;
+
+    [JsonPropertyName("lastName")]
+    public string LastName { get; set; } = string.Empty;
 
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
@@ -84,4 +88,32 @@ public class EcuIdentifyData
 
     [JsonPropertyName("file_hash")]
     public string FileHash { get; set; } = string.Empty;
+
+    [JsonPropertyName("services")]
+    public List<ServiceDto>? Services { get; set; }
 }
+
+public class ServiceDto
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("price")]
+    public string Price { get; set; } = string.Empty;
+
+    [JsonPropertyName("winols_symbole")]
+    public string WinolsSymbole { get; set; } = string.Empty;
+}
+
+public class ProcessingFileDto
+{
+    [JsonPropertyName("file_hash")]
+    public string FileHash { get; set; } = string.Empty;
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+}
+

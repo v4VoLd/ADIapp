@@ -62,6 +62,7 @@ public partial class LoginView : UserControl
                 window?.Navigate(new HomeView());
                 if(currentUser != null) {
                     await WebSocketManager.InitializeAsync(currentUser.Id);
+                    await NotificationService.LoadNotificationsAsync();
                 }
                 
             }

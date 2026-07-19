@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ADIapp.Models;
+using ADIapp.Helpers;
 
 namespace ADIapp.Services;
 
@@ -30,6 +32,24 @@ public static class NotificationService
         NotificationReceived?.Invoke(notif);
     }
 
+    public static async Task LoadNotificationsAsync()
+    {
+        try
+        {
+            var notifs = await ApiService.FetchNotificationsAsync();
+            lock (Notifications)
+            {
+                Notifications.Clear();
+                Notifications.AddRange(notifs);
+            }
+            NotificationsUpdated?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to load database notifications: {ex.Message}", ex);
+        }
+    }
+
     public static void MarkAllAsRead()
     {
         lock (Notifications)
@@ -41,6 +61,9 @@ public static class NotificationService
         }
 
         NotificationsUpdated?.Invoke();
+
+        // Sync with backend database
+        _ = ApiService.MarkAllNotificationsAsReadAsync();
     }
 
     public static void ClearAll()
@@ -51,5 +74,8 @@ public static class NotificationService
         }
 
         NotificationsUpdated?.Invoke();
+
+        // Sync with backend database
+        _ = ApiService.ClearNotificationsAsync();
     }
 }

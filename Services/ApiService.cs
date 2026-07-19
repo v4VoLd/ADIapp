@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -192,4 +193,181 @@ public class ApiService
             };
         }
     }
+
+    public static async Task<List<NotificationModel>> FetchNotificationsAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return new List<NotificationModel>();
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "notifications");
+            var response = await _httpClient.GetAsync(requestUri);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
+            {
+                var list = JsonSerializer.Deserialize<List<NotificationModel>>(dataProp.GetRawText(), options);
+                return list ?? new List<NotificationModel>();
+            }
+            return new List<NotificationModel>();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error fetching notifications: {ex.Message}", ex);
+            return new List<NotificationModel>();
+        }
+    }
+
+    public static async Task<bool> MarkAllNotificationsAsReadAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return false;
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "notifications/read");
+            var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(requestUri, content);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error marking notifications as read: {ex.Message}", ex);
+            return false;
+        }
+    }
+
+    public static async Task<bool> ClearNotificationsAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return false;
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "notifications/clear");
+            var response = await _httpClient.DeleteAsync(requestUri);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error clearing notifications: {ex.Message}", ex);
+            return false;
+        }
+    }
+
+    public static async Task<List<ProcessingFileDto>> GetProcessingFilesAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return new List<ProcessingFileDto>();
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "file/processing");
+            var response = await _httpClient.GetAsync(requestUri);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
+            {
+                var list = JsonSerializer.Deserialize<List<ProcessingFileDto>>(dataProp.GetRawText(), options);
+                return list ?? new List<ProcessingFileDto>();
+            }
+            return new List<ProcessingFileDto>();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error getting processing files: {ex.Message}", ex);
+            return new List<ProcessingFileDto>();
+        }
+    }
+
+    public static async Task<EcuIdentifyResponse> CheckStatusAsync(string hash)
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return new EcuIdentifyResponse { Success = false, Message = "Not authenticated." };
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"file/identify/status/{hash}");
+            var response = await _httpClient.GetAsync(requestUri);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var apiResponse = JsonSerializer.Deserialize<EcuIdentifyResponse>(responseString, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return apiResponse ?? new EcuIdentifyResponse { Success = false, Message = "Failed to deserialize response." };
+        }
+        catch (Exception ex)
+        {
+            return new EcuIdentifyResponse { Success = false, Message = $"Error checking status: {ex.Message}" };
+        }
+    }
+
+    public static async Task<(bool Success, string Message)> CreateOrderAsync(string fileHash, List<int> serviceIds, string comment = "Created from Desktop App")
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return (false, "Not authenticated.");
+
+        try
+        {
+            var payload = new
+            {
+                file_hash = fileHash,
+                services = serviceIds,
+                comment = comment
+            };
+
+            var jsonContent = JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "order");
+            var response = await _httpClient.PostAsync(requestUri, content);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            bool success = false;
+            if (root.TryGetProperty("success", out var successProp))
+            {
+                success = successProp.GetBoolean();
+            }
+
+            string message = "";
+            if (root.TryGetProperty("message", out var msgProp))
+            {
+                message = msgProp.GetString() ?? "";
+            }
+
+            if (success)
+            {
+                _ = FetchProfileAsync();
+                return (true, "Order created successfully.");
+            }
+
+            return (false, string.IsNullOrEmpty(message) ? "Failed to create order." : message);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error creating order: {ex.Message}", ex);
+            return (false, $"Connection error: {ex.Message}");
+        }
+    }
 }
+

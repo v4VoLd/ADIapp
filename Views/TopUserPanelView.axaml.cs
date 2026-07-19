@@ -26,7 +26,7 @@ public partial class TopUserPanelView : UserControl
             var nameBlock = this.FindControl<TextBlock>("UserNameBlock");
             if (nameBlock != null)
             {
-                nameBlock.Text = ApiService.CurrentUser.Name;
+                nameBlock.Text = $"{ApiService.CurrentUser.FirstName} {ApiService.CurrentUser.LastName}".Trim();
             }
             var tokenBlock = this.FindControl<TextBlock>("UserTokenBlock");
             if (tokenBlock != null)
