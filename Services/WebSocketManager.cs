@@ -36,10 +36,13 @@ public static class WebSocketManager
             AuthenticationHeader = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiService.AccessToken)
         };
 
+        var Host = AppConfig.WebSocketHost;
+        var customPort = AppConfig.WebsocketPort;
+
         _client = new Pusher(AppConfig.PusherAppKey, new PusherOptions
         {
-            Host      = AppConfig.WebSocketHost,
-            Encrypted = false,
+            Host      = customPort != "" ? Host + ":" + customPort : Host,
+            Encrypted = AppConfig.WebsocketEncrypted,
             Cluster   = null,
             Authorizer = authorizer
         });

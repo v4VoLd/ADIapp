@@ -6,11 +6,17 @@ namespace ADIapp.Config;
 /// </summary>
 public static class AppConfig
 {
-    public const string BaseUrl = "http://localhost/api/desktop/";
+    public const string BaseHost = "http://localhost/";
 
-    public const string BroadcastingAuthUrl = "http://localhost/broadcasting/auth";
+    public const string BaseUrl = BaseHost + "api/desktop/";
+
+    public const string BroadcastingAuthUrl = BaseHost + "broadcasting/auth";
 
     public const string PusherAppKey = "c05340c18ec069708baaqcsqscz";
 
-    public const string WebSocketHost = "localhost:6001";
+    public const string WebSocketHost = "localhost";
+
+    public const string WebsocketPort = "6001";
+
+    public const bool WebsocketEncrypted = false;
 }
