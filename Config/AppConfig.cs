@@ -6,17 +6,17 @@ namespace ADIapp.Config;
 /// </summary>
 public static class AppConfig
 {
-    public const string BaseHost = "http://localhost/";
+    public const string BaseHost = "https://adi-file-service.fb-technologies.com/";
 
     public const string BaseUrl = BaseHost + "api/desktop/";
 
     public const string BroadcastingAuthUrl = BaseHost + "broadcasting/auth";
 
-    public const string PusherAppKey = "c05340c18ec069708baaqcsqscz";
+    public const string PusherAppKey = "lskldjfhskdjhf9283648792324";
 
-    public const string WebSocketHost = "localhost";
+    public const string WebSocketHost = "adi-file-service.fb-technologies.com";
 
-    public const string WebsocketPort = "6001";
+    public const string WebsocketPort = "443";
 
-    public const bool WebsocketEncrypted = false;
+    public const bool WebsocketEncrypted = true;
 }
