@@ -4,7 +4,6 @@
 
     <!-- ================= TOGGLE STYLES ================= -->
     <UserControl.Styles>
-
         <!-- Toggle OFF -->
         <Style Selector="ToggleSwitch /template/ Border#PART_Track">
             <Setter Property="Background" Value="#2A2A2A"/>
@@ -21,29 +20,35 @@
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="20"/>
         </Style>
-
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*" ColumnDefinitions="280,*">
 
-        <!-- TITLE -->
+        <!-- TITLE / HEADER -->
         <StackPanel Grid.Row="0"
                     Grid.ColumnSpan="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Margin="80,20,0,0"
-                    Spacing="12">
+                    Spacing="14">
 
             <Image Source="avares://ADIapp/Assets/carLogo_icon.png"
-                   Width="36"
-                   Height="36"/>
+                   Width="40"
+                   Height="40"
+                   VerticalAlignment="Center"/>
 
-            <TextBlock Text="BMW G20 320i"
-                       FontSize="28"
-                       FontWeight="Bold"
-                       Foreground="White"
-                       VerticalAlignment="Center"/>
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock x:Name="VehicleTitleText"
+                           Text="Vehicle &amp; ECU Information"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="White"/>
+                <TextBlock x:Name="VehicleSubtitleText"
+                           Text="Upload a binary file or select an active task to inspect specifications."
+                           FontSize="12"
+                           Foreground="#888888"/>
+            </StackPanel>
         </StackPanel>
 
         <!-- SIDEBAR TASKS LIST -->
@@ -89,72 +94,137 @@
         <Border Grid.Row="1"
                 Grid.Column="1"
                 Margin="10,20,80,80"
-                Padding="40"
+                Padding="24,20"
                 CornerRadius="22"
                 Background="#1C1C1C"
-                Opacity="0.92"
+                Opacity="0.95"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
 
-            <Grid RowDefinitions="*,Auto,Auto"
-                  ColumnDefinitions="*,*">
+            <Grid RowDefinitions="Auto,*,Auto">
 
-                <!-- SERVICES CONTAINER (Hidden by default, shown after ECU identification) -->
-                <ScrollViewer x:Name="ServicesContainer"
-                              Grid.Row="0"
-                              Grid.ColumnSpan="2"
-                              IsVisible="False"
-                              VerticalScrollBarVisibility="Auto">
-                    <WrapPanel x:Name="DynamicServicesPanel" 
-                               Orientation="Horizontal" 
-                               Margin="0,0,0,10"/>
+                <!-- TOP DETAILS SECTION (VEHICLE, ENGINE, ECU CARDS) -->
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" MaxHeight="280" Margin="0,0,0,12">
+                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto">
+                        
+                        <!-- VEHICLE SPECS CARD -->
+                        <Border Grid.Column="0" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="VEHICLE SPECS" FontSize="11" Foreground="#4DFF8A" FontWeight="Bold"/>
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
+                                        <TextBlock Text="PRODUCER" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="VehProducerText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,0,4">
+                                        <TextBlock Text="MODEL" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="VehModelText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,4">
+                                        <TextBlock Text="YEAR / CHASSIS" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="VehYearChassisText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,4">
+                                        <TextBlock Text="BUILD / TYPE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="VehBuildTypeText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,0">
+                                        <TextBlock Text="VIN" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="VehVinText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ENGINE SPECS CARD -->
+                        <Border Grid.Column="1" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="ENGINE SPECS" FontSize="11" Foreground="#3B82F6" FontWeight="Bold"/>
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
+                                        <TextBlock Text="NAME / TYPE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EngNameTypeText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,0,4">
+                                        <TextBlock Text="DISPLACEMENT" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EngDisplacementText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,4">
+                                        <TextBlock Text="OUTPUT (PS / KW)" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EngOutputText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,4">
+                                        <TextBlock Text="EMISSION" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EngEmissionText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,0">
+                                        <TextBlock Text="TRANSMISSION" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EngTransmissionText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ECU SPECS CARD -->
+                        <Border Grid.Column="2" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="ECU SPECS" FontSize="11" Foreground="#A855F7" FontWeight="Bold"/>
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
+                                        <TextBlock Text="PRODUCER / BUILD" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EcuBrandText" Text="Not Loaded" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,0,4">
+                                        <TextBlock Text="STAGE / HW NR" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EcuHardwareText" Text="Not Loaded" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,4">
+                                        <TextBlock Text="PART / PROD NR" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EcuProdNrText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,4">
+                                        <TextBlock Text="SW VERSION" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EcuSoftwareText" Text="Not Loaded" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,4,0">
+                                        <TextBlock Text="SW SIZE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="EcuSoftwareSizeText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="4,0,0,0">
+                                        <TextBlock Text="STATUS" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,2,0,0">
+                                            <Border x:Name="StatusDot" Width="8" Height="8" CornerRadius="4" Background="Gray" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="StatusText" Text="Ready" FontSize="11" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                    </Grid>
                 </ScrollViewer>
 
-                <!-- ECU INFO CARD -->
-                <Border Grid.Row="1"
-                        Grid.ColumnSpan="2"
-                        Background="#181818"
-                        BorderBrush="#2D2D2D"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="16,12"
-                        Margin="0,20,0,0"
-                        HorizontalAlignment="Stretch">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <!-- Details -->
-                        <StackPanel Orientation="Horizontal" Spacing="24" VerticalAlignment="Center">
-                            <StackPanel>
-                                <TextBlock Text="ECU BRAND" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                <TextBlock x:Name="EcuBrandText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="ECU MODEL" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                <TextBlock x:Name="EcuModelText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="HARDWARE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                <TextBlock x:Name="EcuHardwareText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="SOFTWARE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                <TextBlock x:Name="EcuSoftwareText" Text="Not Loaded" FontSize="13" Foreground="White" FontWeight="SemiBold" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <!-- Status -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <Border x:Name="StatusDot" Width="8" Height="8" CornerRadius="4" Background="Gray" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="StatusText" Text="Ready" FontSize="12" Foreground="#AAAAAA" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
+                <!-- DYNAMIC SERVICES / TUNES CONTAINER -->
+                <ScrollViewer x:Name="ServicesContainer"
+                              Grid.Row="1"
+                              IsVisible="False"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="AVAILABLE DATABASE TUNES &amp; MODIFICATIONS" 
+                                   FontSize="12" 
+                                   FontWeight="Bold" 
+                                   Foreground="#4DFF8A"/>
+                        <WrapPanel x:Name="DynamicServicesPanel" 
+                                   Orientation="Horizontal" 
+                                   Margin="0,0,0,6"/>
+                    </StackPanel>
+                </ScrollViewer>
 
                 <!-- BUTTONS -->
                 <StackPanel Grid.Row="2"
-                            Grid.ColumnSpan="2"
                             Orientation="Horizontal"
                             HorizontalAlignment="Center"
-                            Margin="0,30,0,0"
+                            Margin="0,15,0,0"
                             Spacing="18">
 
                     <Button Width="160"

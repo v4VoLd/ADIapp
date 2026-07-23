@@ -168,21 +168,8 @@ public class ApiService
             var response = await _httpClient.PostAsync(requestUri, form);
             var responseString = await response.Content.ReadAsStringAsync();
 
-            var apiResponse = JsonSerializer.Deserialize<EcuIdentifyResponse>(responseString, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (apiResponse != null)
-            {
-                return apiResponse;
-            }
-
-            return new EcuIdentifyResponse
-            {
-                Success = false,
-                Message = "Failed to deserialize server response."
-            };
+            var apiResponse = ParseEcuIdentifyResponse(responseString);
+            return apiResponse;
         }
         catch (Exception ex)
         {
@@ -191,6 +178,44 @@ public class ApiService
                 Success = false,
                 Message = $"Upload error: {ex.Message}"
             };
+        }
+    }
+
+    private static EcuIdentifyResponse ParseEcuIdentifyResponse(string responseString)
+    {
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var apiResponse = JsonSerializer.Deserialize<EcuIdentifyResponse>(responseString, options) ?? new EcuIdentifyResponse();
+
+            if (apiResponse.Data == null)
+            {
+                var rawData = JsonSerializer.Deserialize<EcuIdentifyData>(responseString, options);
+                if (rawData != null && (!string.IsNullOrEmpty(rawData.EcuProducer) || !string.IsNullOrEmpty(rawData.VehicleProducer) || rawData.AvailableDatabaseTunes != null || !string.IsNullOrEmpty(rawData.EcuBuild) || !string.IsNullOrEmpty(rawData.Status)))
+                {
+                    apiResponse.Data = rawData;
+                    if (rawData.Status?.Equals("success", StringComparison.OrdinalIgnoreCase) == true || rawData.Status?.Equals("completed", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        apiResponse.Success = true;
+                        apiResponse.Status = "completed";
+                    }
+                }
+            }
+            else
+            {
+                if (apiResponse.Data.Status?.Equals("success", StringComparison.OrdinalIgnoreCase) == true || apiResponse.Status?.Equals("success", StringComparison.OrdinalIgnoreCase) == true || apiResponse.Status?.Equals("completed", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    apiResponse.Success = true;
+                    apiResponse.Status = "completed";
+                }
+            }
+
+            return apiResponse;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error in ParseEcuIdentifyResponse: {ex.Message}", ex);
+            return new EcuIdentifyResponse { Success = false, Message = "Deserialization error" };
         }
     }
 
@@ -306,12 +331,8 @@ public class ApiService
             var response = await _httpClient.GetAsync(requestUri);
             var responseString = await response.Content.ReadAsStringAsync();
 
-            var apiResponse = JsonSerializer.Deserialize<EcuIdentifyResponse>(responseString, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            return apiResponse ?? new EcuIdentifyResponse { Success = false, Message = "Failed to deserialize response." };
+            var apiResponse = ParseEcuIdentifyResponse(responseString);
+            return apiResponse;
         }
         catch (Exception ex)
         {
@@ -366,6 +387,66 @@ public class ApiService
         catch (Exception ex)
         {
             Logger.Error($"Error creating order: {ex.Message}", ex);
+            return (false, $"Connection error: {ex.Message}");
+        }
+    }
+
+    public static async Task<List<SupportMessageDto>> GetSupportMessagesAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return new List<SupportMessageDto>();
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "support/messages");
+            var response = await _httpClient.GetAsync(requestUri);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
+            {
+                var list = JsonSerializer.Deserialize<List<SupportMessageDto>>(dataProp.GetRawText(), options);
+                return list ?? new List<SupportMessageDto>();
+            }
+
+            return new List<SupportMessageDto>();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error fetching support messages: {ex.Message}", ex);
+            return new List<SupportMessageDto>();
+        }
+    }
+
+    public static async Task<(bool Success, string Message)> SendSupportMessageAsync(string messageContent)
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return (false, "Not authenticated.");
+
+        try
+        {
+            var payload = new { content = messageContent };
+            var jsonContent = JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "support/messages");
+            var response = await _httpClient.PostAsync(requestUri, content);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            bool success = root.TryGetProperty("success", out var successProp) && successProp.GetBoolean();
+            string message = root.TryGetProperty("message", out var msgProp) ? msgProp.GetString() ?? "" : "";
+
+            return (success, success ? "Support message sent successfully." : (string.IsNullOrEmpty(message) ? "Failed to send support message." : message));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error sending support message: {ex.Message}", ex);
             return (false, $"Connection error: {ex.Message}");
         }
     }
