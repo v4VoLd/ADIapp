@@ -245,22 +245,114 @@ public partial class TuneView : UserControl
             var stack = new StackPanel { Spacing = 4 };
             string truncatedHash = file.FileHash.Length > 12 ? file.FileHash.Substring(0, 12) + "..." : file.FileHash;
 
-            stack.Children.Add(new TextBlock
+            if (file.IsOrder)
             {
-                Text = $"File: {truncatedHash}",
-                Foreground = Avalonia.Media.Brushes.White,
-                FontSize = 13,
-                FontWeight = Avalonia.Media.FontWeight.SemiBold
-            });
+                // Active Order Item Rendering
+                string displayTitle = !string.IsNullOrEmpty(file.Title) ? file.Title : $"Order #{file.OrderId}";
+                stack.Children.Add(new TextBlock
+                {
+                    Text = $"⚡ {displayTitle}",
+                    Foreground = Avalonia.Media.Brushes.White,
+                    FontSize = 13,
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
+                });
 
-            bool isCompleted = file.Status.Equals("completed", StringComparison.OrdinalIgnoreCase);
-            stack.Children.Add(new TextBlock
+                string statusText = file.Status.ToUpper();
+                string statusColor = file.Status.Equals("finished", StringComparison.OrdinalIgnoreCase)
+                    ? "#4DFF8A"
+                    : (file.Status.Equals("processing", StringComparison.OrdinalIgnoreCase) ? "#2196F3" : "#FFA500");
+
+                var statusPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 6 };
+                statusPanel.Children.Add(new TextBlock
+                {
+                    Text = $"ORDER • {statusText}",
+                    Foreground = Avalonia.Media.Brush.Parse(statusColor),
+                    FontSize = 10,
+                    FontWeight = Avalonia.Media.FontWeight.Bold
+                });
+
+                stack.Children.Add(statusPanel);
+
+                if (file.Status.Equals("finished", StringComparison.OrdinalIgnoreCase))
+                {
+                    string targetDownloadUrl = file.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{file.OrderId}";
+                    string fileName = file.FileSent ?? $"order_{file.OrderId}_mod.bin";
+
+                    var downloadBtn = new Button
+                    {
+                        Content = "⬇ Download Mod File",
+                        Background = Avalonia.Media.Brush.Parse("#4DFF8A"),
+                        Foreground = Avalonia.Media.Brushes.Black,
+                        FontWeight = Avalonia.Media.FontWeight.Bold,
+                        FontSize = 11,
+                        Padding = new Thickness(8, 4),
+                        Margin = new Thickness(0, 4, 0, 0),
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left
+                    };
+
+                    downloadBtn.Click += async (s, e) =>
+                    {
+                        downloadBtn.IsEnabled = false;
+                        downloadBtn.Content = "Downloading...";
+
+                        var topLevel = TopLevel.GetTopLevel(this);
+                        if (topLevel is Window window)
+                        {
+                            var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+                            {
+                                Title = "Save Modified Tuning File",
+                                SuggestedFileName = fileName
+                            });
+
+                            if (saveFile != null)
+                            {
+                                using var stream = await saveFile.OpenWriteAsync();
+                                var (success, msg) = await ApiService.DownloadFileToStreamAsync(targetDownloadUrl, stream);
+                                if (success)
+                                {
+                                    downloadBtn.Content = "✓ Downloaded";
+                                }
+                                else
+                                {
+                                    downloadBtn.IsEnabled = true;
+                                    downloadBtn.Content = "Retry Download";
+                                    await MessageBox(window, $"Download failed: {msg}");
+                                }
+                            }
+                            else
+                            {
+                                downloadBtn.IsEnabled = true;
+                                downloadBtn.Content = "⬇ Download Mod File";
+                            }
+                        }
+                    };
+
+                    stack.Children.Add(downloadBtn);
+                }
+            }
+            else
             {
-                Text = isCompleted ? "IDENTIFIED" : "PROCESSING",
-                Foreground = Avalonia.Media.Brush.Parse(isCompleted ? "#4DFF8A" : "#FFA500"),
-                FontSize = 10,
-                FontWeight = Avalonia.Media.FontWeight.Bold
-            });
+                // Identified Map Item Rendering
+                string displayTitle = !string.IsNullOrEmpty(file.Title) ? file.Title : $"Map: {truncatedHash}";
+                stack.Children.Add(new TextBlock
+                {
+                    Text = $"🔍 {displayTitle}",
+                    Foreground = Avalonia.Media.Brushes.White,
+                    FontSize = 13,
+                    FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
+                });
+
+                bool isCompleted = file.Status.Equals("completed", StringComparison.OrdinalIgnoreCase);
+                stack.Children.Add(new TextBlock
+                {
+                    Text = isCompleted ? "MAP IDENTIFIED" : "IDENTIFICATION PENDING",
+                    Foreground = Avalonia.Media.Brush.Parse(isCompleted ? "#4DFF8A" : "#FFA500"),
+                    FontSize = 10,
+                    FontWeight = Avalonia.Media.FontWeight.Bold
+                });
+            }
 
             itemBorder.Child = stack;
 
@@ -281,20 +373,65 @@ public partial class TuneView : UserControl
         }
     }
 
+    private void SetCardsPendingState(string stateText = "Pending...")
+    {
+        var vehTitle = this.FindControl<TextBlock>("VehicleTitleText");
+        var vehSub = this.FindControl<TextBlock>("VehicleSubtitleText");
+
+        var vehProducer = this.FindControl<TextBlock>("VehProducerText");
+        var vehModel = this.FindControl<TextBlock>("VehModelText");
+        var vehYearChassis = this.FindControl<TextBlock>("VehYearChassisText");
+        var vehBuildType = this.FindControl<TextBlock>("VehBuildTypeText");
+        var vehVin = this.FindControl<TextBlock>("VehVinText");
+
+        var engNameType = this.FindControl<TextBlock>("EngNameTypeText");
+        var engDisplacement = this.FindControl<TextBlock>("EngDisplacementText");
+        var engOutput = this.FindControl<TextBlock>("EngOutputText");
+        var engEmission = this.FindControl<TextBlock>("EngEmissionText");
+        var engTransmission = this.FindControl<TextBlock>("EngTransmissionText");
+
+        var ecuBrand = this.FindControl<TextBlock>("EcuBrandText");
+        var ecuHardware = this.FindControl<TextBlock>("EcuHardwareText");
+        var ecuProdNr = this.FindControl<TextBlock>("EcuProdNrText");
+        var ecuSoftware = this.FindControl<TextBlock>("EcuSoftwareText");
+        var ecuSize = this.FindControl<TextBlock>("EcuSoftwareSizeText");
+
+        if (vehTitle != null) vehTitle.Text = "Vehicle & ECU Information";
+        if (vehSub != null)
+        {
+            vehSub.Text = stateText.Equals("Not Loaded", StringComparison.OrdinalIgnoreCase) || stateText.Equals("-", StringComparison.OrdinalIgnoreCase)
+                ? "Upload a binary file or select an active task to inspect specifications."
+                : $"Status: {stateText}";
+        }
+
+        if (vehProducer != null) vehProducer.Text = stateText;
+        if (vehModel != null) vehModel.Text = stateText;
+        if (vehYearChassis != null) vehYearChassis.Text = stateText;
+        if (vehBuildType != null) vehBuildType.Text = stateText;
+        if (vehVin != null) vehVin.Text = stateText;
+
+        if (engNameType != null) engNameType.Text = stateText;
+        if (engDisplacement != null) engDisplacement.Text = stateText;
+        if (engOutput != null) engOutput.Text = stateText;
+        if (engEmission != null) engEmission.Text = stateText;
+        if (engTransmission != null) engTransmission.Text = stateText;
+
+        if (ecuBrand != null) ecuBrand.Text = stateText;
+        if (ecuHardware != null) ecuHardware.Text = stateText;
+        if (ecuProdNr != null) ecuProdNr.Text = stateText;
+        if (ecuSoftware != null) ecuSoftware.Text = stateText;
+        if (ecuSize != null) ecuSize.Text = stateText;
+    }
+
     private async Task SelectActiveFileAsync(string hash)
     {
         _pendingFileHash = hash;
 
+        SetCardsPendingState("Checking status...");
+
         if (StatusText != null) StatusText.Text = "Checking status...";
         if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
         if (ServicesContainer != null) ServicesContainer.IsVisible = false;
-
-        var ecuBrandText = this.FindControl<TextBlock>("EcuBrandText");
-        var ecuHardwareText = this.FindControl<TextBlock>("EcuHardwareText");
-        var ecuSoftwareText = this.FindControl<TextBlock>("EcuSoftwareText");
-        if (ecuBrandText != null) ecuBrandText.Text = "Loading...";
-        if (ecuHardwareText != null) ecuHardwareText.Text = "Loading...";
-        if (ecuSoftwareText != null) ecuSoftwareText.Text = "Loading...";
 
         var response = await ApiService.CheckStatusAsync(hash);
         if (response.Success)
@@ -304,7 +441,9 @@ public partial class TuneView : UserControl
                 PopulateEcuInfo(response.Data);
                 var effectiveServices = response.Data.GetEffectiveServices();
 
-                if (!response.Data.IsSupported || effectiveServices == null || effectiveServices.Count == 0)
+                bool isFailed = string.Equals(response.Data.Status, "failed", StringComparison.OrdinalIgnoreCase);
+
+                if (isFailed || !response.Data.IsSupported || effectiveServices == null || effectiveServices.Count == 0)
                 {
                     if (StatusText != null) StatusText.Text = "Unsupported ECU";
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
@@ -321,21 +460,28 @@ public partial class TuneView : UserControl
             }
             else
             {
+                SetCardsPendingState("Pending...");
+
                 if (StatusText != null) StatusText.Text = "Processing...";
                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
                 if (ServicesContainer != null) ServicesContainer.IsVisible = false;
-
-                if (ecuBrandText != null) ecuBrandText.Text = "Queued";
-                if (ecuHardwareText != null) ecuHardwareText.Text = "Queued";
-                if (ecuSoftwareText != null) ecuSoftwareText.Text = "Queued";
             }
         }
         else
         {
             if (StatusText != null) StatusText.Text = "Failed";
             if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF4D4D");
-            if (ecuBrandText != null) ecuBrandText.Text = response.Message ?? "Error";
-            if (ServicesContainer != null) ServicesContainer.IsVisible = false;
+
+            if (response.Data != null)
+            {
+                PopulateEcuInfo(response.Data);
+                RenderUnsupportedEcuUi(response.Data);
+            }
+            else
+            {
+                SetCardsPendingState("Failed");
+            }
+            if (ServicesContainer != null) ServicesContainer.IsVisible = true;
         }
     }
 
@@ -511,13 +657,11 @@ public partial class TuneView : UserControl
     private async Task ProcessAndUploadFileAsync(string filePath)
     {
         _isProcessing = true;
+        SetCardsPendingState("Uploading...");
+
         if (StatusText != null) StatusText.Text = "Uploading...";
         if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
         if (ServicesContainer != null) ServicesContainer.IsVisible = false;
-
-        if (EcuBrandText != null) EcuBrandText.Text = "...";
-        if (EcuHardwareText != null) EcuHardwareText.Text = "...";
-        if (EcuSoftwareText != null) EcuSoftwareText.Text = "...";
 
         var response = await ApiService.UploadAndIdentifyEcuAsync(filePath);
         _isProcessing = false;
@@ -537,16 +681,11 @@ public partial class TuneView : UserControl
             }
             else
             {
+                SetCardsPendingState("Pending...");
+
                 if (StatusText != null) StatusText.Text = "Processing...";
                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
                 if (ServicesContainer != null) ServicesContainer.IsVisible = false;
-
-                var ecuBrandText = this.FindControl<TextBlock>("EcuBrandText");
-                var ecuHardwareText = this.FindControl<TextBlock>("EcuHardwareText");
-                var ecuSoftwareText = this.FindControl<TextBlock>("EcuSoftwareText");
-                if (ecuBrandText != null) ecuBrandText.Text = "Queued";
-                if (ecuHardwareText != null) ecuHardwareText.Text = "Queued";
-                if (ecuSoftwareText != null) ecuSoftwareText.Text = "Queued";
             }
         }
         else
@@ -554,8 +693,7 @@ public partial class TuneView : UserControl
             _pendingFileHash = null;
             if (StatusText != null) StatusText.Text = "Failed";
             if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF4D4D");
-            var ecuBrandText = this.FindControl<TextBlock>("EcuBrandText");
-            if (ecuBrandText != null) ecuBrandText.Text = response.Message ?? "Error";
+            SetCardsPendingState("Failed");
             if (ServicesContainer != null) ServicesContainer.IsVisible = false;
         }
     }
@@ -577,25 +715,31 @@ public partial class TuneView : UserControl
         if (panel == null) return;
 
         var selectedServiceIds = new List<int>();
+        var selectedServiceNames = new List<string>();
+
         foreach (var child in panel.Children)
         {
             if (child is Border border && border.Child is StackPanel stack)
             {
                 foreach (var innerChild in stack.Children)
                 {
-                    if (innerChild is ToggleSwitch toggle && toggle.IsChecked == true && toggle.Tag is ServiceDto service)
+                    if (innerChild is ToggleSwitch toggle && toggle.IsChecked == true)
                     {
-                        selectedServiceIds.Add(service.Id);
-                    }
-                    else if (innerChild is ToggleSwitch toggleLegacy && toggleLegacy.IsChecked == true && toggleLegacy.Tag is int serviceId)
-                    {
-                        selectedServiceIds.Add(serviceId);
+                        if (toggle.Tag is ServiceDto service)
+                        {
+                            selectedServiceIds.Add(service.Id);
+                            if (!string.IsNullOrEmpty(service.Name)) selectedServiceNames.Add(service.Name);
+                        }
+                        else if (toggle.Tag is int serviceId)
+                        {
+                            selectedServiceIds.Add(serviceId);
+                        }
                     }
                 }
             }
         }
 
-        if (selectedServiceIds.Count == 0)
+        if (selectedServiceIds.Count == 0 && selectedServiceNames.Count == 0)
         {
             var topLevel = TopLevel.GetTopLevel(this);
             var window = topLevel as Window;
@@ -615,7 +759,7 @@ public partial class TuneView : UserControl
 
         try
         {
-            var (success, message) = await ApiService.CreateOrderAsync(_pendingFileHash, selectedServiceIds);
+            var (success, message) = await ApiService.CreateOrderAsync(_pendingFileHash, selectedServiceIds, selectedServiceNames);
 
             var topLevel = TopLevel.GetTopLevel(this);
             var window = topLevel as Window;
@@ -654,43 +798,7 @@ public partial class TuneView : UserControl
             _activeBorder = null;
         }
 
-        var vehTitle = this.FindControl<TextBlock>("VehicleTitleText");
-        var vehSub = this.FindControl<TextBlock>("VehicleSubtitleText");
-        if (vehTitle != null) vehTitle.Text = "Vehicle & ECU Information";
-        if (vehSub != null) vehSub.Text = "Upload a binary file or select an active task to inspect specifications.";
-
-        var vehProducer = this.FindControl<TextBlock>("VehProducerText");
-        var vehModel = this.FindControl<TextBlock>("VehModelText");
-        var vehYearChassis = this.FindControl<TextBlock>("VehYearChassisText");
-        var vehBuildType = this.FindControl<TextBlock>("VehBuildTypeText");
-        var vehVin = this.FindControl<TextBlock>("VehVinText");
-        if (vehProducer != null) vehProducer.Text = "-";
-        if (vehModel != null) vehModel.Text = "-";
-        if (vehYearChassis != null) vehYearChassis.Text = "-";
-        if (vehBuildType != null) vehBuildType.Text = "-";
-        if (vehVin != null) vehVin.Text = "-";
-
-        var engNameType = this.FindControl<TextBlock>("EngNameTypeText");
-        var engDisplacement = this.FindControl<TextBlock>("EngDisplacementText");
-        var engOutput = this.FindControl<TextBlock>("EngOutputText");
-        var engEmission = this.FindControl<TextBlock>("EngEmissionText");
-        var engTransmission = this.FindControl<TextBlock>("EngTransmissionText");
-        if (engNameType != null) engNameType.Text = "-";
-        if (engDisplacement != null) engDisplacement.Text = "-";
-        if (engOutput != null) engOutput.Text = "-";
-        if (engEmission != null) engEmission.Text = "-";
-        if (engTransmission != null) engTransmission.Text = "-";
-
-        var ecuBrand = this.FindControl<TextBlock>("EcuBrandText");
-        var ecuHardware = this.FindControl<TextBlock>("EcuHardwareText");
-        var ecuProdNr = this.FindControl<TextBlock>("EcuProdNrText");
-        var ecuSoftware = this.FindControl<TextBlock>("EcuSoftwareText");
-        var ecuSize = this.FindControl<TextBlock>("EcuSoftwareSizeText");
-        if (ecuBrand != null) ecuBrand.Text = "Not Loaded";
-        if (ecuHardware != null) ecuHardware.Text = "Not Loaded";
-        if (ecuProdNr != null) ecuProdNr.Text = "-";
-        if (ecuSoftware != null) ecuSoftware.Text = "Not Loaded";
-        if (ecuSize != null) ecuSize.Text = "-";
+        SetCardsPendingState("Not Loaded");
 
         if (StatusText != null) StatusText.Text = "Ready";
         if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brushes.Gray;

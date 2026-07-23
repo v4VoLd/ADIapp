@@ -258,6 +258,23 @@ public class ProcessingFileDto
 
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+
+    [JsonPropertyName("order_id")]
+    public int? OrderId { get; set; }
+
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    [JsonPropertyName("file_sent")]
+    public string? FileSent { get; set; }
+
+    [JsonPropertyName("download_url")]
+    public string? DownloadUrl { get; set; }
+
+    public bool IsOrder => string.Equals(Type, "order", StringComparison.OrdinalIgnoreCase) || OrderId.HasValue;
 }
 
 public class SupportMessageDto

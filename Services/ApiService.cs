@@ -340,7 +340,7 @@ public class ApiService
         }
     }
 
-    public static async Task<(bool Success, string Message)> CreateOrderAsync(string fileHash, List<int> serviceIds, string comment = "Created from Desktop App")
+    public static async Task<(bool Success, string Message)> CreateOrderAsync(string fileHash, List<int> serviceIds, List<string>? serviceNames = null, string comment = "Created from Desktop App")
     {
         if (string.IsNullOrEmpty(AccessToken))
             return (false, "Not authenticated.");
@@ -351,6 +351,7 @@ public class ApiService
             {
                 file_hash = fileHash,
                 services = serviceIds,
+                service_names = serviceNames ?? new List<string>(),
                 comment = comment
             };
 
@@ -448,6 +449,42 @@ public class ApiService
         {
             Logger.Error($"Error sending support message: {ex.Message}", ex);
             return (false, $"Connection error: {ex.Message}");
+        }
+    }
+
+    public static async Task<(bool Success, string Message)> DownloadFileToStreamAsync(string downloadUrl, System.IO.Stream destinationStream)
+    {
+        try
+        {
+            Uri requestUri;
+            if (Uri.IsWellFormedUriString(downloadUrl, UriKind.Absolute))
+            {
+                requestUri = new Uri(downloadUrl);
+            }
+            else
+            {
+                requestUri = new Uri(new Uri(AppConfig.BaseUrl), downloadUrl);
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            if (!string.IsNullOrEmpty(AccessToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+            }
+
+            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+            {
+                return (false, $"Server returned {response.StatusCode}");
+            }
+
+            await response.Content.CopyToAsync(destinationStream);
+            return (true, "Download successful.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Download error: {ex.Message}", ex);
+            return (false, ex.Message);
         }
     }
 }
