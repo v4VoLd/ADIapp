@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -28,6 +30,8 @@ public partial class TuneView : UserControl
     {
         base.OnInitialized();
         WebSocketManager.EcuIdentified += OnEcuIdentified;
+        LanguageService.LanguageChanged += OnLanguageChanged;
+        UpdateLocalizedText();
         await LoadProcessingFilesAsync();
     }
 
@@ -35,6 +39,55 @@ public partial class TuneView : UserControl
     {
         base.OnDetachedFromVisualTree(e);
         WebSocketManager.EcuIdentified -= OnEcuIdentified;
+        LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            UpdateLocalizedText();
+        });
+    }
+
+    private void Back_Click(object? sender, RoutedEventArgs e)
+    {
+        var window = this.FindAncestorOfType<MainWindow>();
+        window?.Navigate(new HomeView());
+    }
+
+    private void UpdateLocalizedText()
+    {
+        if (VehicleTitleText != null) VehicleTitleText.Text = LanguageService.Get("Tune_Title");
+        if (VehicleSubtitleText != null) VehicleSubtitleText.Text = LanguageService.Get("Tune_Subtitle");
+        if (BackButton != null) BackButton.Content = LanguageService.Get("Tune_Back");
+        if (ActiveTasksTitleText != null) ActiveTasksTitleText.Text = LanguageService.Get("Tune_ActiveTasks");
+        if (NewFileButton != null) NewFileButton.Content = LanguageService.Get("Tune_NewUpload");
+        if (NoActiveTasksText != null) NoActiveTasksText.Text = LanguageService.Get("Tune_NoActiveTasks");
+
+        if (VehSpecsTitleText != null) VehSpecsTitleText.Text = LanguageService.Get("Tune_VehSpecs");
+        if (LblProducerText != null) LblProducerText.Text = LanguageService.Get("Tune_Producer");
+        if (LblModelText != null) LblModelText.Text = LanguageService.Get("Tune_Model");
+        if (LblYearChassisText != null) LblYearChassisText.Text = LanguageService.Get("Tune_YearChassis");
+        if (LblBuildTypeText != null) LblBuildTypeText.Text = LanguageService.Get("Tune_BuildType");
+
+        if (EngSpecsTitleText != null) EngSpecsTitleText.Text = LanguageService.Get("Tune_EngSpecs");
+        if (LblNameTypeText != null) LblNameTypeText.Text = LanguageService.Get("Tune_NameType");
+        if (LblDisplacementText != null) LblDisplacementText.Text = LanguageService.Get("Tune_Displacement");
+        if (LblOutputText != null) LblOutputText.Text = LanguageService.Get("Tune_Output");
+        if (LblEmissionText != null) LblEmissionText.Text = LanguageService.Get("Tune_Emission");
+        if (LblTransmissionText != null) LblTransmissionText.Text = LanguageService.Get("Tune_Transmission");
+
+        if (EcuSpecsTitleText != null) EcuSpecsTitleText.Text = LanguageService.Get("Tune_EcuSpecs");
+        if (LblProdBuildText != null) LblProdBuildText.Text = LanguageService.Get("Tune_ProdBuild");
+        if (LblHwNrText != null) LblHwNrText.Text = LanguageService.Get("Tune_HwNr");
+        if (LblProdNrText != null) LblProdNrText.Text = LanguageService.Get("Tune_ProdNr");
+        if (LblSwVersionText != null) LblSwVersionText.Text = LanguageService.Get("Tune_SwVersion");
+        if (LblSwSizeText != null) LblSwSizeText.Text = LanguageService.Get("Tune_SwSize");
+
+        if (AvailableTunesTitleText != null) AvailableTunesTitleText.Text = LanguageService.Get("Tune_AvailableTunes");
+        if (OriginalFileButton != null) OriginalFileButton.Content = LanguageService.Get("Tune_OriginalFile");
+        if (SaveButton != null) SaveButton.Content = LanguageService.Get("Tune_Save");
     }
 
     private void OnEcuIdentified(string hash, EcuIdentifyData data)
@@ -813,6 +866,7 @@ public partial class TuneView : UserControl
     {
         var dialog = new Window
         {
+            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://ADIapp/Assets/sidebar_logo.png"))),
             Width = 280,
             Height = 120,
             CanResize = false,

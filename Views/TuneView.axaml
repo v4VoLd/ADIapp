@@ -1,5 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
              x:Class="ADIapp.Views.TuneView">
 
     <!-- ================= TOGGLE STYLES ================= -->
@@ -22,46 +27,63 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*" ColumnDefinitions="280,*">
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="250,*">
 
-        <!-- TITLE / HEADER -->
-        <StackPanel Grid.Row="0"
-                    Grid.ColumnSpan="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Margin="80,20,0,0"
-                    Spacing="14">
+        <!-- TITLE / HEADER WITH BACK BUTTON -->
+        <Grid Grid.Row="0"
+              Grid.ColumnSpan="2"
+              ColumnDefinitions="Auto,*"
+              Margin="30,20,30,10">
 
-            <Image Source="avares://ADIapp/Assets/carLogo_icon.png"
-                   Width="40"
-                   Height="40"
-                   VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="0"
+                        Orientation="Horizontal"
+                        Spacing="14"
+                        VerticalAlignment="Center">
 
-            <StackPanel VerticalAlignment="Center" Spacing="2">
-                <TextBlock x:Name="VehicleTitleText"
-                           Text="Vehicle &amp; ECU Information"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Foreground="White"/>
-                <TextBlock x:Name="VehicleSubtitleText"
-                           Text="Upload a binary file or select an active task to inspect specifications."
-                           FontSize="12"
-                           Foreground="#888888"/>
+                <!-- BACK BUTTON -->
+                <Button x:Name="BackButton"
+                        Click="Back_Click"
+                        Content="← Back"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="#CFCFCF"
+                        Background="#242430"
+                        Padding="14,8"
+                        CornerRadius="10"
+                        Margin="0,0,8,0"
+                        Cursor="Hand"/>
+
+                <Image Source="avares://ADIapp/Assets/carLogo_icon.png"
+                       Width="36"
+                       Height="36"
+                       VerticalAlignment="Center"/>
+
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                    <TextBlock x:Name="VehicleTitleText"
+                               Text="Vehicle &amp; ECU Information"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="White"/>
+                    <TextBlock x:Name="VehicleSubtitleText"
+                               Text="Upload a binary file or select an active task to inspect specifications."
+                               FontSize="12"
+                               Foreground="#888888"/>
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
+        </Grid>
 
         <!-- SIDEBAR TASKS LIST -->
         <Border Grid.Row="1"
                 Grid.Column="0"
-                Margin="80,20,10,80"
-                Padding="20"
+                Margin="30,10,10,30"
+                Padding="16,20"
                 CornerRadius="22"
                 Background="#141414"
                 Opacity="0.92"
                 VerticalAlignment="Stretch">
             <Grid RowDefinitions="Auto,Auto,*">
                 <TextBlock Grid.Row="0"
+                           x:Name="ActiveTasksTitleText"
                            Text="Active Tasks"
                            FontSize="18"
                            FontWeight="Bold"
@@ -80,7 +102,8 @@
                         Click="NewFileButton_Click"/>
                 <ScrollViewer Grid.Row="2">
                     <StackPanel x:Name="ActiveFilesList" Spacing="8">
-                        <TextBlock Text="No active tasks" 
+                        <TextBlock x:Name="NoActiveTasksText"
+                                   Text="No active tasks" 
                                    Foreground="Gray" 
                                    FontSize="12" 
                                    HorizontalAlignment="Center" 
@@ -93,7 +116,7 @@
         <!-- MAIN CARD -->
         <Border Grid.Row="1"
                 Grid.Column="1"
-                Margin="10,20,80,80"
+                Margin="10,10,30,30"
                 Padding="24,20"
                 CornerRadius="22"
                 Background="#1C1C1C"
@@ -104,33 +127,33 @@
             <Grid RowDefinitions="Auto,*,Auto">
 
                 <!-- TOP DETAILS SECTION (VEHICLE, ENGINE, ECU CARDS) -->
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" MaxHeight="280" Margin="0,0,0,12">
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" MaxHeight="300" Margin="0,0,0,12">
                     <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto">
                         
                         <!-- VEHICLE SPECS CARD -->
                         <Border Grid.Column="0" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
                             <StackPanel Spacing="6">
-                                <TextBlock Text="VEHICLE SPECS" FontSize="11" Foreground="#4DFF8A" FontWeight="Bold"/>
+                                <TextBlock x:Name="VehSpecsTitleText" Text="VEHICLE SPECS" FontSize="11" Foreground="#4DFF8A" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
-                                        <TextBlock Text="PRODUCER" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="VehProducerText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblProducerText" Text="PRODUCER" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="VehProducerText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,0,4">
-                                        <TextBlock Text="MODEL" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="VehModelText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblModelText" Text="MODEL" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="VehModelText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,4">
-                                        <TextBlock Text="YEAR / CHASSIS" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="VehYearChassisText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblYearChassisText" Text="YEAR / CHASSIS" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="VehYearChassisText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,4">
-                                        <TextBlock Text="BUILD / TYPE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="VehBuildTypeText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblBuildTypeText" Text="BUILD / TYPE" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="VehBuildTypeText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,0">
                                         <TextBlock Text="VIN" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="VehVinText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="VehVinText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -139,27 +162,27 @@
                         <!-- ENGINE SPECS CARD -->
                         <Border Grid.Column="1" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
                             <StackPanel Spacing="6">
-                                <TextBlock Text="ENGINE SPECS" FontSize="11" Foreground="#3B82F6" FontWeight="Bold"/>
+                                <TextBlock x:Name="EngSpecsTitleText" Text="ENGINE SPECS" FontSize="11" Foreground="#3B82F6" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
-                                        <TextBlock Text="NAME / TYPE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EngNameTypeText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblNameTypeText" Text="NAME / TYPE" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EngNameTypeText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,0,4">
-                                        <TextBlock Text="DISPLACEMENT" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EngDisplacementText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblDisplacementText" Text="DISPLACEMENT" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EngDisplacementText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,4">
-                                        <TextBlock Text="OUTPUT (PS / KW)" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EngOutputText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblOutputText" Text="OUTPUT (PS / KW)" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EngOutputText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,4">
-                                        <TextBlock Text="EMISSION" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EngEmissionText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblEmissionText" Text="EMISSION" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EngEmissionText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,0">
-                                        <TextBlock Text="TRANSMISSION" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EngTransmissionText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblTransmissionText" Text="TRANSMISSION" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EngTransmissionText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -168,27 +191,27 @@
                         <!-- ECU SPECS CARD -->
                         <Border Grid.Column="2" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
                             <StackPanel Spacing="6">
-                                <TextBlock Text="ECU SPECS" FontSize="11" Foreground="#A855F7" FontWeight="Bold"/>
+                                <TextBlock x:Name="EcuSpecsTitleText" Text="ECU SPECS" FontSize="11" Foreground="#A855F7" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
-                                        <TextBlock Text="PRODUCER / BUILD" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EcuBrandText" Text="Not Loaded" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblProdBuildText" Text="PRODUCER / BUILD" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EcuBrandText" Text="Not Loaded" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="0" Grid.Column="1" Margin="4,0,0,4">
-                                        <TextBlock Text="STAGE / HW NR" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EcuHardwareText" Text="Not Loaded" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblHwNrText" Text="STAGE / HW NR" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EcuHardwareText" Text="Not Loaded" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,4">
-                                        <TextBlock Text="PART / PROD NR" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EcuProdNrText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblProdNrText" Text="PART / PROD NR" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EcuProdNrText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,4">
-                                        <TextBlock Text="SW VERSION" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EcuSoftwareText" Text="Not Loaded" FontSize="11" Foreground="White" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblSwVersionText" Text="SW VERSION" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EcuSoftwareText" Text="Not Loaded" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,4,0">
-                                        <TextBlock Text="SW SIZE" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="EcuSoftwareSizeText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="LblSwSizeText" Text="SW SIZE" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EcuSoftwareSizeText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="2" Grid.Column="1" Margin="4,0,0,0">
                                         <TextBlock Text="STATUS" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
@@ -206,11 +229,12 @@
 
                 <!-- DYNAMIC SERVICES / TUNES CONTAINER -->
                 <ScrollViewer x:Name="ServicesContainer"
-                              Grid.Row="1"
-                              IsVisible="False"
-                              VerticalScrollBarVisibility="Auto">
+                               Grid.Row="1"
+                               IsVisible="False"
+                               VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="AVAILABLE DATABASE TUNES &amp; MODIFICATIONS" 
+                        <TextBlock x:Name="AvailableTunesTitleText"
+                                   Text="AVAILABLE DATABASE TUNES &amp; MODIFICATIONS" 
                                    FontSize="12" 
                                    FontWeight="Bold" 
                                    Foreground="#4DFF8A"/>
@@ -227,14 +251,16 @@
                             Margin="0,15,0,0"
                             Spacing="18">
 
-                    <Button Width="160"
+                    <Button x:Name="OriginalFileButton"
+                            Width="160"
                             Height="44"
                             Background="#2B2B2B"
                             Foreground="White"
                             Content="Original file"
                             Click="OriginalFile_Click"/>
 
-                    <Button Width="160"
+                    <Button x:Name="SaveButton"
+                            Width="160"
                             Height="44"
                             Background="White"
                             Foreground="Black"

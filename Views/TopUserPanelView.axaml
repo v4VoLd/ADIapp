@@ -1,5 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d"
+			 d:DesignWidth="400"
+			 d:DesignHeight="120"
 			 x:Class="ADIapp.Views.TopUserPanelView">
 
 	<Grid>
@@ -56,7 +61,8 @@
 
 					<!-- Text -->
 					<StackPanel Grid.Column="1">
-						<TextBlock Text="Hello,"
+						<TextBlock x:Name="HelloLabelBlock"
+								   Text="Hello,"
 								   FontSize="11"
 								   Foreground="#CFCFCF"/>
 						<TextBlock x:Name="UserNameBlock"
@@ -92,12 +98,14 @@
 
 			<StackPanel Spacing="12">
 				<Grid ColumnDefinitions="*,Auto">
-					<TextBlock Text="Notifications"
+					<TextBlock x:Name="NotifTitleBlock"
+							   Text="Notifications"
 							   FontWeight="Bold"
 							   FontSize="16"
 							   Foreground="White"
 							   VerticalAlignment="Center"/>
-					<Button Grid.Column="1"
+					<Button x:Name="ClearAllBtn"
+							Grid.Column="1"
 							Content="Clear All"
 							FontSize="11"
 							FontWeight="SemiBold"
@@ -125,11 +133,13 @@
 				HorizontalAlignment="Right"
 				CornerRadius="16"
 				Background="#1E1E1E"
-				Padding="20">
+				Padding="20"
+				ZIndex="20">
 
 			<StackPanel Spacing="18">
 
-				<Button Content="Account"
+				<Button x:Name="AccountBtn"
+						Content="Account"
 						FontSize="16"
 						Foreground="White"
 						Background="Transparent"
@@ -145,7 +155,8 @@
 						HorizontalContentAlignment="Left"
 						Click="Token_Click"/>
 
-				<Button Content="Logout"
+				<Button x:Name="LogoutBtn"
+						Content="Logout"
 						FontSize="16"
 						Foreground="White"
 						Background="Transparent"

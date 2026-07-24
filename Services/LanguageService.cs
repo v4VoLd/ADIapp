@@ -1,0 +1,207 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace ADIapp.Services;
+
+public static class LanguageService
+{
+    private static readonly string SettingsFilePath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "ADIapp",
+        "language.txt"
+    );
+
+    public static string CurrentLanguage { get; private set; } = LoadSavedLanguage();
+
+    public static event Action? LanguageChanged;
+
+    private static readonly Dictionary<string, Dictionary<string, string>> Translations = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["en"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Settings_Title"] = "Settings",
+            ["Settings_Language"] = "Language",
+            ["Sidebar_Home"] = "Home",
+            ["Sidebar_Settings"] = "Settings",
+            ["Sidebar_Tickets"] = "Tickets",
+            ["Sidebar_Info"] = "Info",
+            ["Sidebar_Logout"] = "Logout",
+            ["Sidebar_LicenseExp"] = "License Expiration",
+            ["Home_Welcome"] = "Welcome to ADI Performance",
+            ["Home_Desc"] = "Next-generation ECU tuning, file service management, and automotive performance diagnostics.",
+            ["Home_GetStarted"] = "Get Started ➔",
+            ["Home_LearnMore"] = "Learn More",
+            ["Home_QuickAccess"] = "Quick Access",
+            ["Home_QuickAccessDesc"] = "Explore core tools and manage your performance files",
+            ["Home_EcuTuning"] = "ECU Tuning Service",
+            ["Home_EcuDesc"] = "Upload original ECU files and request custom remaps for Stage 1, Stage 2, DPF & EGR solutions.",
+            ["Home_SupportTickets"] = "Support & Tickets",
+            ["Home_SupportDesc"] = "Communicate directly with our master engineers for custom modifications and technical assistance.",
+            ["Home_PlatformInfo"] = "Platform Information",
+            ["Home_PlatformDesc"] = "Check active license details, hardware compatibility, and platform documentation.",
+            ["TopPanel_Hello"] = "Hello,",
+            ["TopPanel_Token"] = "Token:",
+            ["TopPanel_Account"] = "Account",
+            ["TopPanel_Logout"] = "Logout",
+            ["TopPanel_Notifications"] = "Notifications",
+            ["TopPanel_ClearAll"] = "Clear All",
+            ["Logout_Title"] = "Log Out",
+            ["Logout_Message"] = "Are you sure you want to log out? You will need to sign back in to access your account.",
+            ["Logout_Cancel"] = "Cancel",
+            ["Logout_Confirm"] = "Log Out",
+            ["Login_Welcome"] = "Welcome Back",
+            ["Login_Subtitle"] = "Sign in to access your ADI Performance account",
+            ["Login_Username"] = "Username or Email",
+            ["Login_Password"] = "Password",
+            ["Login_Submit"] = "Sign In ➔",
+            ["Login_SigningIn"] = "Signing in...",
+            ["Login_NoAccount"] = "Don't have an account? Sign Up",
+            ["Tune_Title"] = "Vehicle & ECU Information",
+            ["Tune_Subtitle"] = "Upload a binary file or select an active task to inspect specifications.",
+            ["Tune_Back"] = "← Back",
+            ["Tune_ActiveTasks"] = "Active Tasks",
+            ["Tune_NewUpload"] = "+ New Upload",
+            ["Tune_NoActiveTasks"] = "No active tasks",
+            ["Tune_VehSpecs"] = "VEHICLE SPECS",
+            ["Tune_Producer"] = "PRODUCER",
+            ["Tune_Model"] = "MODEL",
+            ["Tune_YearChassis"] = "YEAR / CHASSIS",
+            ["Tune_BuildType"] = "BUILD / TYPE",
+            ["Tune_EngSpecs"] = "ENGINE SPECS",
+            ["Tune_NameType"] = "NAME / TYPE",
+            ["Tune_Displacement"] = "DISPLACEMENT",
+            ["Tune_Output"] = "OUTPUT (PS / KW)",
+            ["Tune_Emission"] = "EMISSION",
+            ["Tune_Transmission"] = "TRANSMISSION",
+            ["Tune_EcuSpecs"] = "ECU SPECS",
+            ["Tune_ProdBuild"] = "PRODUCER / BUILD",
+            ["Tune_HwNr"] = "STAGE / HW NR",
+            ["Tune_ProdNr"] = "PART / PROD NR",
+            ["Tune_SwVersion"] = "SW VERSION",
+            ["Tune_SwSize"] = "SW SIZE",
+            ["Tune_AvailableTunes"] = "AVAILABLE DATABASE TUNES & MODIFICATIONS",
+            ["Tune_OriginalFile"] = "Original file",
+            ["Tune_Save"] = "Save"
+        },
+        ["fr"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Settings_Title"] = "Paramètres",
+            ["Settings_Language"] = "Langue",
+            ["Sidebar_Home"] = "Accueil",
+            ["Sidebar_Settings"] = "Paramètres",
+            ["Sidebar_Tickets"] = "Support",
+            ["Sidebar_Info"] = "À propos",
+            ["Sidebar_Logout"] = "Déconnexion",
+            ["Sidebar_LicenseExp"] = "Expiration de licence",
+            ["Home_Welcome"] = "Bienvenue sur ADI Performance",
+            ["Home_Desc"] = "Service de reprogrammation ECU nouvelle génération, gestion de fichiers et diagnostic automobile.",
+            ["Home_GetStarted"] = "Commencer ➔",
+            ["Home_LearnMore"] = "En savoir plus",
+            ["Home_QuickAccess"] = "Accès Rapide",
+            ["Home_QuickAccessDesc"] = "Explorez les outils principaux et gérez vos fichiers de performance",
+            ["Home_EcuTuning"] = "Service Tuning ECU",
+            ["Home_EcuDesc"] = "Téléchargez vos fichiers ECU originaux et demandez des cartographies sur mesure (Stage 1, Stage 2, DPF & EGR).",
+            ["Home_SupportTickets"] = "Support & Tickets",
+            ["Home_SupportDesc"] = "Communiquez directement avec nos ingénieurs pour vos demandes spécifiques et assistance technique.",
+            ["Home_PlatformInfo"] = "Informations Plateforme",
+            ["Home_PlatformDesc"] = "Vérifiez votre licence active, la compatibilité matérielle et la documentation.",
+            ["TopPanel_Hello"] = "Bonjour,",
+            ["TopPanel_Token"] = "Jetons :",
+            ["TopPanel_Account"] = "Mon Compte",
+            ["TopPanel_Logout"] = "Déconnexion",
+            ["TopPanel_Notifications"] = "Notifications",
+            ["TopPanel_ClearAll"] = "Tout effacer",
+            ["Logout_Title"] = "Déconnexion",
+            ["Logout_Message"] = "Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous réauthentifier pour accéder à votre compte.",
+            ["Logout_Cancel"] = "Annuler",
+            ["Logout_Confirm"] = "Se déconnecter",
+            ["Login_Welcome"] = "Bienvenue",
+            ["Login_Subtitle"] = "Connectez-vous à votre compte ADI Performance",
+            ["Login_Username"] = "Nom d'utilisateur ou e-mail",
+            ["Login_Password"] = "Mot de passe",
+            ["Login_Submit"] = "Se connecter ➔",
+            ["Login_SigningIn"] = "Connexion...",
+            ["Login_NoAccount"] = "Vous n'avez pas de compte ? S'inscrire",
+            ["Tune_Title"] = "Informations Véhicule & ECU",
+            ["Tune_Subtitle"] = "Téléchargez un fichier binaire ou sélectionnez une tâche pour inspecter ses spécifications.",
+            ["Tune_Back"] = "← Retour",
+            ["Tune_ActiveTasks"] = "Tâches Actives",
+            ["Tune_NewUpload"] = "+ Télécharger un fichier",
+            ["Tune_NoActiveTasks"] = "Aucune tâche active",
+            ["Tune_VehSpecs"] = "SPÉCIFICATIONS VÉHICULE",
+            ["Tune_Producer"] = "CONSTRUCTEUR",
+            ["Tune_Model"] = "MODÈLE",
+            ["Tune_YearChassis"] = "ANNÉE / CHÂSSIS",
+            ["Tune_BuildType"] = "FINITION / TYPE",
+            ["Tune_EngSpecs"] = "SPÉCIFICATIONS MOTEUR",
+            ["Tune_NameType"] = "CODE / TYPE",
+            ["Tune_Displacement"] = "CYLINDRÉE",
+            ["Tune_Output"] = "PUISSANCE (CH / KW)",
+            ["Tune_Emission"] = "NORME POLLUTION",
+            ["Tune_Transmission"] = "BOÎTE DE VITESSES",
+            ["Tune_EcuSpecs"] = "SPÉCIFICATIONS CALCULATEUR",
+            ["Tune_ProdBuild"] = "FABRICANT / MODÈLE",
+            ["Tune_HwNr"] = "STAGE / RÉF HW",
+            ["Tune_ProdNr"] = "NUMÉRO PIÈCE",
+            ["Tune_SwVersion"] = "VERSION SOFTWARE",
+            ["Tune_SwSize"] = "TAILLE SOFTWARE",
+            ["Tune_AvailableTunes"] = "CARTOGRAPHIES & OPTIONS DISPONIBLES",
+            ["Tune_OriginalFile"] = "Fichier Original",
+            ["Tune_Save"] = "Enregistrer"
+        }
+    };
+
+    public static string Get(string key)
+    {
+        if (Translations.TryGetValue(CurrentLanguage, out var dict) && dict.TryGetValue(key, out var val))
+            return val;
+
+        if (Translations["en"].TryGetValue(key, out var fallback))
+            return fallback;
+
+        return key;
+    }
+
+    private static string LoadSavedLanguage()
+    {
+        try
+        {
+            if (File.Exists(SettingsFilePath))
+            {
+                string saved = File.ReadAllText(SettingsFilePath).Trim();
+                if (saved == "fr" || saved == "en")
+                    return saved;
+            }
+        }
+        catch { }
+        return "en";
+    }
+
+    public static void SetLanguage(string langCode)
+    {
+        if (langCode != "en" && langCode != "fr")
+            langCode = "en";
+
+        if (CurrentLanguage != langCode)
+        {
+            CurrentLanguage = langCode;
+            SaveLanguage(langCode);
+            LanguageChanged?.Invoke();
+        }
+    }
+
+    private static void SaveLanguage(string langCode)
+    {
+        try
+        {
+            string? dir = Path.GetDirectoryName(SettingsFilePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.WriteAllText(SettingsFilePath, langCode);
+        }
+        catch { }
+    }
+}

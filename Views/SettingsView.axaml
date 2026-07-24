@@ -1,5 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
              x:Class="ADIapp.Views.SettingsView">
 
     <StackPanel HorizontalAlignment="Center"
@@ -8,47 +13,30 @@
                 Spacing="28">
 
         <!-- TITLE -->
-        <TextBlock Text="Settings"
+        <TextBlock x:Name="TitleText"
+                   Text="Settings"
                    FontSize="36"
                    FontWeight="Bold"
                    Foreground="White"
                    HorizontalAlignment="Center"/>
 
-        <!-- DARK MODE
+        <!-- LANGUAGE -->
         <StackPanel Spacing="10">
-            <TextBlock Text="Dark mode"
+            <TextBlock x:Name="LanguageLabelText"
+                       Text="Language / Langue"
                        FontSize="16"
                        FontWeight="Bold"
                        Foreground="White"/>
 
             <Border Background="#1F1F1F"
                     CornerRadius="10"
-                    Padding="14">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Dark mode"
-                               Foreground="#CFCFCF"
-                               VerticalAlignment="Center"/>
-                    <ToggleSwitch Grid.Column="1"/>
-                </Grid>
-            </Border>
-        </StackPanel> -->
-
-        <!-- LANGUAGE -->
-        <StackPanel Spacing="10">
-            <TextBlock Text="Language"
-                       FontSize="16"
-                       FontWeight="Bold"
-                       Foreground="White"
-                       Height="18"/>
-
-            <Border Background="#1F1F1F"
-                    CornerRadius="10"
                     Padding="14"
                     BorderThickness="0">
-                <ComboBox SelectedIndex="0">
-                    <ComboBoxItem Content="English"/>
-                    <ComboBoxItem Content="Arabic"/>
-                    <ComboBoxItem Content="French"/>
+                <ComboBox x:Name="LanguageComboBox"
+                          HorizontalAlignment="Stretch"
+                          SelectionChanged="Language_SelectionChanged">
+                    <ComboBoxItem Content="English 🇺🇸" Tag="en"/>
+                    <ComboBoxItem Content="Français 🇫🇷" Tag="fr"/>
                 </ComboBox>
             </Border>
         </StackPanel>

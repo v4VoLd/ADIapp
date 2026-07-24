@@ -1,11 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\sidebar_logo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <UseSharedCompilation>false</UseSharedCompilation>
   </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Assets\avatar.png" />
     <None Remove="Assets\carLogo_icon.png" />
@@ -16,6 +19,7 @@
     <None Remove="Assets\Sidebar_background.png" />
     <None Remove="Assets\sidebar_logo.png" />
   </ItemGroup>
+
   <ItemGroup>
     <AvaloniaResource Include="Assets\avatar.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -24,6 +28,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\login_background.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\login_icon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\login_logo.png">
@@ -51,9 +58,5 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PusherClient" Version="2.2.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Include="Assets\login_icon.png" />
   </ItemGroup>
 </Project>

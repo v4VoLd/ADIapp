@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using ADIapp.Views;
 
@@ -10,6 +11,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+#if DEBUG
+        this.AttachDevTools();
+#endif
         MainContent.Content = new LoginView();
     }
 
