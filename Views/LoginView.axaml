@@ -58,7 +58,7 @@
                              BorderBrush="#393939"
                              BorderThickness="1"
                              CornerRadius="10"
-                             Watermark="user@example.com"/>
+                             Watermark="Enter Your Email"/
                 </StackPanel>
 
                 <!-- PASSWORD INPUT -->
@@ -78,7 +78,7 @@
                              BorderThickness="1"
                              CornerRadius="10"
                              PasswordChar="•"
-                             Watermark="••••••••"/>
+                             Watermark="Enter password"/>
                 </StackPanel>
 
                 <!-- ERROR MESSAGE -->

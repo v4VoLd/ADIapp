@@ -38,12 +38,16 @@ public partial class LoginView : UserControl
         var passLbl = this.FindControl<TextBlock>("PasswordLabelText");
         var btn = this.FindControl<Button>("LoginButton");
         var signUpBtn = this.FindControl<Button>("SignUpButton");
+        var emailBox = this.FindControl<TextBox>("EmailBox");
+        var passwordBox = this.FindControl<TextBox>("PasswordBox");
 
         if (subTitleLbl != null) subTitleLbl.Text = LanguageService.Get("Login_Subtitle");
         if (userLbl != null) userLbl.Text = LanguageService.Get("Login_Username");
         if (passLbl != null) passLbl.Text = LanguageService.Get("Login_Password");
         if (btn != null) btn.Content = LanguageService.Get("Login_Submit");
         if (signUpBtn != null) signUpBtn.Content = LanguageService.Get("Login_NoAccount");
+        if (emailBox != null) emailBox.Watermark = LanguageService.Get("Login_UsernamePlaceholder");
+        if (passwordBox != null) passwordBox.Watermark = LanguageService.Get("Login_PasswordPlaceholder");
     }
 
     private void SignUp_Click(object? sender, RoutedEventArgs e)
