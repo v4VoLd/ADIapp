@@ -9,7 +9,7 @@
 
 	<Grid>
 		<!-- Background image -->
-		<Image Source="avares://ADIapp/Assets/Sidebar_background.png"
+		<Image Source="avares://ADIapp/Assets/sidebar_background.png"
 			   Stretch="UniformToFill"/>
 
 		<!-- Main Layout Column: Logo Top, Nav Center, License Footer -->

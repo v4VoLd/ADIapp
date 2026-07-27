@@ -1,8 +1,10 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using ADIapp.Services;
 using ADIapp.Models;
+using ADIapp.Helpers;
 
 namespace ADIapp.Views;
 
@@ -112,8 +114,23 @@ public partial class LoginView : UserControl
                 window?.Navigate(new HomeView());
                 if (currentUser != null)
                 {
-                    await WebSocketManager.InitializeAsync(currentUser.Id);
-                    await NotificationService.LoadNotificationsAsync();
+                    try
+                    {
+                        await WebSocketManager.InitializeAsync(currentUser.Id);
+                    }
+                    catch (Exception wsEx)
+                    {
+                        Logger.Error($"WebSocket initialization error: {wsEx.Message}", wsEx);
+                    }
+
+                    try
+                    {
+                        await NotificationService.LoadNotificationsAsync();
+                    }
+                    catch (Exception notifEx)
+                    {
+                        Logger.Error($"Notification loading error: {notifEx.Message}", notifEx);
+                    }
                 }
             }
             else
@@ -121,6 +138,12 @@ public partial class LoginView : UserControl
                 errorLabel.Text = message;
                 errorLabel.IsVisible = true;
             }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Unexpected error during login: {ex.Message}", ex);
+            errorLabel.Text = $"Connection error: {ex.Message}";
+            errorLabel.IsVisible = true;
         }
         finally
         {

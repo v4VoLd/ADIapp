@@ -10,7 +10,7 @@
     <Grid Background="Black">
 
         <!-- Background -->
-        <Image Source="avares://ADIapp/Assets/login_background.png"
+        <Image Source="avares://ADIapp/Assets/login_background2.png"
                Stretch="UniformToFill"/>
 
         <!-- Centered Login Card -->
@@ -58,7 +58,7 @@
                              BorderBrush="#393939"
                              BorderThickness="1"
                              CornerRadius="10"
-                             Watermark="Enter Your Email"/
+                             Watermark="Enter Your Email"/>
                 </StackPanel>
 
                 <!-- PASSWORD INPUT -->
