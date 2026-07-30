@@ -7,90 +7,124 @@
              d:DesignHeight="800"
              x:Class="ADIapp.Views.TicketView">
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="32,28,32,32">
-        <!-- Header -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
-            <StackPanel Spacing="6">
-                <TextBlock x:Name="TicketTitleBlock"
-                           Text="Support Tickets &amp; Messages"
-                           FontSize="28"
-                           FontWeight="Bold"
-                           Foreground="White"/>
-                <TextBlock x:Name="TicketSubtitleBlock"
-                           Text="Communicate directly with technical support regarding ECU additions and orders."
-                           FontSize="13"
-                           Foreground="#A0A0B0"/>
-            </StackPanel>
+    <Grid>
+        <!-- Main View: Split Master/Detail -->
+        <Grid x:Name="MainContainer" ColumnDefinitions="320,*" Margin="16">
+            <!-- Left Side: Ticket List -->
+            <Border Grid.Column="0"
+                    Background="#181818"
+                    BorderBrush="#2D2D2D"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="16"
+                    Margin="0,0,16,0">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- List Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+                        <TextBlock Text="Support Tickets"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="1"
+                                Content="+ New Ticket"
+                                Background="#3A86FF"
+                                Foreground="White"
+                                FontWeight="Bold"
+                                FontSize="12"
+                                CornerRadius="6"
+                                Padding="10,6"
+                                Click="NewTicketButton_Click"/>
+                    </Grid>
 
-            <!-- Status Indicator Badge -->
+                    <!-- Tickets Scroll List -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="TicketListPanel" Spacing="8"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Right Side: Ticket Conversation Thread -->
             <Border Grid.Column="1"
                     Background="#181818"
                     BorderBrush="#2D2D2D"
                     BorderThickness="1"
-                    CornerRadius="20"
-                    Padding="12,6"
-                    VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Ellipse Width="8" Height="8" Fill="#4DFF8A" VerticalAlignment="Center"/>
-                    <TextBlock Text="Support Online"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               Foreground="#CFCFCF"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
+                    CornerRadius="12"
+                    Padding="16">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- Ticket Header Details -->
+                    <Grid Grid.Row="0" x:Name="TicketHeaderPanel" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border x:Name="TicketNumberBadge" Background="#333333" CornerRadius="4" Padding="6,2">
+                                    <TextBlock x:Name="TicketNumberText" Text="#TK-0000" FontSize="11" FontWeight="Bold" Foreground="#80D8FF"/>
+                                </Border>
+                                <Border x:Name="TicketStatusBadge" Background="#2E7D32" CornerRadius="4" Padding="6,2">
+                                    <TextBlock x:Name="TicketStatusText" Text="OPEN" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock x:Name="TicketSubjectText" Text="Select a ticket to view conversation"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Thread Messages Container -->
+                    <ScrollViewer Grid.Row="1" x:Name="MessagesScrollViewer" VerticalScrollBarVisibility="Auto" Margin="0,8">
+                        <StackPanel x:Name="MessagesPanel" Spacing="10"/>
+                    </ScrollViewer>
+
+                    <!-- Reply Input Panel -->
+                    <Grid Grid.Row="2" x:Name="ReplyPanel" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                        <TextBox x:Name="ReplyInput"
+                                 Grid.Column="0"
+                                 Watermark="Type your reply..."
+                                 Height="44"
+                                 CornerRadius="8"
+                                 Background="#252525"
+                                 Foreground="White"
+                                 BorderBrush="#3D3D3D"
+                                 Padding="12,10"
+                                 Margin="0,0,12,0"/>
+                        <Button x:Name="SendReplyButton"
+                                Grid.Column="1"
+                                Content="Send Reply"
+                                Height="44"
+                                Padding="20,0"
+                                Background="White"
+                                Foreground="Black"
+                                FontWeight="Bold"
+                                CornerRadius="8"
+                                Click="SendReplyButton_Click"/>
+                    </Grid>
+                </Grid>
             </Border>
         </Grid>
 
-        <!-- Messages Container Card -->
-        <Border Grid.Row="1"
-                Background="#181818"
-                BorderBrush="#2D2D2D"
-                BorderThickness="1"
-                CornerRadius="16"
-                Padding="24">
-            <ScrollViewer x:Name="MessagesScrollViewer" VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="MessagesPanel" Spacing="16"/>
-            </ScrollViewer>
-        </Border>
+        <!-- Overlay Modal for Creating New Ticket -->
+        <Grid x:Name="NewTicketOverlay" Background="#B0000000" IsVisible="False">
+            <Border Width="500" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="#1E1E1E" BorderBrush="#3D3D3D" BorderThickness="1" CornerRadius="12" Padding="24">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Create New Support Ticket" FontSize="20" FontWeight="Bold" Foreground="White"/>
 
-        <!-- Input Panel -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,20,0,0">
-            <TextBox x:Name="MessageInput"
-                     Grid.Column="0"
-                     Watermark="Type your support message..."
-                     Height="48"
-                     CornerRadius="10"
-                     Background="#252525"
-                     Foreground="White"
-                     BorderBrush="#3D3D3D"
-                     BorderThickness="1"
-                     Padding="16,12"
-                     VerticalContentAlignment="Center"
-                     Margin="0,0,12,0"/>
-            <Button x:Name="SendButton"
-                    Grid.Column="1"
-                    Content="Send Message"
-                    Height="48"
-                    Padding="24,0"
-                    Classes="btn-send"
-                    Click="SendButton_Click"/>
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Subject / Title" FontSize="12" Foreground="#AAAAAA"/>
+                        <TextBox x:Name="NewSubjectInput" Watermark="e.g. ECU support, payment inquiry..." Height="40" Background="#2B2B2B" Foreground="White"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Message Content" FontSize="12" Foreground="#AAAAAA"/>
+                        <TextBox x:Name="NewContentInput" Watermark="Describe your issue in detail..." Height="120" AcceptsReturn="True" TextWrapping="Wrap" Background="#2B2B2B" Foreground="White"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,8,0,0">
+                        <Button Content="Cancel" Click="CancelNewTicket_Click" Background="#333333" Foreground="White" CornerRadius="6" Padding="16,8"/>
+                        <Button Content="Submit Ticket" Click="SubmitNewTicket_Click" Background="#3A86FF" Foreground="White" FontWeight="Bold" CornerRadius="6" Padding="16,8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
-
-    <!-- STYLES -->
-    <UserControl.Styles>
-        <Style Selector="Button.btn-send">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="#141414"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.btn-send:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#E0E0E0"/>
-            <Setter Property="Foreground" Value="#141414"/>
-        </Style>
-    </UserControl.Styles>
-
 </UserControl>

@@ -591,14 +591,32 @@ public partial class TuneView : UserControl
             submitBtn.IsEnabled = false;
             submitBtn.Content = "Sending Ticket...";
 
-            string ticketContent = $"[ECU Support Request]\n" +
-                                   $"File Hash: {data.FileHash}\n" +
-                                   $"ECU Brand: {data.EcuBrand}\n" +
-                                   $"ECU Model: {data.EcuModel}\n" +
-                                   $"Hardware ID: {data.HardwareId}\n" +
-                                   $"Software ID: {data.SoftwareId}";
+            string ecuName = !string.IsNullOrWhiteSpace(data?.EcuBrand) || !string.IsNullOrWhiteSpace(data?.EcuModel)
+                ? $"{data?.EcuBrand} {data?.EcuModel}".Trim()
+                : "Unidentified ECU File";
 
-            var res = await ApiService.SendSupportMessageAsync(ticketContent);
+            string subject = $"Unsupported ECU Request: {ecuName}";
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Please check and add support for my uploaded ECU file:");
+            sb.AppendLine();
+            if (!string.IsNullOrWhiteSpace(data?.FileHash)) sb.AppendLine($"File Hash: {data.FileHash}");
+            if (!string.IsNullOrWhiteSpace(data?.EcuBrand)) sb.AppendLine($"ECU Brand: {data.EcuBrand}");
+            if (!string.IsNullOrWhiteSpace(data?.EcuModel)) sb.AppendLine($"ECU Model: {data.EcuModel}");
+            if (!string.IsNullOrWhiteSpace(data?.HardwareId)) sb.AppendLine($"Hardware ID: {data.HardwareId}");
+            if (!string.IsNullOrWhiteSpace(data?.SoftwareId)) sb.AppendLine($"Software ID: {data.SoftwareId}");
+
+            var metadata = new
+            {
+                type = "ecu_unsupported",
+                file_hash = data?.FileHash ?? "",
+                ecu_brand = data?.EcuBrand ?? "",
+                ecu_model = data?.EcuModel ?? "",
+                hardware_id = data?.HardwareId ?? "",
+                software_id = data?.SoftwareId ?? ""
+            };
+
+            var res = await ApiService.CreateTicketAsync(subject, sb.ToString().Trim(), metadata);
             if (res.Success)
             {
                 submitBtn.Content = "✓ Support Ticket Sent";
