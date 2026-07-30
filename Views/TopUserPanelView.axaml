@@ -57,18 +57,7 @@
 					PointerPressed="User_Click">
 
 				<Grid ColumnDefinitions="Auto,Auto,Auto" VerticalAlignment="Center">
-					<!-- Avatar -->
-					<Border Width="40"
-							Height="40"
-							CornerRadius="17"
-							Background="#4A4A4A"
-							BorderBrush="#3D3D3D"
-							BorderThickness="1"
-							Margin="0,0,10,0"
-							ClipToBounds="True">
-						<Image Source="avares://ADIapp/Assets/avatar.png"
-							   Stretch="UniformToFill"/>
-					</Border>
+
 
 					<!-- Text Stack (3-Lines Tall) -->
 					<StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -207,7 +196,7 @@
 
 		<Style Selector="Button.dropdown-logout">
 			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="Foreground" Value="#FF6B6B"/>
+			<Setter Property="Foreground" Value="White"/>
 			<Setter Property="FontSize" Value="14"/>
 			<Setter Property="FontWeight" Value="SemiBold"/>
 			<Setter Property="Padding" Value="12,10"/>
@@ -218,7 +207,7 @@
 		</Style>
 		<Style Selector="Button.dropdown-logout:pointerover /template/ ContentPresenter">
 			<Setter Property="Background" Value="#321A1A"/>
-			<Setter Property="Foreground" Value="#FF4D4D"/>
+			<Setter Property="Foreground" Value="white"/>
 		</Style>
 
 		<Style Selector="Border.user-card:pointerover">

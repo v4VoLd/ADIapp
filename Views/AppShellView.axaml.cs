@@ -18,7 +18,7 @@ public partial class AppShellView : UserControl
 
         if (TopUserPanel != null)
         {
-            TopUserPanel.IsVisible = page is not TuneView;
+            TopUserPanel.IsVisible = page is not TuneView && page is not TicketView;
         }
     }
 }

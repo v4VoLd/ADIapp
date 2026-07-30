@@ -7,23 +7,55 @@
              d:DesignHeight="800"
              x:Class="ADIapp.Views.TuneView">
 
-    <!-- ================= TOGGLE STYLES ================= -->
+    <!-- ================= THEME ACCENT OVERRIDES ================= -->
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#4DFF8A"/>
+        <SolidColorBrush x:Key="ToggleSwitchFillOnHover" Color="#66FF9E"/>
+        <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#33EE77"/>
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#4DFF8A"/>
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOnHover" Color="#66FF9E"/>
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOnPressed" Color="#33EE77"/>
+        <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#0F172A"/>
+        <SolidColorBrush x:Key="SystemControlHighlightAccentBrush" Color="#4DFF8A"/>
+    </UserControl.Resources>
+
+    <!-- ================= TOGGLE & BUTTON STYLES ================= -->
     <UserControl.Styles>
         <!-- Toggle OFF -->
         <Style Selector="ToggleSwitch /template/ Border#PART_Track">
-            <Setter Property="Background" Value="#2A2A2A"/>
-            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="Background" Value="#22242D"/>
+            <Setter Property="BorderBrush" Value="#383C4A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
         </Style>
 
-        <!-- Toggle ON -->
+        <!-- Toggle ON (Emerald Green) -->
         <Style Selector="ToggleSwitch:checked /template/ Border#PART_Track">
             <Setter Property="Background" Value="#4DFF8A"/>
+            <Setter Property="BorderBrush" Value="#4DFF8A"/>
+        </Style>
+        <Style Selector="ToggleSwitch:checked:pointerover /template/ Border#PART_Track">
+            <Setter Property="Background" Value="#66FF9E"/>
+            <Setter Property="BorderBrush" Value="#66FF9E"/>
         </Style>
 
         <!-- Toggle thumb -->
         <Style Selector="ToggleSwitch /template/ Border#PART_Thumb">
             <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+
+        <!-- Action Buttons Hover -->
+        <Style Selector="Button.action-btn">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
     </UserControl.Styles>
 
@@ -53,7 +85,7 @@
                         Margin="0,0,8,0"
                         Cursor="Hand"/>
 
-                <Image Source="avares://ADIapp/Assets/carLogo_icon.png"
+                <Image Source="avares://ADIapp/Assets/sidebar_logo.png"
                        Width="36"
                        Height="36"
                        VerticalAlignment="Center"/>
@@ -97,8 +129,9 @@
                         Background="#252525"
                         Foreground="White"
                         FontWeight="SemiBold"
+                        CornerRadius="10"
                         Margin="0,0,0,15"
-                        Padding="0,8"
+                        Padding="0,10"
                         Click="NewFileButton_Click"/>
                 <ScrollViewer Grid.Row="2">
                     <StackPanel x:Name="ActiveFilesList" Spacing="8">
@@ -131,7 +164,7 @@
                     <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto">
                         
                         <!-- VEHICLE SPECS CARD -->
-                        <Border Grid.Column="0" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
+                        <Border Grid.Column="0" Margin="4" Padding="12,10" Background="#141414" CornerRadius="14" BorderBrush="#262832" BorderThickness="1">
                             <StackPanel Spacing="6">
                                 <TextBlock x:Name="VehSpecsTitleText" Text="VEHICLE SPECS" FontSize="11" Foreground="#4DFF8A" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
@@ -160,7 +193,7 @@
                         </Border>
 
                         <!-- ENGINE SPECS CARD -->
-                        <Border Grid.Column="1" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
+                        <Border Grid.Column="1" Margin="4" Padding="12,10" Background="#141414" CornerRadius="14" BorderBrush="#262832" BorderThickness="1">
                             <StackPanel Spacing="6">
                                 <TextBlock x:Name="EngSpecsTitleText" Text="ENGINE SPECS" FontSize="11" Foreground="#3B82F6" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
@@ -189,7 +222,7 @@
                         </Border>
 
                         <!-- ECU SPECS CARD -->
-                        <Border Grid.Column="2" Margin="4" Padding="12,10" Background="#141414" CornerRadius="12" BorderBrush="#2A2A2A" BorderThickness="1">
+                        <Border Grid.Column="2" Margin="4" Padding="12,10" Background="#141414" CornerRadius="14" BorderBrush="#262832" BorderThickness="1">
                             <StackPanel Spacing="6">
                                 <TextBlock x:Name="EcuSpecsTitleText" Text="ECU SPECS" FontSize="11" Foreground="#A855F7" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
@@ -232,19 +265,97 @@
                                Grid.Row="1"
                                IsVisible="False"
                                VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="8">
-                        <TextBlock x:Name="AvailableTunesTitleText"
-                                   Text="AVAILABLE DATABASE TUNES &amp; MODIFICATIONS" 
-                                   FontSize="12" 
-                                   FontWeight="Bold" 
-                                   Foreground="#4DFF8A"/>
+                    <StackPanel Spacing="12">
+
+                        <!-- HEADER & SUMMARY COUNTER BAR -->
+                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center" Margin="0,4,0,4">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <TextBlock x:Name="AvailableTunesTitleText"
+                                           Text="AVAILABLE DATABASE TUNES &amp; MODIFICATIONS" 
+                                           FontSize="13" 
+                                           FontWeight="Bold" 
+                                           Foreground="#4DFF8A"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- LIVE SUMMARY CHIP -->
+                            <Border Grid.Column="1" 
+                                    Background="#141E17" 
+                                    BorderBrush="#255233" 
+                                    BorderThickness="1" 
+                                    CornerRadius="12" 
+                                    Padding="12,6"
+                                    VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="Selected:" FontSize="11" Foreground="#888888"/>
+                                        <TextBlock x:Name="SummarySelectedCountText" Text="0 Tunes" FontSize="11" FontWeight="Bold" Foreground="#4DFF8A"/>
+                                    </StackPanel>
+                                    <TextBlock Text="•" Foreground="#444444" FontSize="11"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="Total:" FontSize="11" Foreground="#888888"/>
+                                        <TextBlock x:Name="SummaryTotalTokensText" Text="0 CBT" FontSize="11" FontWeight="Bold" Foreground="#3B82F6"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- CATEGORY FILTER TABS BAR -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,4">
+                            <Button x:Name="FilterAllButton" 
+                                    Content="All Options" 
+                                    Click="FilterButton_Click" 
+                                    Tag="ALL"
+                                    Padding="14,6" 
+                                    FontSize="11" 
+                                    FontWeight="SemiBold" 
+                                    Background="#4DFF8A" 
+                                    Foreground="#0F172A" 
+                                    CornerRadius="8" 
+                                    Cursor="Hand"/>
+                            <Button x:Name="FilterPerfButton" 
+                                    Content="🚀 Performance" 
+                                    Click="FilterButton_Click" 
+                                    Tag="PERFORMANCE"
+                                    Padding="14,6" 
+                                    FontSize="11" 
+                                    FontWeight="SemiBold" 
+                                    Background="#22242D" 
+                                    Foreground="#CCCCCC" 
+                                    CornerRadius="8" 
+                                    Cursor="Hand"/>
+                            <Button x:Name="FilterDeletesButton" 
+                                    Content="🛡️ Deletes" 
+                                    Click="FilterButton_Click" 
+                                    Tag="DELETES"
+                                    Padding="14,6" 
+                                    FontSize="11" 
+                                    FontWeight="SemiBold" 
+                                    Background="#22242D" 
+                                    Foreground="#CCCCCC" 
+                                    CornerRadius="8" 
+                                    Cursor="Hand"/>
+                            <Button x:Name="FilterFeaturesButton" 
+                                    Content="⚡ Special Features" 
+                                    Click="FilterButton_Click" 
+                                    Tag="FEATURES"
+                                    Padding="14,6" 
+                                    FontSize="11" 
+                                    FontWeight="SemiBold" 
+                                    Background="#22242D" 
+                                    Foreground="#CCCCCC" 
+                                    CornerRadius="8" 
+                                    Cursor="Hand"/>
+                        </StackPanel>
+
+                        <!-- CARDS WRAP PANEL -->
                         <WrapPanel x:Name="DynamicServicesPanel" 
                                    Orientation="Horizontal" 
-                                   Margin="0,0,0,6"/>
+                                   Margin="0,4,0,6"/>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- BUTTONS -->
+                <!-- ACTION BUTTONS -->
                 <StackPanel Grid.Row="2"
                             Orientation="Horizontal"
                             HorizontalAlignment="Center"
@@ -252,27 +363,48 @@
                             Spacing="18">
 
                     <Button x:Name="OriginalFileButton"
-                            Width="160"
+                            Width="170"
                             Height="44"
-                            Background="#2B2B2B"
+                            Background="#242630"
+                            BorderBrush="#383C4A"
+                            BorderThickness="1"
                             Foreground="White"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            CornerRadius="12"
+                            FontWeight="SemiBold"
                             Content="Original file"
-                            Click="OriginalFile_Click"/>
+                            Click="OriginalFile_Click"
+                            Cursor="Hand"/>
 
                     <Button x:Name="SaveButton"
-                            Width="160"
+                            MinWidth="220"
                             Height="44"
+                            Padding="24,0"
                             Background="White"
-                            Foreground="Black"
+                            Foreground="#141414"
                             FontWeight="Bold"
-                            Content="Save"
-                            Click="Save_Click"/>
+                            FontSize="13"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            CornerRadius="12"
+                            Content="Save Order"
+                            Click="Save_Click"
+                            Cursor="Hand"/>
 
-                    <Button Width="160"
+                    <Button x:Name="DtcOffButton"
+                            Width="170"
                             Height="44"
-                            Background="#2B2B2B"
+                            Background="#242630"
+                            BorderBrush="#383C4A"
+                            BorderThickness="1"
                             Foreground="White"
-                            Content="DTC Off"/>
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            CornerRadius="12"
+                            FontWeight="SemiBold"
+                            Content="DTC Off"
+                            Cursor="Hand"/>
 
                 </StackPanel>
 

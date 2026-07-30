@@ -47,6 +47,6 @@ public partial class HomeView : UserControl
     private void Info_Click(object? sender, RoutedEventArgs e)
     {
         var window = this.FindAncestorOfType<MainWindow>();
-        window?.Navigate(new InfoView());
+        window?.Navigate(new HowItWorksView());
     }
 }

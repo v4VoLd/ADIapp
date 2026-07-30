@@ -92,6 +92,8 @@
                                 Content="Send Reply"
                                 Height="44"
                                 Padding="20,0"
+                                VerticalContentAlignment="Center"
+                                HorizontalContentAlignment="Center"
                                 Background="White"
                                 Foreground="Black"
                                 FontWeight="Bold"

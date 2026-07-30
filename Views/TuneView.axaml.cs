@@ -20,6 +20,17 @@ public partial class TuneView : UserControl
     private bool _isProcessing;
     private Border? _activeBorder;
 
+    private List<ServiceDto>? _currentServices;
+    private string _activeFilter = "ALL";
+    private readonly Dictionary<int, bool> _serviceSelectionStates = new();
+
+    private enum ServiceCategory
+    {
+        Performance,
+        Deletes,
+        Features
+    }
+
     public TuneView()
     {
         InitializeComponent();
@@ -635,65 +646,325 @@ public partial class TuneView : UserControl
         panel.Children.Add(border);
     }
 
+    private ServiceCategory CategorizeService(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return ServiceCategory.Features;
+
+        string upper = name.ToUpperInvariant();
+        if (upper.Contains("STAGE") || upper.Contains("ECO") || upper.Contains("TUNING") || upper.Contains("POWER") || upper.Contains("FLEX"))
+        {
+            return ServiceCategory.Performance;
+        }
+
+        if (upper.Contains("OFF") || upper.Contains("DELETE") || upper.Contains("REMOVE") || upper.Contains("DPF") ||
+            upper.Contains("EGR") || upper.Contains("ADBLUE") || upper.Contains("SCR") || upper.Contains("CAT") ||
+            upper.Contains("OPF") || upper.Contains("FLAP") || upper.Contains("VMAX") || upper.Contains("READINESS") ||
+            upper.Contains("DTC") || upper.Contains("NOX") || upper.Contains("SWIRL") || upper.Contains("START-STOP") ||
+            upper.Contains("LAMBDA"))
+        {
+            return ServiceCategory.Deletes;
+        }
+
+        return ServiceCategory.Features;
+    }
+
+    private void FilterButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string tag)
+        {
+            _activeFilter = tag;
+            UpdateFilterButtonsUi();
+            RenderServicesList();
+        }
+    }
+
+    private void UpdateFilterButtonsUi()
+    {
+        var btnAll = this.FindControl<Button>("FilterAllButton");
+        var btnPerf = this.FindControl<Button>("FilterPerfButton");
+        var btnDeletes = this.FindControl<Button>("FilterDeletesButton");
+        var btnFeatures = this.FindControl<Button>("FilterFeaturesButton");
+
+        SetFilterStyle(btnAll, _activeFilter == "ALL");
+        SetFilterStyle(btnPerf, _activeFilter == "PERFORMANCE");
+        SetFilterStyle(btnDeletes, _activeFilter == "DELETES");
+        SetFilterStyle(btnFeatures, _activeFilter == "FEATURES");
+    }
+
+    private void SetFilterStyle(Button? button, bool isActive)
+    {
+        if (button == null) return;
+        if (isActive)
+        {
+            button.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+            button.Foreground = Avalonia.Media.Brush.Parse("#0F172A");
+            button.FontWeight = Avalonia.Media.FontWeight.Bold;
+        }
+        else
+        {
+            button.Background = Avalonia.Media.Brush.Parse("#22242D");
+            button.Foreground = Avalonia.Media.Brush.Parse("#CCCCCC");
+            button.FontWeight = Avalonia.Media.FontWeight.SemiBold;
+        }
+    }
+
     private void RenderDynamicServices(List<ServiceDto>? services)
+    {
+        _currentServices = services;
+        _serviceSelectionStates.Clear();
+        _activeFilter = "ALL";
+        UpdateFilterButtonsUi();
+        RenderServicesList();
+    }
+
+    private void RenderServicesList()
     {
         var panel = this.FindControl<WrapPanel>("DynamicServicesPanel");
         if (panel == null) return;
 
         panel.Children.Clear();
 
-        if (services == null || services.Count == 0)
+        if (_currentServices == null || _currentServices.Count == 0)
         {
             panel.Children.Add(new TextBlock
             {
                 Text = "No services available for this ECU.",
                 Foreground = Avalonia.Media.Brushes.Gray,
                 FontSize = 13,
-                Margin = new Thickness(0, 10)
+                Margin = new Thickness(0, 15)
             });
+            UpdateSummaryAndSaveButton();
             return;
         }
 
-        foreach (var service in services)
+        foreach (var service in _currentServices)
         {
-            var border = new Border
+            var category = CategorizeService(service.Name);
+
+            if (_activeFilter == "PERFORMANCE" && category != ServiceCategory.Performance) continue;
+            if (_activeFilter == "DELETES" && category != ServiceCategory.Deletes) continue;
+            if (_activeFilter == "FEATURES" && category != ServiceCategory.Features) continue;
+
+            bool isSelected = _serviceSelectionStates.TryGetValue(service.Id, out bool sel) && sel;
+
+            var cardBorder = new Border
             {
-                Background = Avalonia.Media.Brush.Parse("#252525"),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(12, 10),
+                Width = 230,
+                CornerRadius = new CornerRadius(14),
+                Padding = new Thickness(14, 12),
                 Margin = new Thickness(6),
-                Width = 220
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
             };
 
-            var stack = new StackPanel { Spacing = 6 };
+            var stack = new StackPanel { Spacing = 8 };
 
-            stack.Children.Add(new TextBlock
+            // HEADER ROW WITH CATEGORY BADGE & SELECTED CHIP
+            var headerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+
+            string catBg = "#1E2028";
+            string catFg = "#CCCCCC";
+            string catLabel = "OPTION";
+
+            switch (category)
+            {
+                case ServiceCategory.Performance:
+                    catBg = "#152438";
+                    catFg = "#60A5FA";
+                    catLabel = "🚀 STAGE";
+                    break;
+                case ServiceCategory.Deletes:
+                    catBg = "#2E1C38";
+                    catFg = "#C084FC";
+                    catLabel = "🛡️ DELETE";
+                    break;
+                case ServiceCategory.Features:
+                    catBg = "#332612";
+                    catFg = "#FBBF24";
+                    catLabel = "⚡ FEATURE";
+                    break;
+            }
+
+            var catBadge = new Border
+            {
+                Background = Avalonia.Media.Brush.Parse(catBg),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(6, 2),
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                Child = new TextBlock
+                {
+                    Text = catLabel,
+                    FontSize = 9,
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    Foreground = Avalonia.Media.Brush.Parse(catFg)
+                }
+            };
+
+            Grid.SetColumn(catBadge, 0);
+            headerGrid.Children.Add(catBadge);
+
+            var selectedBadge = new Border
+            {
+                Name = "SelectedBadge",
+                Background = Avalonia.Media.Brush.Parse("#4DFF8A"),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(6, 2),
+                IsVisible = isSelected,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                Child = new TextBlock
+                {
+                    Text = "✓ SELECTED",
+                    FontSize = 9,
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    Foreground = Avalonia.Media.Brush.Parse("#0F172A")
+                }
+            };
+
+            Grid.SetColumn(selectedBadge, 1);
+            headerGrid.Children.Add(selectedBadge);
+
+            stack.Children.Add(headerGrid);
+
+            // TITLE
+            var titleText = new TextBlock
             {
                 Text = service.Name,
                 Foreground = Avalonia.Media.Brushes.White,
                 FontSize = 14,
                 FontWeight = Avalonia.Media.FontWeight.SemiBold,
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
-            });
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                MinHeight = 36
+            };
+            stack.Children.Add(titleText);
 
-            stack.Children.Add(new TextBlock
+            // FOOTER ROW WITH PRICE CHIP & TOGGLE SWITCH
+            var footerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+
+            string priceDisplay = !string.IsNullOrWhiteSpace(service.Price) && service.Price != "Included" && service.Price != "Free"
+                ? $"🪙 {service.Price} CBT"
+                : "✨ Included";
+
+            var priceText = new TextBlock
             {
-                Text = $"{service.Price} CBT Tokens",
-                Foreground = Avalonia.Media.Brushes.Gray,
-                FontSize = 11
-            });
+                Text = priceDisplay,
+                Foreground = Avalonia.Media.Brush.Parse("#94A3B8"),
+                FontSize = 11,
+                FontWeight = Avalonia.Media.FontWeight.Medium,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            };
+            Grid.SetColumn(priceText, 0);
+            footerGrid.Children.Add(priceText);
 
             var toggle = new ToggleSwitch
             {
-                Tag = service.Id,
-                OnContent = "Selected",
-                OffContent = "Select",
-                Margin = new Thickness(0, 4, 0, 0)
+                Tag = service,
+                IsChecked = isSelected,
+                OnContent = null,
+                OffContent = null,
+                Margin = new Thickness(0)
+            };
+            Grid.SetColumn(toggle, 1);
+            footerGrid.Children.Add(toggle);
+            stack.Children.Add(footerGrid);
+
+            cardBorder.Child = stack;
+
+            // Apply card visual selection state
+            ApplyCardStyle(cardBorder, selectedBadge, isSelected);
+
+            // Handlers
+            toggle.IsCheckedChanged += (s, e) =>
+            {
+                bool checkedState = toggle.IsChecked == true;
+                _serviceSelectionStates[service.Id] = checkedState;
+                ApplyCardStyle(cardBorder, selectedBadge, checkedState);
+                UpdateSummaryAndSaveButton();
             };
 
-            stack.Children.Add(toggle);
-            border.Child = stack;
-            panel.Children.Add(border);
+            cardBorder.PointerPressed += (s, e) =>
+            {
+                toggle.IsChecked = !toggle.IsChecked;
+            };
+
+            cardBorder.PointerEntered += (s, e) =>
+            {
+                if (toggle.IsChecked != true)
+                {
+                    cardBorder.BorderBrush = Avalonia.Media.Brush.Parse("#4A5164");
+                }
+            };
+
+            cardBorder.PointerExited += (s, e) =>
+            {
+                if (toggle.IsChecked != true)
+                {
+                    cardBorder.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+                }
+            };
+
+            panel.Children.Add(cardBorder);
+        }
+
+        UpdateSummaryAndSaveButton();
+    }
+
+    private void ApplyCardStyle(Border cardBorder, Border selectedBadge, bool isSelected)
+    {
+        if (isSelected)
+        {
+            cardBorder.Background = Avalonia.Media.Brush.Parse("#14281E");
+            cardBorder.BorderBrush = Avalonia.Media.Brush.Parse("#4DFF8A");
+            cardBorder.BorderThickness = new Thickness(1.5);
+            selectedBadge.IsVisible = true;
+        }
+        else
+        {
+            cardBorder.Background = Avalonia.Media.Brush.Parse("#1A1C24");
+            cardBorder.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+            cardBorder.BorderThickness = new Thickness(1);
+            selectedBadge.IsVisible = false;
+        }
+    }
+
+    private void UpdateSummaryAndSaveButton()
+    {
+        int selectedCount = 0;
+        double totalTokens = 0;
+
+        if (_currentServices != null)
+        {
+            foreach (var service in _currentServices)
+            {
+                if (_serviceSelectionStates.TryGetValue(service.Id, out bool sel) && sel)
+                {
+                    selectedCount++;
+                    if (double.TryParse(service.Price, out double priceVal))
+                    {
+                        totalTokens += priceVal;
+                    }
+                }
+            }
+        }
+
+        var selectedText = this.FindControl<TextBlock>("SummarySelectedCountText");
+        var totalText = this.FindControl<TextBlock>("SummaryTotalTokensText");
+
+        if (selectedText != null) selectedText.Text = $"{selectedCount} Tune{(selectedCount == 1 ? "" : "s")}";
+        if (totalText != null) totalText.Text = $"{totalTokens} CBT";
+
+        if (SaveButton != null)
+        {
+            if (selectedCount > 0)
+            {
+                SaveButton.Content = $"Save Order ({selectedCount} Selected • {totalTokens} CBT)";
+                SaveButton.Background = Avalonia.Media.Brushes.White;
+                SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
+            }
+            else
+            {
+                SaveButton.Content = "Save Order";
+                SaveButton.Background = Avalonia.Media.Brush.Parse("#E2E8F0");
+                SaveButton.Foreground = Avalonia.Media.Brush.Parse("#64748B");
+            }
         }
     }
 
@@ -789,22 +1060,36 @@ public partial class TuneView : UserControl
         var selectedServiceIds = new List<int>();
         var selectedServiceNames = new List<string>();
 
-        foreach (var child in panel.Children)
+        if (_currentServices != null && _currentServices.Count > 0)
         {
-            if (child is Border border && border.Child is StackPanel stack)
+            foreach (var service in _currentServices)
             {
-                foreach (var innerChild in stack.Children)
+                if (_serviceSelectionStates.TryGetValue(service.Id, out bool sel) && sel)
                 {
-                    if (innerChild is ToggleSwitch toggle && toggle.IsChecked == true)
+                    selectedServiceIds.Add(service.Id);
+                    if (!string.IsNullOrEmpty(service.Name)) selectedServiceNames.Add(service.Name);
+                }
+            }
+        }
+        else
+        {
+            foreach (var child in panel.Children)
+            {
+                if (child is Border border && border.Child is StackPanel stack)
+                {
+                    foreach (var innerChild in stack.Children)
                     {
-                        if (toggle.Tag is ServiceDto service)
+                        if (innerChild is ToggleSwitch toggle && toggle.IsChecked == true)
                         {
-                            selectedServiceIds.Add(service.Id);
-                            if (!string.IsNullOrEmpty(service.Name)) selectedServiceNames.Add(service.Name);
-                        }
-                        else if (toggle.Tag is int serviceId)
-                        {
-                            selectedServiceIds.Add(serviceId);
+                            if (toggle.Tag is ServiceDto service)
+                            {
+                                selectedServiceIds.Add(service.Id);
+                                if (!string.IsNullOrEmpty(service.Name)) selectedServiceNames.Add(service.Name);
+                            }
+                            else if (toggle.Tag is int serviceId)
+                            {
+                                selectedServiceIds.Add(serviceId);
+                            }
                         }
                     }
                 }
@@ -851,7 +1136,7 @@ public partial class TuneView : UserControl
             if (saveButton != null)
             {
                 saveButton.IsEnabled = true;
-                saveButton.Content = "Save";
+                UpdateSummaryAndSaveButton();
             }
         }
     }
@@ -864,6 +1149,10 @@ public partial class TuneView : UserControl
     private void ResetWorkspace()
     {
         _pendingFileHash = null;
+        _currentServices = null;
+        _serviceSelectionStates.Clear();
+        _activeFilter = "ALL";
+
         if (_activeBorder != null)
         {
             _activeBorder.Background = Avalonia.Media.Brush.Parse("#252525");
@@ -878,6 +1167,9 @@ public partial class TuneView : UserControl
 
         var panel = this.FindControl<WrapPanel>("DynamicServicesPanel");
         if (panel != null) panel.Children.Clear();
+
+        UpdateFilterButtonsUi();
+        UpdateSummaryAndSaveButton();
     }
 
     private async Task MessageBox(Window window, string message)
