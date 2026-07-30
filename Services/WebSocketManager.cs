@@ -24,6 +24,7 @@ public static class WebSocketManager
         => _client?.State == ConnectionState.Connected;
 
     public static event Action<string, EcuIdentifyData>? EcuIdentified;
+    public static event Action? TicketUpdated;
 
     public static async Task InitializeAsync(int userId)
     {
@@ -54,13 +55,30 @@ public static class WebSocketManager
             _userChannel = await _client.SubscribeAsync($"private-App.Models.User.{userId}");
             _userChannel.Bind("Illuminate\\Notifications\\Events\\BroadcastNotificationCreated", OnNotificationReceived);
             _userChannel.Bind("EcuIdentified", OnEcuIdentifiedEvent);
+            _userChannel.Bind("TicketUpdated", OnTicketUpdatedEvent);
         }
+
+
         catch (Exception ex)
         {
             Logger.Error($"[WebSocket] Exception during initialization: {ex.Message}", ex);
             throw;
         }
     }
+
+    private static void OnTicketUpdatedEvent(PusherEvent eventData)
+    {
+        try
+        {
+            Logger.Info($"[WebSocket] Received TicketUpdated event: {eventData.Data}");
+            TicketUpdated?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[WebSocket] Error handling TicketUpdated event: {ex.Message}", ex);
+        }
+    }
+
 
     private static void OnNotificationReceived(PusherEvent eventData)
     {

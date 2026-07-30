@@ -452,6 +452,142 @@ public class ApiService
         }
     }
 
+    #region Dedicated Tickets API
+
+    public static async Task<List<TicketDto>> GetTicketsAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken)) return new List<TicketDto>();
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "tickets");
+            var response = await _httpClient.GetAsync(requestUri);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
+            {
+                var list = JsonSerializer.Deserialize<List<TicketDto>>(dataProp.GetRawText(), options);
+                return list ?? new List<TicketDto>();
+            }
+
+            return new List<TicketDto>();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error fetching tickets: {ex.Message}", ex);
+            return new List<TicketDto>();
+        }
+    }
+
+    public static async Task<TicketDto?> GetTicketDetailsAsync(int ticketId)
+    {
+        if (string.IsNullOrEmpty(AccessToken)) return null;
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"tickets/{ticketId}");
+            var response = await _httpClient.GetAsync(requestUri);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
+            {
+                return JsonSerializer.Deserialize<TicketDto>(dataProp.GetRawText(), options);
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error fetching ticket details: {ex.Message}", ex);
+            return null;
+        }
+    }
+
+    public static async Task<(bool Success, string Message, TicketDto? Ticket)> CreateTicketAsync(string subject, string content, object? metadata = null, string priority = "normal")
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return (false, "Not authenticated.", null);
+
+        try
+        {
+            var payload = new CreateTicketRequestDto
+            {
+                Subject = subject,
+                Content = content,
+                Priority = priority,
+                Metadata = metadata
+            };
+
+            var jsonContent = JsonSerializer.Serialize(payload);
+            var requestContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "tickets");
+            var response = await _httpClient.PostAsync(requestUri, requestContent);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            bool success = root.TryGetProperty("success", out var successProp) && successProp.GetBoolean();
+            string message = root.TryGetProperty("message", out var msgProp) ? msgProp.GetString() ?? "" : "";
+
+            TicketDto? ticket = null;
+            if (success && root.TryGetProperty("data", out var dataProp))
+            {
+                ticket = JsonSerializer.Deserialize<TicketDto>(dataProp.GetRawText(), options);
+            }
+
+            return (success, success ? "Ticket created successfully." : message, ticket);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error creating ticket: {ex.Message}", ex);
+            return (false, $"Connection error: {ex.Message}", null);
+        }
+    }
+
+    public static async Task<(bool Success, string Message)> SendTicketReplyAsync(int ticketId, string replyContent)
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return (false, "Not authenticated.");
+
+        try
+        {
+            var payload = new { content = replyContent };
+            var jsonContent = JsonSerializer.Serialize(payload);
+            var requestContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"tickets/{ticketId}/reply");
+            var response = await _httpClient.PostAsync(requestUri, requestContent);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            bool success = root.TryGetProperty("success", out var successProp) && successProp.GetBoolean();
+            string message = root.TryGetProperty("message", out var msgProp) ? msgProp.GetString() ?? "" : "";
+
+            return (success, success ? "Reply sent successfully." : message);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error sending ticket reply: {ex.Message}", ex);
+            return (false, $"Connection error: {ex.Message}");
+        }
+    }
+
+    #endregion
+
+
     public static async Task<(bool Success, string Message)> DownloadFileToStreamAsync(string downloadUrl, System.IO.Stream destinationStream)
     {
         try
