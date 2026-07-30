@@ -41,6 +41,7 @@ public partial class SettingsView : UserControl
     private void UpdateLocalizedText()
     {
         if (TitleText != null) TitleText.Text = LanguageService.Get("Settings_Title");
+        if (SettingsSubtitleText != null) SettingsSubtitleText.Text = LanguageService.Get("Settings_Subtitle");
         if (LanguageLabelText != null) LanguageLabelText.Text = LanguageService.Get("Settings_Language");
     }
 

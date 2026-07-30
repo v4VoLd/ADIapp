@@ -11,6 +11,7 @@
 
         <!-- Background -->
         <Image Source="avares://ADIapp/Assets/login_background2.png"
+               HorizontalAlignment="Left"
                Stretch="UniformToFill"/>
 
         <!-- Centered Login Card -->

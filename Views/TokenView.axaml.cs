@@ -14,6 +14,9 @@ public partial class TokenView : UserControl
     {
         base.OnInitialized();
         
+        UpdateLocalizedText();
+        LanguageService.LanguageChanged += OnLanguageChanged;
+
         // Populate with currently cached profile data immediately
         PopulateToken();
 
@@ -24,6 +27,29 @@ public partial class TokenView : UserControl
             // Re-populate with updated data from the backend
             PopulateToken();
         }
+    }
+
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        UpdateLocalizedText();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        var title = this.FindControl<TextBlock>("TokenTitleBlock");
+        if (title != null) title.Text = LanguageService.Get("Token_Title");
+
+        var subtitle = this.FindControl<TextBlock>("TokenSubtitleBlock");
+        if (subtitle != null) subtitle.Text = LanguageService.Get("Token_Subtitle");
+
+        var availLabel = this.FindControl<TextBlock>("AvailableBalanceLabelBlock");
+        if (availLabel != null) availLabel.Text = LanguageService.Get("Token_AvailableBalance");
     }
 
     private void PopulateToken()

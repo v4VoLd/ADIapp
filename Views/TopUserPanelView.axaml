@@ -7,19 +7,23 @@
 			 d:DesignHeight="120"
 			 x:Class="ADIapp.Views.TopUserPanelView">
 
-	<Grid>
+	<Grid VerticalAlignment="Top">
 		<!-- MAIN ROW -->
 		<StackPanel Orientation="Horizontal"
 					HorizontalAlignment="Right"
 					VerticalAlignment="Top"
 					Spacing="12">
 
-			<!-- 🔔 BELL -->
-			<Panel>
-				<Border Width="44"
+			<!-- 🔔 BELL BUTTON -->
+			<Panel VerticalAlignment="Top">
+				<Border Classes="bell-btn"
+						Width="44"
 						Height="44"
 						CornerRadius="12"
 						Background="#2A2A2A"
+						BorderBrush="#3D3D3D"
+						BorderThickness="1"
+						Cursor="Hand"
 						PointerPressed="Bell_Click">
 					<TextBlock Text="🔔"
 							   FontSize="18"
@@ -32,35 +36,42 @@
 						Height="10"
 						CornerRadius="5"
 						Background="#FF4D4D"
+						BorderBrush="#141414"
+						BorderThickness="1.5"
 						HorizontalAlignment="Right"
 						VerticalAlignment="Top"
-						Margin="0,2,2,0"
+						Margin="0,0,0,0"
 						IsVisible="False"
 						IsHitTestVisible="False"/>
 			</Panel>
 
-			<!-- USER CARD -->
-			<Border CornerRadius="14"
+			<!-- 👤 USER COMPONENT CARD (TALL FULL HEIGHT) -->
+			<Border Classes="user-card"
+					CornerRadius="14"
 					Background="#2A2A2A"
+					BorderBrush="#3D3D3D"
+					BorderThickness="1"
 					Padding="12"
+					Cursor="Hand"
+					VerticalAlignment="Top"
 					PointerPressed="User_Click">
 
-				<Grid ColumnDefinitions="Auto,Auto">
+				<Grid ColumnDefinitions="Auto,Auto,Auto" VerticalAlignment="Center">
 					<!-- Avatar -->
 					<Border Width="40"
 							Height="40"
 							CornerRadius="17"
 							Background="#4A4A4A"
+							BorderBrush="#3D3D3D"
+							BorderThickness="1"
 							Margin="0,0,10,0"
 							ClipToBounds="True">
-
 						<Image Source="avares://ADIapp/Assets/avatar.png"
 							   Stretch="UniformToFill"/>
 					</Border>
 
-
-					<!-- Text -->
-					<StackPanel Grid.Column="1">
+					<!-- Text Stack (3-Lines Tall) -->
+					<StackPanel Grid.Column="1" VerticalAlignment="Center">
 						<TextBlock x:Name="HelloLabelBlock"
 								   Text="Hello,"
 								   FontSize="11"
@@ -80,6 +91,14 @@
 									   Foreground="White"/>
 						</Border>
 					</StackPanel>
+
+					<!-- Dropdown Indicator Arrow -->
+					<TextBlock Grid.Column="2"
+							   Text="▾"
+							   FontSize="12"
+							   Foreground="#A0A0B0"
+							   VerticalAlignment="Center"
+							   Margin="8,0,0,0"/>
 				</Grid>
 			</Border>
 		</StackPanel>
@@ -87,13 +106,16 @@
 		<!-- NOTIFICATION MENU -->
 		<Border x:Name="NotificationMenu"
 				IsVisible="False"
-				Margin="0,60,110,0"
-				Width="320"
+				Margin="0,74,130,0"
+				Width="340"
 				HorizontalAlignment="Right"
 				VerticalAlignment="Top"
-				CornerRadius="16"
-				Background="#1E1E1E"
+				CornerRadius="14"
+				Background="#181818"
+				BorderBrush="#2D2D2D"
+				BorderThickness="1"
 				Padding="16"
+				BoxShadow="0 8 24 0 #80000000"
 				ZIndex="10">
 
 			<StackPanel Spacing="12">
@@ -101,7 +123,7 @@
 					<TextBlock x:Name="NotifTitleBlock"
 							   Text="Notifications"
 							   FontWeight="Bold"
-							   FontSize="16"
+							   FontSize="15"
 							   Foreground="White"
 							   VerticalAlignment="Center"/>
 					<Button x:Name="ClearAllBtn"
@@ -110,9 +132,10 @@
 							FontSize="11"
 							FontWeight="SemiBold"
 							Background="Transparent"
-							Foreground="#CFCFCF"
-							Padding="6,4"
+							Foreground="#A0A0B0"
+							Padding="8,4"
 							BorderThickness="0"
+							Cursor="Hand"
 							Click="ClearNotifications_Click"/>
 				</Grid>
 
@@ -129,44 +152,84 @@
 		<!-- EXPANDED MENU -->
 		<Border x:Name="Menu"
 				IsVisible="False"
-				Margin="0,60,0,0"
+				Margin="0,74,0,0"
+				Width="200"
 				HorizontalAlignment="Right"
-				CornerRadius="16"
-				Background="#1E1E1E"
-				Padding="20"
+				VerticalAlignment="Top"
+				CornerRadius="14"
+				Background="#181818"
+				BorderBrush="#2D2D2D"
+				BorderThickness="1"
+				Padding="8"
+				BoxShadow="0 8 24 0 #80000000"
 				ZIndex="20">
 
-			<StackPanel Spacing="18">
+			<StackPanel Spacing="4">
 
 				<Button x:Name="AccountBtn"
 						Content="Account"
-						FontSize="16"
-						Foreground="White"
-						Background="Transparent"
-						BorderThickness="0"
-						HorizontalContentAlignment="Left"
+						Classes="dropdown-item"
 						Click="Account_Click"/>
 
 				<Button Content="Token"
-						FontSize="16"
-						Foreground="White"
-						Background="Transparent"
-						BorderThickness="0"
-						HorizontalContentAlignment="Left"
+						Classes="dropdown-item"
 						Click="Token_Click"/>
+
+				<Separator Height="1" Background="#2D2D2D" Margin="4,4"/>
 
 				<Button x:Name="LogoutBtn"
 						Content="Logout"
-						FontSize="16"
-						Foreground="White"
-						Background="Transparent"
-						BorderThickness="0"
-						HorizontalContentAlignment="Left"
+						Classes="dropdown-logout"
 						Click="Logout_Click"/>
 
 			</StackPanel>
 		</Border>
 
-
 	</Grid>
+
+	<!-- STYLES -->
+	<UserControl.Styles>
+		<Style Selector="Button.dropdown-item">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Foreground" Value="#E0E0E0"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="FontWeight" Value="Medium"/>
+			<Setter Property="Padding" Value="12,10"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Left"/>
+		</Style>
+		<Style Selector="Button.dropdown-item:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#252525"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button.dropdown-logout">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Foreground" Value="#FF6B6B"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="Padding" Value="12,10"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Left"/>
+		</Style>
+		<Style Selector="Button.dropdown-logout:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#321A1A"/>
+			<Setter Property="Foreground" Value="#FF4D4D"/>
+		</Style>
+
+		<Style Selector="Border.user-card:pointerover">
+			<Setter Property="Background" Value="#323232"/>
+			<Setter Property="BorderBrush" Value="#4A4A4A"/>
+		</Style>
+
+		<Style Selector="Border.bell-btn:pointerover">
+			<Setter Property="Background" Value="#323232"/>
+			<Setter Property="BorderBrush" Value="#4A4A4A"/>
+		</Style>
+	</UserControl.Styles>
+
 </UserControl>
