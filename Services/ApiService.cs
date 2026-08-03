@@ -297,7 +297,20 @@ public class ApiService
         {
             var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "file/processing");
             var response = await _httpClient.GetAsync(requestUri);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Error($"GetProcessingFilesAsync returned HTTP {(int)response.StatusCode} {response.ReasonPhrase}");
+                return new List<ProcessingFileDto>();
+            }
+
             var responseString = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(responseString) || !responseString.TrimStart().StartsWith("{"))
+            {
+                Logger.Error($"GetProcessingFilesAsync response is not a valid JSON object: {responseString}");
+                return new List<ProcessingFileDto>();
+            }
 
             var options = new JsonSerializerOptions
             {
@@ -306,7 +319,7 @@ public class ApiService
 
             using var doc = JsonDocument.Parse(responseString);
             var root = doc.RootElement;
-            if (root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
             {
                 var list = JsonSerializer.Deserialize<List<ProcessingFileDto>>(dataProp.GetRawText(), options);
                 return list ?? new List<ProcessingFileDto>();
