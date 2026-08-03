@@ -1,0 +1,87 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ADIapp.Views.OrderHistoryView">
+
+    <Grid RowDefinitions="Auto,Auto,*" Margin="60,20,60,40">
+
+        <!-- HEADER SECTION -->
+        <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,20">
+            <TextBlock Text="Order &amp; Request History"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="White"/>
+            <TextBlock Text="Track past tuning orders, completed/canceled files, and pending ECU support requests."
+                       FontSize="13"
+                       Foreground="#888888"/>
+        </StackPanel>
+
+        <!-- FILTER TABS BAR -->
+        <Border Grid.Row="1"
+                Background="#141414"
+                CornerRadius="12"
+                Padding="6"
+                Margin="0,0,0,20"
+                HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="TabAll"
+                        Content="All Items"
+                        Classes="filterTab activeTab"
+                        Click="FilterTab_Click"
+                        Tag="All"/>
+                <Button x:Name="TabCompleted"
+                        Content="✓ Completed Orders"
+                        Classes="filterTab"
+                        Click="FilterTab_Click"
+                        Tag="Completed"/>
+                <Button x:Name="TabCanceled"
+                        Content="✕ Canceled Orders"
+                        Classes="filterTab"
+                        Click="FilterTab_Click"
+                        Tag="Canceled"/>
+                <Button x:Name="TabEcuTickets"
+                        Content="📩 Pending ECU Tickets"
+                        Classes="filterTab"
+                        Click="FilterTab_Click"
+                        Tag="EcuTickets"/>
+            </StackPanel>
+        </Border>
+
+        <!-- MAIN CONTENT LIST CONTAINER -->
+        <Border Grid.Row="2"
+                Background="#1C1C1C"
+                CornerRadius="16"
+                Padding="20">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="OrderListPanel" Spacing="12">
+                    <TextBlock Text="Loading order history..."
+                               Foreground="#888888"
+                               FontSize="14"
+                               HorizontalAlignment="Center"
+                               Margin="0,40"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+    </Grid>
+
+    <UserControl.Styles>
+        <!-- Filter tab default style -->
+        <Style Selector="Button.filterTab">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#AAAAAA"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <!-- Filter tab active style -->
+        <Style Selector="Button.filterTab.activeTab">
+            <Setter Property="Background" Value="#353535"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+    </UserControl.Styles>
+
+</UserControl>

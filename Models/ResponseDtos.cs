@@ -266,6 +266,12 @@ public class ProcessingFileDto
     [JsonPropertyName("order_id")]
     public int? OrderId { get; set; }
 
+    [JsonPropertyName("ticket_id")]
+    public int? TicketId { get; set; }
+
+    [JsonPropertyName("ticket_number")]
+    public string? TicketNumber { get; set; }
+
     [JsonPropertyName("title")]
     public string? Title { get; set; }
 
@@ -276,6 +282,77 @@ public class ProcessingFileDto
     public string? DownloadUrl { get; set; }
 
     public bool IsOrder => string.Equals(Type, "order", StringComparison.OrdinalIgnoreCase) || OrderId.HasValue;
+    public bool IsTicket => string.Equals(Type, "ticket", StringComparison.OrdinalIgnoreCase) || TicketId.HasValue;
+}
+
+public class OrderHistoryItemDto
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("status_code")]
+    public int StatusCode { get; set; }
+
+    [JsonPropertyName("file_received")]
+    public string? FileReceived { get; set; }
+
+    [JsonPropertyName("file_sent")]
+    public string? FileSent { get; set; }
+
+    [JsonPropertyName("download_url")]
+    public string? DownloadUrl { get; set; }
+
+    [JsonPropertyName("total_price")]
+    public string TotalPrice { get; set; } = "0";
+
+    [JsonPropertyName("services")]
+    public List<ServiceDto>? Services { get; set; }
+
+    [JsonPropertyName("comment")]
+    public string? Comment { get; set; }
+
+    [JsonPropertyName("ticket_number")]
+    public string? TicketNumber { get; set; }
+
+    [JsonPropertyName("subject")]
+    public string? Subject { get; set; }
+
+    [JsonPropertyName("ecu_brand")]
+    public string? EcuBrand { get; set; }
+
+    [JsonPropertyName("ecu_model")]
+    public string? EcuModel { get; set; }
+
+    [JsonPropertyName("hardware_id")]
+    public string? HardwareId { get; set; }
+
+    [JsonPropertyName("software_id")]
+    public string? SoftwareId { get; set; }
+
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public string? CreatedAt { get; set; }
+
+    [JsonPropertyName("updated_at")]
+    public string? UpdatedAt { get; set; }
+
+    public bool IsCompleted => string.Equals(Status, "completed", StringComparison.OrdinalIgnoreCase) || StatusCode == 1;
+    public bool IsCanceled => string.Equals(Status, "canceled", StringComparison.OrdinalIgnoreCase) || StatusCode == 2;
+    public bool IsPending => string.Equals(Status, "pending", StringComparison.OrdinalIgnoreCase) || StatusCode == 0 || string.Equals(Status, "processing", StringComparison.OrdinalIgnoreCase) || StatusCode == 3;
+}
+
+public class OrderHistoryResponseDto
+{
+    [JsonPropertyName("orders")]
+    public List<OrderHistoryItemDto>? Orders { get; set; }
+
+    [JsonPropertyName("ecu_tickets")]
+    public List<OrderHistoryItemDto>? EcuTickets { get; set; }
 }
 
 public class SupportMessageDto

@@ -585,6 +585,35 @@ public class ApiService
         }
     }
 
+    public static async Task<OrderHistoryResponseDto?> GetOrderHistoryAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken)) return null;
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "orders/history");
+            var response = await _httpClient.GetAsync(requestUri);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                using var doc = JsonDocument.Parse(responseContent);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("data", out var dataProp))
+                {
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    return JsonSerializer.Deserialize<OrderHistoryResponseDto>(dataProp.GetRawText(), options);
+                }
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error fetching order history: {ex.Message}", ex);
+            return null;
+        }
+    }
+
     #endregion
 
 

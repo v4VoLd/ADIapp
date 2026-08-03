@@ -145,6 +145,14 @@
 						HorizontalContentAlignment="Left"
 						Click="Token_Click"/>
 
+				<Button Content="Order History"
+						FontSize="16"
+						Foreground="White"
+						Background="Transparent"
+						BorderThickness="0"
+						HorizontalContentAlignment="Left"
+						Click="OrderHistory_Click"/>
+
 				<Button Content="Logout"
 						FontSize="16"
 						Foreground="White"

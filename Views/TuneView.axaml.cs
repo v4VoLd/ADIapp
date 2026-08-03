@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,6 +19,8 @@ public partial class TuneView : UserControl
     private bool _isProcessing;
     private Border? _activeBorder;
 
+    private Avalonia.Threading.DispatcherTimer? _pollTimer;
+
     public TuneView()
     {
         InitializeComponent();
@@ -28,6 +31,15 @@ public partial class TuneView : UserControl
     {
         base.OnInitialized();
         WebSocketManager.EcuIdentified += OnEcuIdentified;
+        WebSocketManager.OrderUpdated += OnOrderUpdated;
+
+        _pollTimer = new Avalonia.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(5)
+        };
+        _pollTimer.Tick += (s, e) => _ = LoadProcessingFilesAsync();
+        _pollTimer.Start();
+
         await LoadProcessingFilesAsync();
     }
 
@@ -35,6 +47,16 @@ public partial class TuneView : UserControl
     {
         base.OnDetachedFromVisualTree(e);
         WebSocketManager.EcuIdentified -= OnEcuIdentified;
+        WebSocketManager.OrderUpdated -= OnOrderUpdated;
+        _pollTimer?.Stop();
+    }
+
+    private void OnOrderUpdated()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _ = LoadProcessingFilesAsync();
+        });
     }
 
     private void OnEcuIdentified(string hash, EcuIdentifyData data)
@@ -47,9 +69,23 @@ public partial class TuneView : UserControl
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 PopulateEcuInfo(data);
-                RenderDynamicServices(data.GetEffectiveServices());
-                if (StatusText != null) StatusText.Text = "Identified";
-                if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+
+                bool isFailed = string.Equals(data?.Status, "failed", StringComparison.OrdinalIgnoreCase) || data?.IsSupported == false;
+                var effectiveServices = data?.GetEffectiveServices();
+
+                if (isFailed || effectiveServices == null || effectiveServices.Count == 0)
+                {
+                    if (StatusText != null) StatusText.Text = "Unsupported ECU";
+                    if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
+                    RenderUnsupportedEcuUi(data ?? new EcuIdentifyData { FileHash = hash });
+                }
+                else
+                {
+                    RenderDynamicServices(effectiveServices);
+                    if (StatusText != null) StatusText.Text = "Identified";
+                    if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+                }
+
                 if (ServicesContainer != null) ServicesContainer.IsVisible = true;
             });
         }
@@ -180,19 +216,37 @@ public partial class TuneView : UserControl
             // If there's an active pending file hash we are currently waiting for, check if it finished
             if (!string.IsNullOrEmpty(_pendingFileHash))
             {
-                bool isStillPending = processingFiles != null && processingFiles.Exists(f => f.FileHash == _pendingFileHash);
+                var currentItem = processingFiles?.Find(f => f.FileHash == _pendingFileHash);
+                bool isStillPending = currentItem != null && currentItem.Status.Equals("pending", StringComparison.OrdinalIgnoreCase);
+
                 if (!isStillPending)
                 {
-                    // It finished! Check its status and load the services
+                    // It finished or failed! Check status and render appropriate UI
                     var response = await ApiService.CheckStatusAsync(_pendingFileHash);
-                    if (response.Success && response.Data != null && response.Status == "completed")
+                    if (response.Data != null)
                     {
+                        var effectiveServices = response.Data.GetEffectiveServices();
+                        bool isFailed = string.Equals(response.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(response.Data.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                            || !response.Data.IsSupported;
+
                         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                         {
                             PopulateEcuInfo(response.Data);
-                            RenderDynamicServices(response.Data.GetEffectiveServices());
-                            if (StatusText != null) StatusText.Text = "Identified";
-                            if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+
+                            if (isFailed || effectiveServices == null || effectiveServices.Count == 0)
+                            {
+                                if (StatusText != null) StatusText.Text = "Unsupported ECU";
+                                if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
+                                RenderUnsupportedEcuUi(response.Data);
+                            }
+                            else
+                            {
+                                RenderDynamicServices(effectiveServices);
+                                if (StatusText != null) StatusText.Text = "Identified";
+                                if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+                            }
+
                             if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                         });
                     }
@@ -332,6 +386,59 @@ public partial class TuneView : UserControl
                     stack.Children.Add(downloadBtn);
                 }
             }
+            else if (file.IsTicket)
+            {
+                // Pending Ticket Item Rendering
+                string displayTitle = !string.IsNullOrEmpty(file.Title) ? file.Title : $"Ticket #{file.TicketNumber ?? file.TicketId?.ToString()}";
+                stack.Children.Add(new TextBlock
+                {
+                    Text = $"📩 {displayTitle}",
+                    Foreground = Avalonia.Media.Brushes.White,
+                    FontSize = 13,
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
+                });
+
+                string statusText = file.Status.ToUpper();
+                string statusColor = file.Status.Equals("answered", StringComparison.OrdinalIgnoreCase)
+                    ? "#2196F3"
+                    : (file.Status.Equals("customer_reply", StringComparison.OrdinalIgnoreCase) ? "#FB8C00" : "#FF9800");
+
+                var statusPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 6 };
+                statusPanel.Children.Add(new TextBlock
+                {
+                    Text = $"TICKET • {statusText}",
+                    Foreground = Avalonia.Media.Brush.Parse(statusColor),
+                    FontSize = 10,
+                    FontWeight = Avalonia.Media.FontWeight.Bold
+                });
+
+                stack.Children.Add(statusPanel);
+
+                if (file.TicketId.HasValue)
+                {
+                    int ticketId = file.TicketId.Value;
+                    var viewBtn = new Button
+                    {
+                        Content = "💬 View Ticket",
+                        Background = Avalonia.Media.Brush.Parse("#FF9800"),
+                        Foreground = Avalonia.Media.Brushes.Black,
+                        FontWeight = Avalonia.Media.FontWeight.Bold,
+                        FontSize = 11,
+                        Padding = new Thickness(8, 4),
+                        Margin = new Thickness(0, 4, 0, 0),
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left
+                    };
+
+                    viewBtn.Click += (s, e) =>
+                    {
+                        var window = this.FindAncestorOfType<MainWindow>();
+                        window?.Navigate(new TicketView(ticketId));
+                    };
+
+                    stack.Children.Add(viewBtn);
+                }
+            }
             else
             {
                 // Identified Map Item Rendering
@@ -346,6 +453,7 @@ public partial class TuneView : UserControl
                 });
 
                 bool isCompleted = file.Status.Equals("completed", StringComparison.OrdinalIgnoreCase);
+
                 stack.Children.Add(new TextBlock
                 {
                     Text = isCompleted ? "MAP IDENTIFIED" : "IDENTIFICATION PENDING",

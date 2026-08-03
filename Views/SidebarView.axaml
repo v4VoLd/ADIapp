@@ -29,6 +29,10 @@
 					Click="Tickets_Click"
 					Classes="sidebar"/>
 
+			<Button Content="Orders"
+					Click="Orders_Click"
+					Classes="sidebar"/>
+
 			<Button Content="Info"
 					Click="Info_Click"
 					Classes="sidebar"/>

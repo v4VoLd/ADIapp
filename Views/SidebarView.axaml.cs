@@ -68,6 +68,12 @@ public partial class SidebarView : UserControl
         Window?.Navigate(new TicketView());
     }
 
+    private void Orders_Click(object? s, RoutedEventArgs e)
+    {
+        Select((Button)s!);
+        Window?.Navigate(new OrderHistoryView());
+    }
+
     private void Info_Click(object? s, RoutedEventArgs e)
     {
         Select((Button)s!);

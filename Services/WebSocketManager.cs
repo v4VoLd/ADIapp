@@ -25,6 +25,7 @@ public static class WebSocketManager
 
     public static event Action<string, EcuIdentifyData>? EcuIdentified;
     public static event Action? TicketUpdated;
+    public static event Action? OrderUpdated;
 
     public static async Task InitializeAsync(int userId)
     {
@@ -56,6 +57,8 @@ public static class WebSocketManager
             _userChannel.Bind("Illuminate\\Notifications\\Events\\BroadcastNotificationCreated", OnNotificationReceived);
             _userChannel.Bind("EcuIdentified", OnEcuIdentifiedEvent);
             _userChannel.Bind("TicketUpdated", OnTicketUpdatedEvent);
+            _userChannel.Bind("OrderUpdated", OnOrderUpdatedEvent);
+            _userChannel.Bind("OrderStatusUpdated", OnOrderUpdatedEvent);
         }
 
 
@@ -79,11 +82,24 @@ public static class WebSocketManager
         }
     }
 
+    private static void OnOrderUpdatedEvent(PusherEvent eventData)
+    {
+        try
+        {
+            Logger.Info($"[WebSocket] Received OrderUpdated event: {eventData.Data}");
+            OrderUpdated?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[WebSocket] Error handling OrderUpdated event: {ex.Message}", ex);
+        }
+    }
 
     private static void OnNotificationReceived(PusherEvent eventData)
     {
         try
         {
+            OrderUpdated?.Invoke();
             using var doc = System.Text.Json.JsonDocument.Parse(eventData.Data);
             var root = doc.RootElement;
 

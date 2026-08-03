@@ -102,6 +102,14 @@ public partial class TopUserPanelView : UserControl
         Window?.Navigate(new TokenView());
     }
 
+    private void OrderHistory_Click(object? sender, RoutedEventArgs e)
+    {
+        Menu.IsVisible = false;
+        var notificationMenu = this.FindControl<Border>("NotificationMenu");
+        if (notificationMenu != null) notificationMenu.IsVisible = false;
+        Window?.Navigate(new OrderHistoryView());
+    }
+
     private void Logout_Click(object? sender, RoutedEventArgs e)
     {
         Menu.IsVisible = false;

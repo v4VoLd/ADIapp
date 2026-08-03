@@ -16,6 +16,7 @@ public partial class TicketView : UserControl
 {
     private List<TicketDto> _tickets = new();
     private TicketDto? _selectedTicket;
+    private int? _initialTicketId;
 
     public TicketView()
     {
@@ -33,6 +34,11 @@ public partial class TicketView : UserControl
         };
     }
 
+    public TicketView(int initialTicketId) : this()
+    {
+        _initialTicketId = initialTicketId;
+    }
+
     private void OnTicketUpdated()
     {
         Dispatcher.UIThread.InvokeAsync(async () =>
@@ -45,6 +51,18 @@ public partial class TicketView : UserControl
     {
         _tickets = await ApiService.GetTicketsAsync();
         RenderTicketList();
+
+        if (_initialTicketId.HasValue)
+        {
+            var match = _tickets.Find(t => t.Id == _initialTicketId.Value);
+            if (match != null)
+            {
+                var full = await ApiService.GetTicketDetailsAsync(match.Id);
+                SelectTicket(full ?? match);
+                _initialTicketId = null;
+                return;
+            }
+        }
 
         if (_selectedTicket != null)
         {
