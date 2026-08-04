@@ -1,9 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ADIapp.Services;
 using ADIapp.Models;
@@ -25,6 +28,8 @@ public partial class TuneView : UserControl
     {
         InitializeComponent();
         SavedText = this.FindControl<TextBlock>("SavedText");
+        AddHandler(DragDrop.DropEvent, OnFileDrop);
+        AddHandler(DragDrop.DragOverEvent, OnFileDragOver);
     }
 
     protected override async void OnInitialized()
@@ -752,12 +757,9 @@ public partial class TuneView : UserControl
         }
     }
 
-    private async void OriginalFile_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private async Task OpenFilePickerAndUploadAsync()
     {
-        if (_isProcessing)
-        {
-            return;
-        }
+        if (_isProcessing) return;
 
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
@@ -778,6 +780,40 @@ public partial class TuneView : UserControl
             var file = files[0];
             string filePath = file.Path.LocalPath;
             await ProcessAndUploadFileAsync(filePath);
+        }
+    }
+
+    private void OnFileDragOver(object? sender, DragEventArgs e)
+    {
+        if (e.DataTransfer.Contains(DataFormat.File))
+        {
+            e.DragEffects = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+    }
+
+    private async void OnFileDrop(object? sender, DragEventArgs e)
+    {
+        if (_isProcessing) return;
+
+#pragma warning disable CS0618
+        var files = e.Data.GetFiles();
+#pragma warning restore CS0618
+        if (files != null)
+        {
+            var file = files.FirstOrDefault(f =>
+                f.Path.LocalPath.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) ||
+                f.Path.LocalPath.EndsWith(".hex", StringComparison.OrdinalIgnoreCase) ||
+                f.Path.LocalPath.EndsWith(".ori", StringComparison.OrdinalIgnoreCase) ||
+                f.Path.LocalPath.EndsWith(".dec", StringComparison.OrdinalIgnoreCase));
+
+            if (file != null)
+            {
+                await ProcessAndUploadFileAsync(file.Path.LocalPath);
+            }
         }
     }
 
@@ -829,12 +865,7 @@ public partial class TuneView : UserControl
     {
         if (string.IsNullOrEmpty(_pendingFileHash))
         {
-            var topLevel = TopLevel.GetTopLevel(this);
-            var window = topLevel as Window;
-            if (window != null)
-            {
-                await MessageBox(window, "Please upload or select an identified file first.");
-            }
+            await OpenFilePickerAndUploadAsync();
             return;
         }
 

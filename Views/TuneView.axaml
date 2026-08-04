@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="ADIapp.Views.TuneView">
+             x:Class="ADIapp.Views.TuneView"
+             DragDrop.AllowDrop="True">
 
     <!-- ================= TOGGLE STYLES ================= -->
     <UserControl.Styles>
@@ -220,33 +221,27 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- BUTTONS -->
+                <!-- ACTIONS BAR -->
                 <StackPanel Grid.Row="2"
                             Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             Margin="0,15,0,0"
                             Spacing="18">
 
-                    <Button Width="160"
+                    <Button x:Name="SaveButton"
+                            MinWidth="260"
                             Height="44"
-                            Background="#2B2B2B"
-                            Foreground="White"
-                            Content="Original file"
-                            Click="OriginalFile_Click"/>
-
-                    <Button Width="160"
-                            Height="44"
+                            Padding="32,0"
                             Background="White"
-                            Foreground="Black"
+                            Foreground="#141414"
                             FontWeight="Bold"
-                            Content="Save"
-                            Click="Save_Click"/>
-
-                    <Button Width="160"
-                            Height="44"
-                            Background="#2B2B2B"
-                            Foreground="White"
-                            Content="DTC Off"/>
+                            FontSize="14"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            CornerRadius="12"
+                            Content="📁 Select ECU File to Upload"
+                            Click="Save_Click"
+                            Cursor="Hand"/>
 
                 </StackPanel>
 
