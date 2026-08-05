@@ -14,7 +14,14 @@ public partial class MainWindow : Window
 #if DEBUG
         this.AttachDevTools();
 #endif
-        MainContent.Content = new LoginView();
+        if (Helpers.VmDetector.IsVirtualMachine())
+        {
+            MainContent.Content = new VmBlockedView();
+        }
+        else
+        {
+            MainContent.Content = new LoginView();
+        }
     }
 
     /// <summary>
@@ -24,6 +31,11 @@ public partial class MainWindow : Window
     /// </summary>
     public void Navigate(Control view)
     {
+        if (MainContent.Content is VmBlockedView)
+        {
+            return;
+        }
+
         if (view is LoginView)
         {
             // Tear down the app shell and show the login shell full-screen

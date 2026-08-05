@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ADIapp.Views.VmBlockedView">
+
+    <Grid Background="#0E0E0E">
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="460"
+                Padding="36"
+                CornerRadius="20"
+                Background="#181818"
+                BorderBrush="#FF3B30"
+                BorderThickness="1.5">
+
+            <StackPanel Spacing="16" HorizontalAlignment="Center">
+                <Border Width="64"
+                        Height="64"
+                        CornerRadius="32"
+                        Background="#2B1515"
+                        HorizontalAlignment="Center">
+                    <TextBlock Text="⚠️"
+                               FontSize="32"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Border>
+
+                <TextBlock Text="Virtual Machine Detected"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="#FF3B30"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"/>
+
+                <TextBlock Text="ADI Application is not supported inside Virtual Machines, Hypervisors, or Emulated Environments for security &amp; licensing compliance."
+                           FontSize="13"
+                           Foreground="#CCCCCC"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           LineHeight="20"/>
+
+                <Border Background="#222222"
+                        CornerRadius="10"
+                        Padding="16,12"
+                        Margin="0,8,0,8">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="System Security Requirement:"
+                                   FontSize="11"
+                                   FontWeight="Bold"
+                                   Foreground="#888888"/>
+                        <TextBlock Text="Please run this software directly on a physical host machine (Windows, macOS, or Linux)."
+                                   FontSize="12"
+                                   Foreground="White"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="Exit Application"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Height="42"
+                        Background="#FF3B30"
+                        Foreground="White"
+                        FontWeight="Bold"
+                        FontSize="13"
+                        CornerRadius="10"
+                        Click="Exit_Click"
+                        Cursor="Hand"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
