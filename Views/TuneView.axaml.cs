@@ -19,6 +19,7 @@ public partial class TuneView : UserControl
 {
     private TextBlock? SavedText;
     private string? _pendingFileHash;
+    private string? _renderedFileHash;
     private bool _isProcessing;
     private Border? _activeBorder;
 
@@ -92,6 +93,7 @@ public partial class TuneView : UserControl
                 }
 
                 if (ServicesContainer != null) ServicesContainer.IsVisible = true;
+                _renderedFileHash = hash;
             });
         }
     }
@@ -219,7 +221,7 @@ public partial class TuneView : UserControl
             });
 
             // If there's an active pending file hash we are currently waiting for, check if it finished
-            if (!string.IsNullOrEmpty(_pendingFileHash))
+            if (!string.IsNullOrEmpty(_pendingFileHash) && _renderedFileHash != _pendingFileHash)
             {
                 var currentItem = processingFiles?.Find(f => f.FileHash == _pendingFileHash);
                 bool isStillPending = currentItem != null && currentItem.Status.Equals("pending", StringComparison.OrdinalIgnoreCase);
@@ -253,6 +255,7 @@ public partial class TuneView : UserControl
                             }
 
                             if (ServicesContainer != null) ServicesContainer.IsVisible = true;
+                            _renderedFileHash = _pendingFileHash;
                         });
                     }
                 }
@@ -700,6 +703,21 @@ public partial class TuneView : UserControl
         var panel = this.FindControl<WrapPanel>("DynamicServicesPanel");
         if (panel == null) return;
 
+        var selectedIds = new System.Collections.Generic.HashSet<int>();
+        foreach (var child in panel.Children)
+        {
+            if (child is Border b && b.Child is StackPanel sp)
+            {
+                foreach (var innerChild in sp.Children)
+                {
+                    if (innerChild is ToggleSwitch t && t.IsChecked == true && t.Tag is int sId)
+                    {
+                        selectedIds.Add(sId);
+                    }
+                }
+            }
+        }
+
         panel.Children.Clear();
 
         if (services == null || services.Count == 0)
@@ -765,12 +783,21 @@ public partial class TuneView : UserControl
                 Tag = service.Id,
                 OnContent = "Selected",
                 OffContent = "Select",
+                IsChecked = selectedIds.Contains(service.Id),
                 Margin = new Thickness(0, 4, 0, 0)
             };
 
             stack.Children.Add(toggle);
             border.Child = stack;
             panel.Children.Add(border);
+        }
+
+        var saveBtn = this.FindControl<Button>("SaveButton");
+        if (saveBtn != null)
+        {
+            saveBtn.Content = "Order Selected Tuning Services";
+            saveBtn.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+            saveBtn.Foreground = Avalonia.Media.Brushes.Black;
         }
     }
 
@@ -954,7 +981,18 @@ public partial class TuneView : UserControl
             if (saveButton != null)
             {
                 saveButton.IsEnabled = true;
-                saveButton.Content = "Save";
+                if (string.IsNullOrEmpty(_pendingFileHash))
+                {
+                    saveButton.Content = "📁 Select ECU File to Upload";
+                    saveButton.Background = Avalonia.Media.Brushes.White;
+                    saveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
+                }
+                else
+                {
+                    saveButton.Content = "Order Selected Tuning Services";
+                    saveButton.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+                    saveButton.Foreground = Avalonia.Media.Brushes.Black;
+                }
             }
         }
     }
@@ -967,6 +1005,7 @@ public partial class TuneView : UserControl
     private void ResetWorkspace()
     {
         _pendingFileHash = null;
+        _renderedFileHash = null;
         if (_activeBorder != null)
         {
             _activeBorder.Background = Avalonia.Media.Brush.Parse("#252525");
@@ -981,6 +1020,15 @@ public partial class TuneView : UserControl
 
         var panel = this.FindControl<WrapPanel>("DynamicServicesPanel");
         if (panel != null) panel.Children.Clear();
+
+        var saveBtn = this.FindControl<Button>("SaveButton");
+        if (saveBtn != null)
+        {
+            saveBtn.IsEnabled = true;
+            saveBtn.Content = "📁 Select ECU File to Upload";
+            saveBtn.Background = Avalonia.Media.Brushes.White;
+            saveBtn.Foreground = Avalonia.Media.Brush.Parse("#141414");
+        }
     }
 
     private async Task MessageBox(Window window, string message)
