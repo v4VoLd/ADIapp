@@ -10,6 +10,11 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        try
+        {
+            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/login_logo.png")));
+        }
+        catch { }
         MainContent.Content = new LoginView();
     }
 

@@ -58,7 +58,7 @@ public partial class TicketView : UserControl
             if (match != null)
             {
                 var full = await ApiService.GetTicketDetailsAsync(match.Id);
-                SelectTicket(full ?? match);
+                await SelectTicketAsync(full ?? match);
                 _initialTicketId = null;
                 return;
             }
@@ -69,12 +69,12 @@ public partial class TicketView : UserControl
             var updated = await ApiService.GetTicketDetailsAsync(_selectedTicket.Id);
             if (updated != null)
             {
-                SelectTicket(updated);
+                await SelectTicketAsync(updated);
             }
         }
         else if (_tickets.Count > 0)
         {
-            SelectTicket(_tickets[0]);
+            await SelectTicketAsync(_tickets[0]);
         }
         else
         {
@@ -175,13 +175,13 @@ public partial class TicketView : UserControl
             }
 
             border.Child = stack;
-            border.PointerPressed += (s, e) => SelectTicket(ticket);
+            border.PointerPressed += async (s, e) => await SelectTicketAsync(ticket);
 
             TicketListPanel.Children.Add(border);
         }
     }
 
-    private void SelectTicket(TicketDto ticket)
+    private async Task SelectTicketAsync(TicketDto ticket)
     {
         _selectedTicket = ticket;
         RenderTicketList();
@@ -201,6 +201,16 @@ public partial class TicketView : UserControl
                 _ => "#757575"
             };
             TicketStatusBadge.Background = Brush.Parse(statusColor);
+        }
+
+        if (ticket.Messages == null || ticket.Messages.Count == 0)
+        {
+            var fullTicket = await ApiService.GetTicketDetailsAsync(ticket.Id);
+            if (fullTicket != null && fullTicket.Messages != null)
+            {
+                ticket = fullTicket;
+                _selectedTicket = fullTicket;
+            }
         }
 
         RenderMessages(ticket.Messages);
@@ -326,7 +336,7 @@ public partial class TicketView : UserControl
         {
             CancelNewTicket_Click(sender, e);
             await LoadTicketsAsync();
-            SelectTicket(res.Ticket);
+            await SelectTicketAsync(res.Ticket);
         }
     }
 }

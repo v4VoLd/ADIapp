@@ -250,6 +250,12 @@ public class ServiceDto
 
     [JsonPropertyName("winols_symbole")]
     public string WinolsSymbole { get; set; } = string.Empty;
+
+    [JsonPropertyName("is_included_in_subscription")]
+    public bool IsIncludedInSubscription { get; set; }
+
+    [JsonPropertyName("remaining_quota")]
+    public int? RemainingQuota { get; set; }
 }
 
 public class ProcessingFileDto
@@ -313,6 +319,12 @@ public class OrderHistoryItemDto
 
     [JsonPropertyName("comment")]
     public string? Comment { get; set; }
+
+    [JsonPropertyName("expires_at")]
+    public string? ExpiresAt { get; set; }
+
+    [JsonPropertyName("is_download_expired")]
+    public bool IsDownloadExpired { get; set; }
 
     [JsonPropertyName("ticket_number")]
     public string? TicketNumber { get; set; }

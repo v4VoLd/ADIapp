@@ -736,11 +736,28 @@ public partial class TuneView : UserControl
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap
             });
 
+            string priceLabel;
+            Avalonia.Media.IBrush priceBrush;
+
+            if (service.IsIncludedInSubscription)
+            {
+                priceLabel = service.RemainingQuota.HasValue
+                    ? $"0 CBT Tokens (Included - {service.RemainingQuota.Value} left)"
+                    : "0 CBT Tokens (Included in Subscription)";
+                priceBrush = Avalonia.Media.Brush.Parse("#4CAF50");
+            }
+            else
+            {
+                priceLabel = $"{service.Price} CBT Tokens";
+                priceBrush = Avalonia.Media.Brushes.Gray;
+            }
+
             stack.Children.Add(new TextBlock
             {
-                Text = $"{service.Price} CBT Tokens",
-                Foreground = Avalonia.Media.Brushes.Gray,
-                FontSize = 11
+                Text = priceLabel,
+                Foreground = priceBrush,
+                FontSize = 11,
+                FontWeight = service.IsIncludedInSubscription ? Avalonia.Media.FontWeight.SemiBold : Avalonia.Media.FontWeight.Normal
             });
 
             var toggle = new ToggleSwitch

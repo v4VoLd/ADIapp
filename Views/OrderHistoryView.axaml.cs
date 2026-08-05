@@ -263,60 +263,79 @@ public partial class OrderHistoryView : UserControl
         Grid.SetColumn(priceText, 0);
         bottomGrid.Children.Add(priceText);
 
-        if (order.IsCompleted && (!string.IsNullOrEmpty(order.DownloadUrl) || order.Id > 0))
+        if (order.IsCompleted)
         {
-            string downloadUrl = order.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{order.Id}";
-            string fileName = order.FileSent ?? $"order_{order.Id}_mod.bin";
-
-            var downloadBtn = new Button
+            if (order.IsDownloadExpired)
             {
-                Content = "⬇ Download Mod File",
-                Background = Brush.Parse("#4DFF8A"),
-                Foreground = Brushes.Black,
-                FontWeight = FontWeight.Bold,
-                FontSize = 12,
-                Padding = new Thickness(12, 6),
-                CornerRadius = new CornerRadius(6)
-            };
-
-            downloadBtn.Click += async (s, e) =>
-            {
-                downloadBtn.IsEnabled = false;
-                downloadBtn.Content = "Downloading...";
-
-                var topLevel = TopLevel.GetTopLevel(this);
-                if (topLevel is Window window)
+                var expiredBtn = new Button
                 {
-                    var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
-                    {
-                        Title = "Save Modified Tuning File",
-                        SuggestedFileName = fileName
-                    });
+                    Content = "⏰ Download Expired",
+                    Background = Brush.Parse("#333333"),
+                    Foreground = Brush.Parse("#888888"),
+                    FontWeight = FontWeight.SemiBold,
+                    FontSize = 12,
+                    Padding = new Thickness(12, 6),
+                    CornerRadius = new CornerRadius(6),
+                    IsEnabled = false
+                };
+                Grid.SetColumn(expiredBtn, 1);
+                bottomGrid.Children.Add(expiredBtn);
+            }
+            else if (!string.IsNullOrEmpty(order.DownloadUrl) || order.Id > 0)
+            {
+                string downloadUrl = order.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{order.Id}";
+                string fileName = order.FileSent ?? $"order_{order.Id}_mod.bin";
 
-                    if (saveFile != null)
+                var downloadBtn = new Button
+                {
+                    Content = "⬇ Download Mod File",
+                    Background = Brush.Parse("#4DFF8A"),
+                    Foreground = Brushes.Black,
+                    FontWeight = FontWeight.Bold,
+                    FontSize = 12,
+                    Padding = new Thickness(12, 6),
+                    CornerRadius = new CornerRadius(6)
+                };
+
+                downloadBtn.Click += async (s, e) =>
+                {
+                    downloadBtn.IsEnabled = false;
+                    downloadBtn.Content = "Downloading...";
+
+                    var topLevel = TopLevel.GetTopLevel(this);
+                    if (topLevel is Window window)
                     {
-                        using var stream = await saveFile.OpenWriteAsync();
-                        var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream);
-                        if (success)
+                        var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
                         {
-                            downloadBtn.Content = "✓ Downloaded";
+                            Title = "Save Modified Tuning File",
+                            SuggestedFileName = fileName
+                        });
+
+                        if (saveFile != null)
+                        {
+                            using var stream = await saveFile.OpenWriteAsync();
+                            var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream);
+                            if (success)
+                            {
+                                downloadBtn.Content = "✓ Downloaded";
+                            }
+                            else
+                            {
+                                downloadBtn.IsEnabled = true;
+                                downloadBtn.Content = "Retry Download";
+                            }
                         }
                         else
                         {
                             downloadBtn.IsEnabled = true;
-                            downloadBtn.Content = "Retry Download";
+                            downloadBtn.Content = "⬇ Download Mod File";
                         }
                     }
-                    else
-                    {
-                        downloadBtn.IsEnabled = true;
-                        downloadBtn.Content = "⬇ Download Mod File";
-                    }
-                }
-            };
+                };
 
-            Grid.SetColumn(downloadBtn, 1);
-            bottomGrid.Children.Add(downloadBtn);
+                Grid.SetColumn(downloadBtn, 1);
+                bottomGrid.Children.Add(downloadBtn);
+            }
         }
 
         mainStack.Children.Add(bottomGrid);

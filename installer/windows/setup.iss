@@ -1,0 +1,39 @@
+; Inno Setup Script for ADI Application (Windows)
+#define MyAppName "ADI Application"
+#define MyAppVersion "1.0.0"
+#define MyAppPublisher "ADI Performance"
+#define MyAppURL "https://adi-performance.com"
+#define MyAppExeName "ADIapp.exe"
+
+[Setup]
+AppId={{D374F6B2-9A4E-4A6F-A619-38DF0800B91C}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
+DefaultDirName={autopf}\{#MyAppName}
+DisableProgramGroupPage=yes
+LicenseFile=..\..\LICENSE
+OutputBaseFilename=ADIapp-Windows-Setup-x64
+SetupIconFile=..\..\Assets\app_icon.ico
+Compression=lzma2/ultra64
+SolidCompression=yes
+WizardStyle=modern
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+[Files]
+Source: "..\..\bin\Release\net9.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Icons]
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
