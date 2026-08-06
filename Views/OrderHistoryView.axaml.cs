@@ -314,10 +314,16 @@ public partial class OrderHistoryView : UserControl
                         if (saveFile != null)
                         {
                             using var stream = await saveFile.OpenWriteAsync();
-                            var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream);
+                            var progress = new System.Progress<double>(p =>
+                            {
+                                downloadBtn.Content = $"Downloading {p:F0}%...";
+                            });
+
+                            var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
                             if (success)
                             {
                                 downloadBtn.Content = "✓ Downloaded";
+                                NotificationService.AddNotification($"download_done_{order.Id}", $"File download completed: {fileName}", "info");
                             }
                             else
                             {

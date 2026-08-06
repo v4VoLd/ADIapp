@@ -256,6 +256,8 @@ public partial class TuneView : UserControl
 
                             if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                             _renderedFileHash = _pendingFileHash;
+
+                            NotificationService.AddNotification($"ecu_done_{_pendingFileHash}", "File tuning / ECU identification completed!", "info");
                         });
                     }
                 }
@@ -296,7 +298,7 @@ public partial class TuneView : UserControl
                 Background = Avalonia.Media.Brush.Parse(isActive ? "#353535" : "#252525"),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(12, 10),
-                Margin = new Thickness(0, 4),
+                Margin = new Thickness(0, 6),
                 Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
             };
 
@@ -305,8 +307,30 @@ public partial class TuneView : UserControl
                 _activeBorder = itemBorder;
             }
 
-            var stack = new StackPanel { Spacing = 4 };
+            var cardGrid = new Grid
+            {
+                ColumnDefinitions = new ColumnDefinitions("*,Auto")
+            };
+
+            var stack = new StackPanel { Spacing = 6, Margin = new Thickness(0, 0, 8, 0) };
             string truncatedHash = file.FileHash.Length > 12 ? file.FileHash.Substring(0, 12) + "..." : file.FileHash;
+
+            var removeBtn = new Button
+            {
+                Content = "✕",
+                FontSize = 10,
+                Padding = new Thickness(6, 2),
+                Background = Avalonia.Media.Brushes.Transparent,
+                Foreground = Avalonia.Media.Brush.Parse("#AAAAAA"),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
+                CornerRadius = new CornerRadius(4),
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+            };
+            removeBtn.Click += (s, e) =>
+            {
+                sidebar.Children.Remove(itemBorder);
+            };
+            Grid.SetColumn(removeBtn, 1);
 
             if (file.IsOrder)
             {
@@ -318,7 +342,8 @@ public partial class TuneView : UserControl
                     Foreground = Avalonia.Media.Brushes.White,
                     FontSize = 13,
                     FontWeight = Avalonia.Media.FontWeight.Bold,
-                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                    Margin = new Thickness(0, 0, 0, 2)
                 });
 
                 string statusText = file.Status.ToUpper();
@@ -371,10 +396,16 @@ public partial class TuneView : UserControl
                             if (saveFile != null)
                             {
                                 using var stream = await saveFile.OpenWriteAsync();
-                                var (success, msg) = await ApiService.DownloadFileToStreamAsync(targetDownloadUrl, stream);
+                                var progress = new System.Progress<double>(p =>
+                                {
+                                    downloadBtn.Content = $"Downloading {p:F0}%...";
+                                });
+
+                                var (success, msg) = await ApiService.DownloadFileToStreamAsync(targetDownloadUrl, stream, progress);
                                 if (success)
                                 {
                                     downloadBtn.Content = "✓ Downloaded";
+                                    NotificationService.AddNotification($"download_done_{fileName}", $"File download completed: {fileName}", "info");
                                 }
                                 else
                                 {
@@ -469,9 +500,10 @@ public partial class TuneView : UserControl
                     FontSize = 10,
                     FontWeight = Avalonia.Media.FontWeight.Bold
                 });
-            }
-
-            itemBorder.Child = stack;
+            Grid.SetColumn(stack, 0);
+            cardGrid.Children.Add(stack);
+            cardGrid.Children.Add(removeBtn);
+            itemBorder.Child = cardGrid;
 
             string fileHash = file.FileHash;
             itemBorder.PointerPressed += async (s, e) =>

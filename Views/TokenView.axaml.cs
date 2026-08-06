@@ -13,17 +13,27 @@ public partial class TokenView : UserControl
     protected override async void OnInitialized()
     {
         base.OnInitialized();
-        
-        // Populate with currently cached profile data immediately
+
+        WebSocketManager.OrderUpdated += OnOrderUpdated;
+
         PopulateToken();
 
-        // Fetch fresh profile data from the Laravel API profile controller
         var (success, _) = await ApiService.FetchProfileAsync();
         if (success)
         {
-            // Re-populate with updated data from the backend
             PopulateToken();
         }
+    }
+
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        WebSocketManager.OrderUpdated -= OnOrderUpdated;
+    }
+
+    private void OnOrderUpdated()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => PopulateToken());
     }
 
     private void PopulateToken()

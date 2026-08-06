@@ -60,4 +60,38 @@ public partial class AccountView : UserControl
             }
         }
     }
+
+    private async void SaveButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var firstNameBox = this.FindControl<TextBox>("FirstNameBox");
+        var lastNameBox = this.FindControl<TextBox>("LastNameBox");
+        var phoneBox = this.FindControl<TextBox>("PhoneBox");
+        var saveButton = this.FindControl<Button>("SaveButton");
+
+        string firstName = firstNameBox?.Text?.Trim() ?? string.Empty;
+        string lastName = lastNameBox?.Text?.Trim() ?? string.Empty;
+        string phone = phoneBox?.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName))
+        {
+            NotificationService.AddNotification("account_error", "First name and Last name are required.", "error");
+            return;
+        }
+
+        if (saveButton != null) saveButton.IsEnabled = false;
+
+        var (success, msg) = await ApiService.UpdateProfileAsync(firstName, lastName, phone);
+
+        if (saveButton != null) saveButton.IsEnabled = true;
+
+        if (success)
+        {
+            PopulateFields();
+            NotificationService.AddNotification($"account_saved_{System.Guid.NewGuid()}", "Account profile updated successfully!", "info");
+        }
+        else
+        {
+            NotificationService.AddNotification($"account_failed_{System.Guid.NewGuid()}", $"Failed to update account: {msg}", "error");
+        }
+    }
 }

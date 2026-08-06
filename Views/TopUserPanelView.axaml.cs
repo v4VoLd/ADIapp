@@ -21,6 +21,29 @@ public partial class TopUserPanelView : UserControl
     protected override void OnInitialized()
     {
         base.OnInitialized();
+        UpdateUserInfo();
+
+        NotificationService.NotificationReceived += OnNotificationReceived;
+        NotificationService.NotificationsUpdated += OnNotificationsUpdated;
+        WebSocketManager.OrderUpdated += OnOrderUpdated;
+        UpdateNotificationsList();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        NotificationService.NotificationReceived -= OnNotificationReceived;
+        NotificationService.NotificationsUpdated -= OnNotificationsUpdated;
+        WebSocketManager.OrderUpdated -= OnOrderUpdated;
+    }
+
+    private void OnOrderUpdated()
+    {
+        Dispatcher.UIThread.Post(() => UpdateUserInfo());
+    }
+
+    private void UpdateUserInfo()
+    {
         if (ApiService.CurrentUser != null)
         {
             var nameBlock = this.FindControl<TextBlock>("UserNameBlock");
@@ -34,17 +57,6 @@ public partial class TopUserPanelView : UserControl
                 tokenBlock.Text = $"Token: {ApiService.CurrentUser.AvailableCredit}";
             }
         }
-
-        NotificationService.NotificationReceived += OnNotificationReceived;
-        NotificationService.NotificationsUpdated += OnNotificationsUpdated;
-        UpdateNotificationsList();
-    }
-
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        base.OnDetachedFromVisualTree(e);
-        NotificationService.NotificationReceived -= OnNotificationReceived;
-        NotificationService.NotificationsUpdated -= OnNotificationsUpdated;
     }
 
     private MainWindow? Window =>
@@ -184,9 +196,10 @@ public partial class TopUserPanelView : UserControl
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                 FontSize = 13
             });
+            var displayDate = notif.CreatedAt.Kind == DateTimeKind.Utc ? notif.CreatedAt.ToLocalTime() : notif.CreatedAt;
             textStack.Children.Add(new TextBlock
             {
-                Text = notif.CreatedAt.ToString("g"),
+                Text = displayDate.ToString("g"),
                 Foreground = Avalonia.Media.Brushes.Gray,
                 FontSize = 10
             });

@@ -88,6 +88,9 @@ public static class WebSocketManager
         {
             Logger.Info($"[WebSocket] Received OrderUpdated event: {eventData.Data}");
             OrderUpdated?.Invoke();
+
+            NotificationService.AddNotification(Guid.NewGuid().ToString(), "Your order status has been updated!", "info");
+            _ = ApiService.FetchProfileAsync();
         }
         catch (Exception ex)
         {

@@ -107,7 +107,9 @@
         </Grid>
 
         <!-- SAVE -->
-        <Button Width="160"
+        <Button x:Name="SaveButton"
+                Click="SaveButton_Click"
+                Width="160"
                 Height="44"
                 Background="White"
                 Foreground="Black"

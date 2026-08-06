@@ -19,16 +19,17 @@
             <Image Source="avares://ADIapp/Assets/main_background.png"
                    Stretch="UniformToFill"/>
 
-            <!-- TOP RIGHT USER SECTION (overlay) -->
-            <views:TopUserPanelView
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Margin="0,18,18,0"/>
-
             <!-- PAGE CONTENT SLOT -->
             <ContentControl x:Name="PageContent"
                             HorizontalContentAlignment="Stretch"
                             VerticalContentAlignment="Stretch"/>
+
+            <!-- TOP RIGHT USER SECTION (overlay) -->
+            <views:TopUserPanelView
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,18,18,0"
+                ZIndex="99"/>
 
         </Grid>
     </Grid>

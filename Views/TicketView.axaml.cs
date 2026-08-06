@@ -300,12 +300,19 @@ public partial class TicketView : UserControl
             return;
 
         string content = ReplyInput.Text.Trim();
-        ReplyInput.Text = string.Empty;
+        if (SendReplyButton != null) SendReplyButton.IsEnabled = false;
 
         var res = await ApiService.SendTicketReplyAsync(_selectedTicket.Id, content);
+        if (SendReplyButton != null) SendReplyButton.IsEnabled = true;
+
         if (res.Success)
         {
+            ReplyInput.Text = string.Empty;
             await LoadTicketsAsync();
+        }
+        else
+        {
+            NotificationService.AddNotification($"reply_failed_{System.Guid.NewGuid()}", $"Failed to send reply: {res.Message}", "error");
         }
     }
 
@@ -329,14 +336,26 @@ public partial class TicketView : UserControl
         string content = NewContentInput.Text?.Trim() ?? "";
 
         if (string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(content))
+        {
+            NotificationService.AddNotification("ticket_err", "Please enter both subject and message content.", "error");
             return;
+        }
+
+        if (sender is Button submitBtn) submitBtn.IsEnabled = false;
 
         var res = await ApiService.CreateTicketAsync(subject, content);
+        if (sender is Button btn) btn.IsEnabled = true;
+
         if (res.Success && res.Ticket != null)
         {
             CancelNewTicket_Click(sender, e);
             await LoadTicketsAsync();
             await SelectTicketAsync(res.Ticket);
+            NotificationService.AddNotification($"ticket_created_{res.Ticket.Id}", "Support ticket created successfully!", "info");
+        }
+        else
+        {
+            NotificationService.AddNotification($"ticket_failed_{System.Guid.NewGuid()}", $"Failed to create ticket: {res.Message}", "error");
         }
     }
 }

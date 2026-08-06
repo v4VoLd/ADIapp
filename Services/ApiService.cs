@@ -630,8 +630,51 @@ public class ApiService
     #endregion
 
 
-    public static async Task<(bool Success, string Message)> DownloadFileToStreamAsync(string downloadUrl, System.IO.Stream destinationStream)
+    public static async Task<(bool Success, string Message)> UpdateProfileAsync(string firstName, string lastName, string phoneNumber)
     {
+        if (string.IsNullOrEmpty(AccessToken))
+            return (false, "Not authenticated.");
+
+        if (!NetworkHelper.IsNetworkAvailable())
+            return (false, "Network is offline. Please check your internet connection.");
+
+        try
+        {
+            var payload = new
+            {
+                name = firstName,
+                lastName = lastName,
+                phoneNumber = phoneNumber
+            };
+
+            var jsonContent = JsonSerializer.Serialize(payload);
+            var requestContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "users/updateCurrentUser");
+            var response = await _httpClient.PutAsync(requestUri, requestContent);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Refresh profile data locally
+                await FetchProfileAsync();
+                return (true, "Profile updated successfully.");
+            }
+
+            return (false, $"Failed to update profile: {response.StatusCode}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error updating profile: {ex.Message}", ex);
+            return (false, $"Connection error: {ex.Message}");
+        }
+    }
+
+    public static async Task<(bool Success, string Message)> DownloadFileToStreamAsync(string downloadUrl, System.IO.Stream destinationStream, IProgress<double>? progress = null)
+    {
+        if (!NetworkHelper.IsNetworkAvailable())
+            return (false, "Network is offline. Please check your internet connection.");
+
         try
         {
             Uri requestUri;
@@ -656,7 +699,26 @@ public class ApiService
                 return (false, $"Server returned {response.StatusCode}");
             }
 
-            await response.Content.CopyToAsync(destinationStream);
+            long totalBytes = response.Content.Headers.ContentLength ?? -1L;
+            using var downloadStream = await response.Content.ReadAsStreamAsync();
+
+            var buffer = new byte[8192];
+            long bytesReadTotal = 0;
+            int bytesRead;
+
+            while ((bytesRead = await downloadStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                await destinationStream.WriteAsync(buffer, 0, bytesRead);
+                bytesReadTotal += bytesRead;
+
+                if (totalBytes > 0 && progress != null)
+                {
+                    double percent = (double)bytesReadTotal / totalBytes * 100.0;
+                    progress.Report(percent);
+                }
+            }
+
+            progress?.Report(100.0);
             return (true, "Download successful.");
         }
         catch (Exception ex)
