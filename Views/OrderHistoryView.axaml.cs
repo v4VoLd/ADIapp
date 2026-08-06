@@ -456,9 +456,13 @@ public partial class OrderHistoryView : UserControl
 
     private string FormatDate(string isoDate)
     {
-        if (DateTime.TryParse(isoDate, out var dt))
+        if (DateTime.TryParse(isoDate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt))
         {
-            return dt.ToString("g");
+            return dt.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+        }
+        if (DateTime.TryParse(isoDate, out var fallbackDt))
+        {
+            return fallbackDt.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
         }
         return isoDate;
     }

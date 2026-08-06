@@ -277,9 +277,19 @@ public partial class TicketView : UserControl
 
             if (!string.IsNullOrEmpty(msg.CreatedAt))
             {
+                string displayDate = msg.CreatedAt;
+                if (DateTime.TryParse(msg.CreatedAt, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out var parsedDate))
+                {
+                    displayDate = parsedDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                }
+                else if (DateTime.TryParse(msg.CreatedAt, out var fallbackDate))
+                {
+                    displayDate = fallbackDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                }
+
                 stack.Children.Add(new TextBlock
                 {
-                    Text = msg.CreatedAt,
+                    Text = displayDate,
                     FontSize = 9,
                     Foreground = Brush.Parse("#888888"),
                     HorizontalAlignment = HorizontalAlignment.Right,
@@ -312,17 +322,23 @@ public partial class TicketView : UserControl
         }
         else
         {
-            NotificationService.AddNotification($"reply_failed_{System.Guid.NewGuid()}", $"Failed to send reply: {res.Message}", "error");
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window window)
+            {
+                await MessageBox(window, $"Failed to send reply: {res.Message}");
+            }
         }
     }
 
     private void NewTicketButton_Click(object? sender, RoutedEventArgs e)
     {
+        if (TicketModalErrorText != null) TicketModalErrorText.IsVisible = false;
         if (NewTicketOverlay != null) NewTicketOverlay.IsVisible = true;
     }
 
     private void CancelNewTicket_Click(object? sender, RoutedEventArgs e)
     {
+        if (TicketModalErrorText != null) TicketModalErrorText.IsVisible = false;
         if (NewTicketOverlay != null) NewTicketOverlay.IsVisible = false;
         if (NewSubjectInput != null) NewSubjectInput.Text = string.Empty;
         if (NewContentInput != null) NewContentInput.Text = string.Empty;
@@ -331,13 +347,18 @@ public partial class TicketView : UserControl
     private async void SubmitNewTicket_Click(object? sender, RoutedEventArgs e)
     {
         if (NewSubjectInput == null || NewContentInput == null) return;
+        if (TicketModalErrorText != null) TicketModalErrorText.IsVisible = false;
 
         string subject = NewSubjectInput.Text?.Trim() ?? "";
         string content = NewContentInput.Text?.Trim() ?? "";
 
         if (string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(content))
         {
-            NotificationService.AddNotification("ticket_err", "Please enter both subject and message content.", "error");
+            if (TicketModalErrorText != null)
+            {
+                TicketModalErrorText.Text = "Please enter both subject and message content.";
+                TicketModalErrorText.IsVisible = true;
+            }
             return;
         }
 
@@ -351,11 +372,40 @@ public partial class TicketView : UserControl
             CancelNewTicket_Click(sender, e);
             await LoadTicketsAsync();
             await SelectTicketAsync(res.Ticket);
-            NotificationService.AddNotification($"ticket_created_{res.Ticket.Id}", "Support ticket created successfully!", "info");
         }
         else
         {
-            NotificationService.AddNotification($"ticket_failed_{System.Guid.NewGuid()}", $"Failed to create ticket: {res.Message}", "error");
+            if (TicketModalErrorText != null)
+            {
+                TicketModalErrorText.Text = string.IsNullOrEmpty(res.Message) ? "Failed to create ticket. Please try again." : res.Message;
+                TicketModalErrorText.IsVisible = true;
+            }
         }
+    }
+
+    private async Task MessageBox(Window window, string message)
+    {
+        var dialog = new Window
+        {
+            Width = 320,
+            Height = 140,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = new Border
+            {
+                Padding = new Thickness(20),
+                Background = Brush.Parse("#1F1F1F"),
+                CornerRadius = new CornerRadius(8),
+                Child = new TextBlock
+                {
+                    Text = message,
+                    Foreground = Brushes.White,
+                    TextWrapping = TextWrapping.Wrap,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            }
+        };
+
+        await dialog.ShowDialog(window);
     }
 }

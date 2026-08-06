@@ -67,14 +67,22 @@ public partial class AccountView : UserControl
         var lastNameBox = this.FindControl<TextBox>("LastNameBox");
         var phoneBox = this.FindControl<TextBox>("PhoneBox");
         var saveButton = this.FindControl<Button>("SaveButton");
+        var statusText = this.FindControl<TextBlock>("AccountStatusText");
 
         string firstName = firstNameBox?.Text?.Trim() ?? string.Empty;
         string lastName = lastNameBox?.Text?.Trim() ?? string.Empty;
         string phone = phoneBox?.Text?.Trim() ?? string.Empty;
 
+        if (statusText != null) statusText.IsVisible = false;
+
         if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName))
         {
-            NotificationService.AddNotification("account_error", "First name and Last name are required.", "error");
+            if (statusText != null)
+            {
+                statusText.Text = "First name and Last name are required.";
+                statusText.Foreground = Avalonia.Media.Brush.Parse("#FF5252");
+                statusText.IsVisible = true;
+            }
             return;
         }
 
@@ -84,14 +92,16 @@ public partial class AccountView : UserControl
 
         if (saveButton != null) saveButton.IsEnabled = true;
 
+        if (statusText != null)
+        {
+            statusText.Text = success ? "Account profile updated successfully!" : $"Failed to update account: {msg}";
+            statusText.Foreground = Avalonia.Media.Brush.Parse(success ? "#4DFF8A" : "#FF5252");
+            statusText.IsVisible = true;
+        }
+
         if (success)
         {
             PopulateFields();
-            NotificationService.AddNotification($"account_saved_{System.Guid.NewGuid()}", "Account profile updated successfully!", "info");
-        }
-        else
-        {
-            NotificationService.AddNotification($"account_failed_{System.Guid.NewGuid()}", $"Failed to update account: {msg}", "error");
         }
     }
 }

@@ -488,7 +488,7 @@ public partial class TuneView : UserControl
                     Foreground = Avalonia.Media.Brushes.White,
                     FontSize = 13,
                     FontWeight = Avalonia.Media.FontWeight.SemiBold,
-                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
                 });
 
                 bool isCompleted = file.Status.Equals("completed", StringComparison.OrdinalIgnoreCase);
@@ -500,6 +500,8 @@ public partial class TuneView : UserControl
                     FontSize = 10,
                     FontWeight = Avalonia.Media.FontWeight.Bold
                 });
+            }
+
             Grid.SetColumn(stack, 0);
             cardGrid.Children.Add(stack);
             cardGrid.Children.Add(removeBtn);

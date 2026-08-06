@@ -114,6 +114,8 @@
                         <TextBox x:Name="NewContentInput" Watermark="Describe your issue in detail..." Height="120" AcceptsReturn="True" TextWrapping="Wrap" Background="#2B2B2B" Foreground="White"/>
                     </StackPanel>
 
+                    <TextBlock x:Name="TicketModalErrorText" Foreground="#FF5252" FontSize="12" IsVisible="False" TextWrapping="Wrap"/>
+
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,8,0,0">
                         <Button Content="Cancel" Click="CancelNewTicket_Click" Background="#333333" Foreground="White" CornerRadius="6" Padding="16,8"/>
                         <Button Content="Submit Ticket" Click="SubmitNewTicket_Click" Background="#3A86FF" Foreground="White" FontWeight="Bold" CornerRadius="6" Padding="16,8"/>

@@ -106,6 +106,12 @@
             </StackPanel>
         </Grid>
 
+        <TextBlock x:Name="AccountStatusText"
+                   FontSize="13"
+                   HorizontalAlignment="Center"
+                   IsVisible="False"
+                   TextWrapping="Wrap"/>
+
         <!-- SAVE -->
         <Button x:Name="SaveButton"
                 Click="SaveButton_Click"
