@@ -292,7 +292,9 @@ public partial class TuneView : UserControl
 
         foreach (var file in files)
         {
-            bool isActive = _pendingFileHash == file.FileHash;
+            if (file == null) continue;
+            string fileHashStr = file.FileHash ?? string.Empty;
+            bool isActive = !string.IsNullOrEmpty(_pendingFileHash) && _pendingFileHash == fileHashStr;
             var itemBorder = new Border
             {
                 Background = Avalonia.Media.Brush.Parse(isActive ? "#353535" : "#252525"),
@@ -313,7 +315,7 @@ public partial class TuneView : UserControl
             };
 
             var stack = new StackPanel { Spacing = 6, Margin = new Thickness(0, 0, 8, 0) };
-            string truncatedHash = file.FileHash.Length > 12 ? file.FileHash.Substring(0, 12) + "..." : file.FileHash;
+            string truncatedHash = fileHashStr.Length > 12 ? fileHashStr.Substring(0, 12) + "..." : fileHashStr;
 
             var removeBtn = new Button
             {
@@ -346,7 +348,7 @@ public partial class TuneView : UserControl
                     Margin = new Thickness(0, 0, 0, 2)
                 });
 
-                string statusText = file.Status.ToUpper();
+                string statusText = file.Status.Replace("_", " ").ToUpper();
                 string statusColor = file.Status.Equals("finished", StringComparison.OrdinalIgnoreCase)
                     ? "#4DFF8A"
                     : (file.Status.Equals("processing", StringComparison.OrdinalIgnoreCase) ? "#2196F3" : "#FFA500");
@@ -438,7 +440,7 @@ public partial class TuneView : UserControl
                     TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis
                 });
 
-                string statusText = file.Status.ToUpper();
+                string statusText = file.DisplayStatus;
                 string statusColor = file.Status.Equals("answered", StringComparison.OrdinalIgnoreCase)
                     ? "#2196F3"
                     : (file.Status.Equals("customer_reply", StringComparison.OrdinalIgnoreCase) ? "#FB8C00" : "#FF9800");
@@ -507,7 +509,7 @@ public partial class TuneView : UserControl
             cardGrid.Children.Add(removeBtn);
             itemBorder.Child = cardGrid;
 
-            string fileHash = file.FileHash;
+            string fileHash = fileHashStr;
             itemBorder.PointerPressed += async (s, e) =>
             {
                 if (_activeBorder != null)
@@ -517,7 +519,10 @@ public partial class TuneView : UserControl
                 itemBorder.Background = Avalonia.Media.Brush.Parse("#353535");
                 _activeBorder = itemBorder;
 
-                await SelectActiveFileAsync(fileHash);
+                if (!string.IsNullOrEmpty(fileHash))
+                {
+                    await SelectActiveFileAsync(fileHash);
+                }
             };
 
             sidebar.Children.Add(itemBorder);

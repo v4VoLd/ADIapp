@@ -197,7 +197,7 @@ public partial class OrderHistoryView : UserControl
         Grid.SetColumn(titleStack, 0);
 
         // Status Badge
-        string statusText = order.Status.ToUpper();
+        string statusText = order.Status.Replace("_", " ").ToUpper();
         string statusColor = order.Status.ToLower() switch
         {
             "completed" or "finished" => "#4DFF8A",
@@ -385,7 +385,7 @@ public partial class OrderHistoryView : UserControl
         }
         Grid.SetColumn(titleStack, 0);
 
-        string statusText = $"TICKET • {ticket.Status.ToUpper()}";
+        string statusText = $"TICKET • {ticket.Status.Replace("_", " ").ToUpper()}";
         var statusBadge = new Border
         {
             Background = Brush.Parse("#FF9800"),

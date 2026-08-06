@@ -21,6 +21,11 @@ public class TicketDto
     [JsonPropertyName("status")]
     public string Status { get; set; } = "open";
 
+    [JsonPropertyName("status_label")]
+    public string? StatusLabel { get; set; }
+
+    public string DisplayStatus => !string.IsNullOrWhiteSpace(StatusLabel) ? StatusLabel.ToUpper() : Status.Replace("_", " ").ToUpper();
+
     [JsonPropertyName("priority")]
     public string Priority { get; set; } = "normal";
 

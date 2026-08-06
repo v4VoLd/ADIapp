@@ -266,6 +266,11 @@ public class ProcessingFileDto
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;
 
+    [JsonPropertyName("status_label")]
+    public string? StatusLabel { get; set; }
+
+    public string DisplayStatus => !string.IsNullOrWhiteSpace(StatusLabel) ? StatusLabel.ToUpper() : Status.Replace("_", " ").ToUpper();
+
     [JsonPropertyName("type")]
     public string? Type { get; set; }
 

@@ -306,22 +306,25 @@ public class ApiService
 
             var responseString = await response.Content.ReadAsStringAsync();
 
-            if (string.IsNullOrWhiteSpace(responseString) || !responseString.TrimStart().StartsWith("{"))
-            {
-                Logger.Error($"GetProcessingFilesAsync response is not a valid JSON object: {responseString}");
-                return new List<ProcessingFileDto>();
-            }
-
             var options = new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.WriteAsString
             };
 
             using var doc = JsonDocument.Parse(responseString);
             var root = doc.RootElement;
-            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("success", out var successProp) && successProp.GetBoolean() && root.TryGetProperty("data", out var dataProp))
+            if (root.ValueKind == JsonValueKind.Object)
             {
-                var list = JsonSerializer.Deserialize<List<ProcessingFileDto>>(dataProp.GetRawText(), options);
+                if (root.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == JsonValueKind.Array)
+                {
+                    var list = JsonSerializer.Deserialize<List<ProcessingFileDto>>(dataProp.GetRawText(), options);
+                    return list ?? new List<ProcessingFileDto>();
+                }
+            }
+            else if (root.ValueKind == JsonValueKind.Array)
+            {
+                var list = JsonSerializer.Deserialize<List<ProcessingFileDto>>(responseString, options);
                 return list ?? new List<ProcessingFileDto>();
             }
             return new List<ProcessingFileDto>();
@@ -612,10 +615,19 @@ public class ApiService
             {
                 using var doc = JsonDocument.Parse(responseContent);
                 var root = doc.RootElement;
-                if (root.TryGetProperty("data", out var dataProp))
+                var options = new JsonSerializerOptions
                 {
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    PropertyNameCaseInsensitive = true,
+                    NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.WriteAsString
+                };
+
+                if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == JsonValueKind.Object)
+                {
                     return JsonSerializer.Deserialize<OrderHistoryResponseDto>(dataProp.GetRawText(), options);
+                }
+                else
+                {
+                    return JsonSerializer.Deserialize<OrderHistoryResponseDto>(responseContent, options);
                 }
             }
             return null;

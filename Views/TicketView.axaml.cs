@@ -142,7 +142,7 @@ public partial class TicketView : UserControl
                 Padding = new Thickness(6, 2),
                 Child = new TextBlock
                 {
-                    Text = ticket.Status.ToUpper(),
+                    Text = ticket.DisplayStatus,
                     FontSize = 9,
                     FontWeight = FontWeight.Bold,
                     Foreground = Brushes.White
@@ -188,7 +188,7 @@ public partial class TicketView : UserControl
 
         if (TicketNumberText != null) TicketNumberText.Text = ticket.TicketNumber;
         if (TicketSubjectText != null) TicketSubjectText.Text = ticket.Subject;
-        if (TicketStatusText != null) TicketStatusText.Text = ticket.Status.ToUpper();
+        if (TicketStatusText != null) TicketStatusText.Text = ticket.DisplayStatus;
 
         if (TicketStatusBadge != null)
         {
