@@ -58,6 +58,8 @@
                                       SelectionChanged="Language_SelectionChanged">
                                 <ComboBoxItem Content="English 🇺🇸" Tag="en" Padding="12,8"/>
                                 <ComboBoxItem Content="Français 🇫🇷" Tag="fr" Padding="12,8"/>
+                                <ComboBoxItem Content="Español 🇪🇸" Tag="es" Padding="12,8"/>
+                                <ComboBoxItem Content="Deutsch 🇩🇪" Tag="de" Padding="12,8"/>
                             </ComboBox>
                         </StackPanel>
 

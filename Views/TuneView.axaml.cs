@@ -127,6 +127,17 @@ public partial class TuneView : UserControl
         if (LblSwSizeText != null) LblSwSizeText.Text = LanguageService.Get("Tune_SwSize");
 
         if (AvailableTunesTitleText != null) AvailableTunesTitleText.Text = LanguageService.Get("Tune_AvailableTunes");
+
+        var filterAll = this.FindControl<Button>("FilterAllButton");
+        var filterPerf = this.FindControl<Button>("FilterPerfButton");
+        var filterDeletes = this.FindControl<Button>("FilterDeletesButton");
+        var filterFeatures = this.FindControl<Button>("FilterFeaturesButton");
+
+        if (filterAll != null) filterAll.Content = LanguageService.Get("Tune_FilterAll");
+        if (filterPerf != null) filterPerf.Content = LanguageService.Get("Tune_FilterPerf");
+        if (filterDeletes != null) filterDeletes.Content = LanguageService.Get("Tune_FilterDeletes");
+        if (filterFeatures != null) filterFeatures.Content = LanguageService.Get("Tune_FilterFeatures");
+
         UpdateSummaryAndSaveButton();
     }
 
@@ -172,7 +183,6 @@ public partial class TuneView : UserControl
         var vehModel = this.FindControl<TextBlock>("VehModelText");
         var vehYearChassis = this.FindControl<TextBlock>("VehYearChassisText");
         var vehBuildType = this.FindControl<TextBlock>("VehBuildTypeText");
-        var vehVin = this.FindControl<TextBlock>("VehVinText");
 
         var engNameType = this.FindControl<TextBlock>("EngNameTypeText");
         var engDisplacement = this.FindControl<TextBlock>("EngDisplacementText");
@@ -196,7 +206,6 @@ public partial class TuneView : UserControl
         if (vehSub != null)
         {
             var subtitleParts = new System.Collections.Generic.List<string>();
-            if (!string.IsNullOrWhiteSpace(data.VehicleVIN)) subtitleParts.Add($"VIN: {data.VehicleVIN}");
             if (!string.IsNullOrWhiteSpace(data.VehicleModelyear)) subtitleParts.Add($"Year: {data.VehicleModelyear}");
             if (!string.IsNullOrWhiteSpace(data.EngineTransmission)) subtitleParts.Add($"Trans: {data.EngineTransmission}");
             vehSub.Text = subtitleParts.Count > 0 
@@ -220,8 +229,6 @@ public partial class TuneView : UserControl
             string type = !string.IsNullOrWhiteSpace(data.VehicleType) ? data.VehicleType : "-";
             vehBuildType.Text = $"{build} / {type}";
         }
-
-        if (vehVin != null) vehVin.Text = !string.IsNullOrWhiteSpace(data.VehicleVIN) ? data.VehicleVIN : "N/A";
 
         if (engNameType != null)
         {
@@ -603,7 +610,6 @@ public partial class TuneView : UserControl
         var vehModel = this.FindControl<TextBlock>("VehModelText");
         var vehYearChassis = this.FindControl<TextBlock>("VehYearChassisText");
         var vehBuildType = this.FindControl<TextBlock>("VehBuildTypeText");
-        var vehVin = this.FindControl<TextBlock>("VehVinText");
 
         var engNameType = this.FindControl<TextBlock>("EngNameTypeText");
         var engDisplacement = this.FindControl<TextBlock>("EngDisplacementText");
@@ -629,7 +635,6 @@ public partial class TuneView : UserControl
         if (vehModel != null) vehModel.Text = stateText;
         if (vehYearChassis != null) vehYearChassis.Text = stateText;
         if (vehBuildType != null) vehBuildType.Text = stateText;
-        if (vehVin != null) vehVin.Text = stateText;
 
         if (engNameType != null) engNameType.Text = stateText;
         if (engDisplacement != null) engDisplacement.Text = stateText;
@@ -1136,19 +1141,21 @@ public partial class TuneView : UserControl
         {
             if (string.IsNullOrEmpty(_pendingFileHash))
             {
-                SaveButton.Content = "📁 Select ECU File to Upload";
+                SaveButton.Content = LanguageService.Get("Tune_SelectEcuFile");
                 SaveButton.Background = Avalonia.Media.Brushes.White;
                 SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
             }
             else
             {
+                string orderSelected = LanguageService.Get("Tune_OrderSelected");
+                string selectedLabel = LanguageService.Get("Tune_Selected");
                 if (selectedCount > 0)
                 {
-                    SaveButton.Content = $"Order Selected Tuning Services ({selectedCount} Selected • {totalTokens} CBT)";
+                    SaveButton.Content = $"{orderSelected} ({selectedCount} {selectedLabel} • {totalTokens} CBT)";
                 }
                 else
                 {
-                    SaveButton.Content = "Order Selected Tuning Services";
+                    SaveButton.Content = orderSelected;
                 }
                 SaveButton.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
                 SaveButton.Foreground = Avalonia.Media.Brushes.Black;

@@ -168,7 +168,7 @@
                         <Border Grid.Column="0" Margin="4" Padding="12,10" Background="#141414" CornerRadius="14" BorderBrush="#262832" BorderThickness="1">
                             <StackPanel Spacing="6">
                                 <TextBlock x:Name="VehSpecsTitleText" Text="VEHICLE SPECS" FontSize="11" Foreground="#4DFF8A" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
-                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="0,2,0,0">
                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
                                         <TextBlock x:Name="LblProducerText" Text="PRODUCER" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock x:Name="VehProducerText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
@@ -177,17 +177,13 @@
                                         <TextBlock x:Name="LblModelText" Text="MODEL" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock x:Name="VehModelText" Text="-" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
-                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,4">
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,4,0">
                                         <TextBlock x:Name="LblYearChassisText" Text="YEAR / CHASSIS" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock x:Name="VehYearChassisText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
-                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,4">
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="4,0,0,0">
                                         <TextBlock x:Name="LblBuildTypeText" Text="BUILD / TYPE" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock x:Name="VehBuildTypeText" Text="-" FontSize="11" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,0">
-                                        <TextBlock Text="VIN" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
-                                        <TextBlock x:Name="VehVinText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>

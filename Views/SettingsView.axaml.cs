@@ -19,7 +19,13 @@ public partial class SettingsView : UserControl
 
         if (LanguageComboBox != null)
         {
-            LanguageComboBox.SelectedIndex = LanguageService.CurrentLanguage == "fr" ? 1 : 0;
+            LanguageComboBox.SelectedIndex = LanguageService.CurrentLanguage switch
+            {
+                "fr" => 1,
+                "es" => 2,
+                "de" => 3,
+                _ => 0
+            };
         }
 
         _isInitializing = false;
