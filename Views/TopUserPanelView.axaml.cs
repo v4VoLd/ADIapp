@@ -26,7 +26,10 @@ public partial class TopUserPanelView : UserControl
         NotificationService.NotificationReceived += OnNotificationReceived;
         NotificationService.NotificationsUpdated += OnNotificationsUpdated;
         WebSocketManager.OrderUpdated += OnOrderUpdated;
+        LanguageService.LanguageChanged += OnLanguageChanged;
+
         UpdateNotificationsList();
+        UpdateLocalizedText();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -35,6 +38,7 @@ public partial class TopUserPanelView : UserControl
         NotificationService.NotificationReceived -= OnNotificationReceived;
         NotificationService.NotificationsUpdated -= OnNotificationsUpdated;
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
+        LanguageService.LanguageChanged -= OnLanguageChanged;
     }
 
     private void OnOrderUpdated()
@@ -51,12 +55,28 @@ public partial class TopUserPanelView : UserControl
             {
                 nameBlock.Text = $"{ApiService.CurrentUser.FirstName} {ApiService.CurrentUser.LastName}".Trim();
             }
-            var tokenBlock = this.FindControl<TextBlock>("UserTokenBlock");
-            if (tokenBlock != null)
-            {
-                tokenBlock.Text = $"Token: {ApiService.CurrentUser.AvailableCredit}";
-            }
         }
+    }
+
+    private void OnLanguageChanged()
+    {
+        Dispatcher.UIThread.Post(() => {
+            UpdateLocalizedText();
+        });
+    }
+
+    private void UpdateLocalizedText()
+    {
+        if (HelloLabelBlock != null) HelloLabelBlock.Text = LanguageService.Get("TopPanel_Hello");
+        if (UserTokenBlock != null)
+        {
+            var credit = ApiService.CurrentUser?.AvailableCredit ?? 0;
+            UserTokenBlock.Text = $"{LanguageService.Get("TopPanel_Token")} {credit}";
+        }
+        if (NotifTitleBlock != null) NotifTitleBlock.Text = LanguageService.Get("TopPanel_Notifications");
+        if (ClearAllBtn != null) ClearAllBtn.Content = LanguageService.Get("TopPanel_ClearAll");
+        if (AccountBtn != null) AccountBtn.Content = LanguageService.Get("TopPanel_Account");
+        if (LogoutBtn != null) LogoutBtn.Content = LanguageService.Get("TopPanel_Logout");
     }
 
     private MainWindow? Window =>
@@ -122,12 +142,22 @@ public partial class TopUserPanelView : UserControl
         Window?.Navigate(new OrderHistoryView());
     }
 
-    private void Logout_Click(object? sender, RoutedEventArgs e)
+    private async void Logout_Click(object? sender, RoutedEventArgs e)
     {
         Menu.IsVisible = false;
         var notificationMenu = this.FindControl<Border>("NotificationMenu");
         if (notificationMenu != null) notificationMenu.IsVisible = false;
-        Window?.Navigate(new LoginView());
+
+        var window = Window;
+        if (window == null) return;
+
+        var dialog = new ConfirmLogoutDialog();
+        var confirm = await dialog.ShowDialog<bool>(window);
+        if (confirm)
+        {
+            ApiService.Logout();
+            window.Navigate(new LoginView());
+        }
     }
 
     private void OnNotificationReceived(NotificationModel notif)
@@ -221,6 +251,7 @@ public partial class TopUserPanelView : UserControl
     {
         var dialog = new Window
         {
+            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://ADIapp/Assets/sidebar_logo.png"))),
             Width = 280,
             Height = 120,
             CanResize = false,

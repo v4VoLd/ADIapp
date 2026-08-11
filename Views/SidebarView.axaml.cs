@@ -19,6 +19,29 @@ public partial class SidebarView : UserControl
     {
         base.OnInitialized();
         UpdateExpirationDate();
+        UpdateLocalizedText();
+        LanguageService.LanguageChanged += OnLanguageChanged;
+    }
+
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        UpdateLocalizedText();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        if (NavHomeText != null) NavHomeText.Text = LanguageService.Get("Sidebar_Home");
+        if (NavSettingsText != null) NavSettingsText.Text = LanguageService.Get("Sidebar_Settings");
+        if (NavTicketsText != null) NavTicketsText.Text = LanguageService.Get("Sidebar_Tickets");
+        if (NavInfoText != null) NavInfoText.Text = LanguageService.Get("Sidebar_Info");
+        if (NavLogoutText != null) NavLogoutText.Text = LanguageService.Get("Sidebar_Logout");
+        if (LicenseExpTitleText != null) LicenseExpTitleText.Text = LanguageService.Get("Sidebar_LicenseExp");
     }
 
     private void UpdateExpirationDate()
@@ -80,9 +103,18 @@ public partial class SidebarView : UserControl
         Window?.Navigate(new InfoView());
     }
 
-    private void Logout_Click(object? s, RoutedEventArgs e)
+    private async void Logout_Click(object? s, RoutedEventArgs e)
     {
-        Select((Button)s!);
-        Window?.Navigate(new LoginView());
+        var window = Window;
+        if (window == null) return;
+
+        var dialog = new ConfirmLogoutDialog();
+        var confirm = await dialog.ShowDialog<bool>(window);
+        if (confirm)
+        {
+            Select((Button)s!);
+            ApiService.Logout();
+            window.Navigate(new LoginView());
+        }
     }
 }

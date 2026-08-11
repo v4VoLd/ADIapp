@@ -65,7 +65,6 @@ public static class WebSocketManager
         catch (Exception ex)
         {
             Logger.Error($"[WebSocket] Exception during initialization: {ex.Message}", ex);
-            throw;
         }
     }
 

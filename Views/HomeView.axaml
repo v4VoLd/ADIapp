@@ -1,32 +1,98 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
              x:Class="ADIapp.Views.HomeView">
 
-    <StackPanel Width="800"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Stretch"
-                Margin="120">
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+		<Grid MinHeight="600" Margin="55,85,40,40">
+			<StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Spacing="18" MaxWidth="620">
+				<!-- Badge Tag -->
+				<Border Background="Transparent"
+						CornerRadius="12"
+						Padding="0,4"
+						HorizontalAlignment="Left">
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<TextBlock Text="⚡" FontSize="14" VerticalAlignment="Center" Foreground="#3B82F6"/>
+						<TextBlock Text="ADI PERFORMANCE PLATFORM"
+								   FontSize="11"
+								   FontWeight="Bold"
+								   Foreground="#CFCFCF"/>
+					</StackPanel>
+				</Border>
 
-        <TextBlock Text="Welcome to ADI Performance"
-                   FontSize="64"
-                   Foreground="#464646"
-                   FontWeight="Bold"
-                   TextWrapping="Wrap"
-                   TextAlignment="Center"/>
+				<!-- Title & Description -->
+				<TextBlock x:Name="WelcomeTitleText"
+						   Text="Welcome to&#x0a;ADI Performance"
+						   FontSize="44"
+						   FontWeight="Heavy"
+						   Foreground="White"
+						   HorizontalAlignment="Left"
+						   TextWrapping="Wrap"/>
 
-        <Button Content="Get Started"
-                Width="200"
-                Height="60"
-                Background="White"
-                Foreground="Black"
-                FontSize="24"
-                FontWeight="Bold"
-                Margin="0,30,0,0"
-                HorizontalAlignment="Center"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Click="GetStarted_Click"/>
+				<TextBlock x:Name="WelcomeDescText"
+						   Text="Next-generation ECU tuning,&#x0a;file service management and automotive performance diagnostics."
+						   FontSize="16"
+						   Foreground="#A0A0B0"
+						   HorizontalAlignment="Left"
+						   TextWrapping="Wrap"
+						   MaxWidth="580"/>
 
-    </StackPanel>
+				<!-- Action Buttons -->
+				<StackPanel Orientation="Horizontal" Spacing="16" Margin="0,12,0,0" HorizontalAlignment="Left">
+					<Button x:Name="GetStartedBtn"
+							Content="Get Started ➔"
+							Click="GetStarted_Click"
+							Classes="hero-primary"/>
+
+					<Button x:Name="LearnMoreBtn"
+							Content="Learn More"
+							Click="Info_Click"
+							Classes="hero-secondary"/>
+				</StackPanel>
+			</StackPanel>
+		</Grid>
+	</ScrollViewer>
+
+	<!-- STYLES -->
+	<UserControl.Styles>
+
+		<!-- Hero Primary Button -->
+		<Style Selector="Button.hero-primary">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="Foreground" Value="#141414"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="FontSize" Value="15"/>
+			<Setter Property="Padding" Value="24,12"/>
+			<Setter Property="CornerRadius" Value="10"/>
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.hero-primary:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#E0E0E0"/>
+			<Setter Property="Foreground" Value="#141414"/>
+		</Style>
+
+		<!-- Hero Secondary Button -->
+		<Style Selector="Button.hero-secondary">
+			<Setter Property="Background" Value="#141414"/>
+			<Setter Property="Foreground" Value="white"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="FontSize" Value="15"/>
+			<Setter Property="Padding" Value="22,12"/>
+			<Setter Property="CornerRadius" Value="10"/>
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.hero-secondary:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#323242"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+
+
+
+	</UserControl.Styles>
 
 </UserControl>

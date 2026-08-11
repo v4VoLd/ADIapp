@@ -1,6 +1,11 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-              x:Class="ADIapp.Views.TicketView">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
+             x:Class="ADIapp.Views.TicketView">
 
     <Grid>
         <!-- Main View: Split Master/Detail -->
@@ -87,6 +92,8 @@
                                 Content="Send Reply"
                                 Height="44"
                                 Padding="20,0"
+                                VerticalContentAlignment="Center"
+                                HorizontalContentAlignment="Center"
                                 Background="White"
                                 Foreground="Black"
                                 FontWeight="Bold"

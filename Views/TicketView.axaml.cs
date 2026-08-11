@@ -39,6 +39,33 @@ public partial class TicketView : UserControl
         _initialTicketId = initialTicketId;
     }
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        UpdateLocalizedText();
+        LanguageService.LanguageChanged += OnLanguageChanged;
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        UpdateLocalizedText();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        var title = this.FindControl<TextBlock>("TicketTitleBlock");
+        if (title != null) title.Text = LanguageService.Get("Ticket_Title");
+
+        var subtitle = this.FindControl<TextBlock>("TicketSubtitleBlock");
+        if (subtitle != null) subtitle.Text = LanguageService.Get("Ticket_Subtitle");
+    }
+
     private void OnTicketUpdated()
     {
         Dispatcher.UIThread.InvokeAsync(async () =>
@@ -232,14 +259,39 @@ public partial class TicketView : UserControl
 
         if (messages == null || messages.Count == 0)
         {
-            MessagesPanel.Children.Add(new TextBlock
+            var emptyStack = new StackPanel
             {
-                Text = "No messages in this ticket thread yet.",
-                Foreground = Brush.Parse("#888888"),
-                FontSize = 13,
+                Spacing = 10,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 40)
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 60)
+            };
+
+            emptyStack.Children.Add(new TextBlock
+            {
+                Text = "💬",
+                FontSize = 36,
+                HorizontalAlignment = HorizontalAlignment.Center
             });
+
+            emptyStack.Children.Add(new TextBlock
+            {
+                Text = "No Messages Yet",
+                FontSize = 16,
+                FontWeight = FontWeight.Bold,
+                Foreground = Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            emptyStack.Children.Add(new TextBlock
+            {
+                Text = "Type a message below to start communicating with technical support.",
+                FontSize = 13,
+                Foreground = Brush.Parse("#A0A0B0"),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            MessagesPanel.Children.Add(emptyStack);
             return;
         }
 
@@ -249,15 +301,17 @@ public partial class TicketView : UserControl
 
             var bubble = new Border
             {
-                Background = Brush.Parse(isAdmin ? "#2B2B2B" : "#1A3A5C"),
-                CornerRadius = new CornerRadius(10),
-                Padding = new Thickness(14, 10),
+                Background = Brush.Parse(isAdmin ? "#252525" : "#1E3A5F"),
+                BorderBrush = Brush.Parse(isAdmin ? "#3D3D3D" : "#2A5A8F"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = isAdmin ? new CornerRadius(14, 14, 14, 3) : new CornerRadius(14, 14, 3, 14),
+                Padding = new Thickness(16, 12),
                 Margin = new Thickness(0, 4),
                 HorizontalAlignment = isAdmin ? HorizontalAlignment.Left : HorizontalAlignment.Right,
-                MaxWidth = 550
+                MaxWidth = 580
             };
 
-            var stack = new StackPanel { Spacing = 4 };
+            var stack = new StackPanel { Spacing = 6 };
 
             stack.Children.Add(new TextBlock
             {

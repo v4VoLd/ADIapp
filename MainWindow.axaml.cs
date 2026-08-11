@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using ADIapp.Views;
 
@@ -10,12 +11,14 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+#if DEBUG
+        this.AttachDevTools();
+#endif
         try
         {
-            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/login_logo.png")));
+            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/sidebar_logo.ico")));
         }
         catch { }
-
         if (Helpers.VmDetector.IsVirtualMachine())
         {
             MainContent.Content = new VmBlockedView();

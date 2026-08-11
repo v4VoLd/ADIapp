@@ -5,7 +5,7 @@
         mc:Ignorable="d"
         x:Class="ADIapp.MainWindow"
         Title="ADIapp"
-        Icon="/Assets/login_logo.png"
+        Icon="/Assets/sidebar_logo.png"
         Width="1500"
         Height="900"
         MinWidth="1200"

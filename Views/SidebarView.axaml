@@ -1,83 +1,166 @@
 <UserControl xmlns="https://github.com/avaloniaui"
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d"
+			 d:DesignWidth="260"
+			 d:DesignHeight="800"
 			 x:Class="ADIapp.Views.SidebarView">
 
 	<Grid>
-		<Image Source="avares://ADIapp/Assets/Sidebar_background.png"
+		<!-- Background image -->
+		<Image Source="avares://ADIapp/Assets/sidebar_background.png"
 			   Stretch="UniformToFill"/>
 
-		<StackPanel VerticalAlignment="Center"
-					HorizontalAlignment="Stretch"
-					Margin="20">
+		<!-- Main Layout Column: Logo Top, Nav Center, License Footer -->
+		<Grid RowDefinitions="Auto,*,Auto" Margin="16,24,16,24">
 
-			<Image Source="avares://ADIapp/Assets/sidebar_logo.png"
-				   Width="222"
-				   Height="120"
-				   HorizontalAlignment="Center"
-				   Margin="0,20,0,30"/>
-
-			<!-- MENU -->
-			<Button Content="Home"
-					Click="Home_Click"
-					Classes="sidebar"/>
-
-			<Button Content="Settings"
-					Click="Settings_Click"
-					Classes="sidebar"/>
-
-			<Button Content="Tickets"
-					Click="Tickets_Click"
-					Classes="sidebar"/>
-
-			<Button Content="Orders"
-					Click="Orders_Click"
-					Classes="sidebar"/>
-
-			<Button Content="Info"
-					Click="Info_Click"
-					Classes="sidebar"/>
-
-			<Button Content="Logout"
-					Click="Logout_Click"
-					Classes="sidebar"/>
-
-			<TextBlock Text="License Expiration Date"
-					   FontSize="12"
-					   Foreground="#BEBEBE"
-					   HorizontalAlignment="Center"
-					   Margin="0,40,0,0"/>
-
-			<TextBlock x:Name="LicenseExpirationText"
-					   Text="01/01/2026"
-					   FontSize="12"
-					   FontWeight="Bold"
-					   Foreground="White"
+			<!-- 1. TOP LOGO -->
+			<StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,10,0,24">
+				<Image Source="avares://ADIapp/Assets/sidebar_logo.png"
+					   Width="180"
+					   Height="90"
+					   Stretch="Uniform"
 					   HorizontalAlignment="Center"/>
-		</StackPanel>
+			</StackPanel>
+
+			<!-- 2. NAVIGATION MENU -->
+			<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+				<StackPanel Spacing="8" VerticalAlignment="Top" Margin="4,10">
+
+					<!-- HOME -->
+					<Button x:Name="HomeBtn"
+							Click="Home_Click"
+							Classes="sidebar-nav selected">
+						<StackPanel Orientation="Horizontal" Spacing="16">
+							<TextBlock Text="🏠" FontSize="20" VerticalAlignment="Center"/>
+							<TextBlock x:Name="NavHomeText" Text="Home" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
+					<!-- SETTINGS -->
+					<Button Click="Settings_Click"
+							Classes="sidebar-nav">
+						<StackPanel Orientation="Horizontal" Spacing="16">
+							<TextBlock Text="⚙️" FontSize="20" VerticalAlignment="Center"/>
+							<TextBlock x:Name="NavSettingsText" Text="Settings" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
+					<!-- TICKETS -->
+					<Button Click="Tickets_Click"
+							Classes="sidebar-nav">
+						<StackPanel Orientation="Horizontal" Spacing="16">
+							<TextBlock Text="🎫" FontSize="20" VerticalAlignment="Center"/>
+							<TextBlock x:Name="NavTicketsText" Text="Tickets" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
+					<!-- ORDERS -->
+					<Button Click="Orders_Click"
+							Classes="sidebar-nav">
+						<StackPanel Orientation="Horizontal" Spacing="16">
+							<TextBlock Text="📦" FontSize="20" VerticalAlignment="Center"/>
+							<TextBlock x:Name="NavOrdersText" Text="Orders" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
+					<!-- INFO -->
+					<Button Click="Info_Click"
+							Classes="sidebar-nav">
+						<StackPanel Orientation="Horizontal" Spacing="16">
+							<TextBlock Text="ℹ️" FontSize="20" VerticalAlignment="Center"/>
+							<TextBlock x:Name="NavInfoText" Text="Info" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
+					<Separator Height="1" Background="#242430" Margin="0,12"/>
+
+					<!-- LOGOUT -->
+					<Button Click="Logout_Click"
+							Classes="sidebar-nav logout">
+						<StackPanel Orientation="Horizontal" Spacing="16">
+							<TextBlock Text="🚪" FontSize="20" VerticalAlignment="Center"/>
+							<TextBlock x:Name="NavLogoutText" Text="Logout" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
+				</StackPanel>
+			</ScrollViewer>
+
+			<!-- 3. FOOTER: LICENSE CARD -->
+			<Border Grid.Row="2"
+					Background="#141414"
+					BorderThickness="0"
+					CornerRadius="14"
+					Padding="14,12"
+					Margin="0,16,0,0">
+				<Grid ColumnDefinitions="Auto,*">
+					<Border Grid.Column="0"
+							Width="36"
+							Height="36"
+							CornerRadius="10"
+							Background="#242424"
+							Margin="0,0,12,0"
+							VerticalAlignment="Center">
+						<TextBlock Text="🛡️" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+					</Border>
+					<StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+						<TextBlock x:Name="LicenseExpTitleText"
+								   Text="License Expiration"
+								   FontSize="11"
+								   Foreground="#9E9EA0"
+								   FontWeight="Normal"/>
+						<TextBlock x:Name="LicenseExpirationText"
+								   Text="01/01/2026"
+								   FontSize="13"
+								   FontWeight="Bold"
+								   Foreground="White"/>
+					</StackPanel>
+				</Grid>
+			</Border>
+
+		</Grid>
 
 		<!-- STYLES -->
 		<Grid.Styles>
 
-			<!-- Default -->
-			<Style Selector="Button.sidebar">
-				<Setter Property="FontSize" Value="32"/>
-				<Setter Property="Foreground" Value="Gray"/>
-				<Setter Property="FontWeight" Value="Normal"/>
+			<!-- Base Sidebar Nav Item -->
+			<Style Selector="Button.sidebar-nav">
 				<Setter Property="Background" Value="Transparent"/>
-				<Setter Property="BorderThickness" Value="0"/>
+				<Setter Property="Foreground" Value="#A0A0B0"/>
 				<Setter Property="HorizontalAlignment" Value="Stretch"/>
-				<Setter Property="HorizontalContentAlignment" Value="Center"/>
-				<Setter Property="Margin" Value="0,8"/>
+				<Setter Property="HorizontalContentAlignment" Value="Left"/>
+				<Setter Property="Padding" Value="16,14"/>
+				<Setter Property="CornerRadius" Value="12"/>
+				<Setter Property="BorderThickness" Value="0"/>
+				<Setter Property="Cursor" Value="Hand"/>
 			</Style>
 
-			<!-- Selected -->
-			<Style Selector="Button.sidebar.selected">
+			<Style Selector="Button.sidebar-nav:pointerover /template/ ContentPresenter">
+				<Setter Property="Background" Value="#1E1E28"/>
 				<Setter Property="Foreground" Value="White"/>
-				<Setter Property="FontWeight" Value="Bold"/>
+			</Style>
+
+			<!-- Selected Nav Item -->
+			<Style Selector="Button.sidebar-nav.selected">
+				<Setter Property="Background" Value="#242424"/>
+				<Setter Property="Foreground" Value="White"/>
+			</Style>
+			<Style Selector="Button.sidebar-nav.selected /template/ ContentPresenter">
+				<Setter Property="Background" Value="#242424"/>
+				<Setter Property="Foreground" Value="White"/>
+			</Style>
+
+			<!-- Logout Button Special Styling -->
+			<Style Selector="Button.sidebar-nav.logout">
+				<Setter Property="Foreground" Value="#A0A0B0"/>
+			</Style>
+			<Style Selector="Button.sidebar-nav.logout:pointerover /template/ ContentPresenter">
+				<Setter Property="Background" Value="white"/>
+				<Setter Property="Foreground" Value="black"/>
 			</Style>
 
 		</Grid.Styles>
-
-
 	</Grid>
 </UserControl>

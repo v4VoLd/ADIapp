@@ -1,0 +1,141 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
+             x:Class="ADIapp.Views.HowItWorksView">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid MinHeight="650" Margin="32,30">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="760"
+                        Spacing="28">
+
+                <!-- TITLE HEADER -->
+                <StackPanel Spacing="8" HorizontalAlignment="Center">
+                    <Border Background="#1A271F"
+                            BorderBrush="#255233"
+                            BorderThickness="1"
+                            CornerRadius="20"
+                            Padding="14,4"
+                            HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="✨" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="BadgeBlock" Text="HOW IT WORKS" FontSize="11" FontWeight="Bold" Foreground="#4DFF8A"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock x:Name="TitleBlock"
+                               Text="How To Use ADI Performance"
+                               FontSize="32"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="SubtitleBlock"
+                               Text="4 simple steps to tune and modify your vehicle file in seconds"
+                               FontSize="13"
+                               Foreground="#A0A0B0"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- STEP-BY-STEP TUTORIAL GRID -->
+                <UniformGrid Columns="2" HorizontalAlignment="Stretch">
+                    
+                    <!-- STEP 1 -->
+                    <Border Background="#161820"
+                            BorderBrush="#262832"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="22,20"
+                            Margin="8">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Border Grid.Column="0" Background="#1E293B" CornerRadius="10" Width="36" Height="36">
+                                    <TextBlock Text="1" FontSize="16" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Grid.Column="1" x:Name="Step1TitleBlock" Text="📁 Upload Your File" FontSize="15" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            </Grid>
+                            <TextBlock x:Name="Step1DescBlock" Text="Click New Upload on the left sidebar and choose your original vehicle binary file."
+                                       FontSize="13" Foreground="#94A3B8" TextWrapping="Wrap" LineHeight="18"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- STEP 2 -->
+                    <Border Background="#161820"
+                            BorderBrush="#262832"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="22,20"
+                            Margin="8">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Border Grid.Column="0" Background="#1E293B" CornerRadius="10" Width="36" Height="36">
+                                    <TextBlock Text="2" FontSize="16" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Grid.Column="1" x:Name="Step2TitleBlock" Text="🔍 Instant Vehicle Check" FontSize="15" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            </Grid>
+                            <TextBlock x:Name="Step2DescBlock" Text="Our system automatically detects your vehicle specs, engine displacement, and ECU info."
+                                       FontSize="13" Foreground="#94A3B8" TextWrapping="Wrap" LineHeight="18"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- STEP 3 -->
+                    <Border Background="#161820"
+                            BorderBrush="#262832"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="22,20"
+                            Margin="8">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Border Grid.Column="0" Background="#1E293B" CornerRadius="10" Width="36" Height="36">
+                                    <TextBlock Text="3" FontSize="16" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Grid.Column="1" x:Name="Step3TitleBlock" Text="⚡ Select Options" FontSize="15" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            </Grid>
+                            <TextBlock x:Name="Step3DescBlock" Text="Toggle your desired performance stages, delete options, or special features with 1 click."
+                                       FontSize="13" Foreground="#94A3B8" TextWrapping="Wrap" LineHeight="18"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- STEP 4 -->
+                    <Border Background="#161820"
+                            BorderBrush="#262832"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="22,20"
+                            Margin="8">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Border Grid.Column="0" Background="#14281E" CornerRadius="10" Width="36" Height="36">
+                                    <TextBlock Text="4" FontSize="16" FontWeight="Bold" Foreground="#4DFF8A" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Grid.Column="1" x:Name="Step4TitleBlock" Text="💾 Save &amp; Download" FontSize="15" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            </Grid>
+                            <TextBlock x:Name="Step4DescBlock" Text="Click Save Order to confirm your selection and download your ready-to-use tuned file!"
+                                       FontSize="13" Foreground="#94A3B8" TextWrapping="Wrap" LineHeight="18"/>
+                        </StackPanel>
+                    </Border>
+
+                </UniformGrid>
+
+                <!-- CALL TO ACTION BUTTON -->
+                <Button x:Name="UnderstandBtn"
+                        Content="I Understand ➔"
+                        Click="Understand_Click"
+                        HorizontalAlignment="Center"
+                        Padding="36,12"
+                        FontSize="15"
+                        FontWeight="Bold"
+                        Background="White"
+                        Foreground="#141414"
+                        CornerRadius="12"
+                        Cursor="Hand"/>
+
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+
+</UserControl>

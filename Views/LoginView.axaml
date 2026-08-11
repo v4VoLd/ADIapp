@@ -1,86 +1,149 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
              x:Class="ADIapp.Views.LoginView">
 
-    <Grid  Background="Black">
+    <Grid Background="Black">
 
         <!-- Background -->
-        <Image Source="avares://ADIapp/Assets/login_background.png"
+        <Image Source="avares://ADIapp/Assets/login_background2.png"
+               HorizontalAlignment="Left"
                Stretch="UniformToFill"/>
 
-        <!-- Centered Login Panel -->
-        <Border Width="420"
-                Padding="30"
-                Background="#CC000000"
-                CornerRadius="16"
+        <!-- Centered Login Card -->
+        <Border Width="440"
+                Padding="36,32"
+                Background="#141414"
+                BorderThickness="0"
+                CornerRadius="20"
                 HorizontalAlignment="Center"
-                VerticalAlignment="Center">
+                VerticalAlignment="Center"
+                BoxShadow="0 16 48 0 #B0000000">
 
-            <StackPanel>
+            <StackPanel Spacing="18">
 
+                <!-- Logo Header -->
                 <Image Source="avares://ADIapp/Assets/login_logo.png"
-                       Width="320"
-                       HorizontalAlignment="Center"/>
+                       Width="260"
+                       Height="75"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,2"/>
 
-                <TextBlock Text="Welcome"
-                           FontSize="26"
-                           FontWeight="Bold"
-                           Foreground="White"
+                <!-- Subtitle Description -->
+                <TextBlock x:Name="WelcomeSubtitleText"
+                           Text="Sign in to access your ADI Performance account"
+                           FontSize="13"
+                           Foreground="#9E9EA0"
                            HorizontalAlignment="Center"
-                           Margin="0,15"/>
+                           TextAlignment="Center"
+                           Margin="0,0,0,6"/>
 
-                <TextBlock Text="Username"
-                           FontSize="14"
-                           FontWeight="Bold"
-                           Foreground="White"/>
+                <!-- USERNAME / EMAIL INPUT -->
+                <StackPanel Spacing="6" Margin="0,8,0,0">
+                    <TextBlock x:Name="UsernameLabelText"
+                               Text="Username or Email"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="#CFCFCF"/>
 
-                <TextBox x:Name="EmailBox"
-                         FontSize="18"
-                         Padding="12"
-                         Foreground="White"
-                         Background="#101010"
-                         BorderThickness="0"/>
+                    <TextBox x:Name="EmailBox"
+                             FontSize="14"
+                             Padding="14,12"
+                             Foreground="White"
+                             Background="#1c1c1c"
+                             BorderBrush="#393939"
+                             BorderThickness="1"
+                             CornerRadius="10"
+                             Watermark="Enter Your Email"/>
+                </StackPanel>
 
-                <TextBlock Text="Password"
-                           FontSize="14"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           Margin="0,12,0,0"/>
+                <!-- PASSWORD INPUT -->
+                <StackPanel Spacing="6">
+                    <TextBlock x:Name="PasswordLabelText"
+                               Text="Password"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="#CFCFCF"/>
 
-                <TextBox x:Name="PasswordBox"
-                         FontSize="16"
-                         Padding="12"
-                         Foreground="White"
-                         Background="#101010"
-                         BorderThickness="0"
-                         PasswordChar="*"/>
+                    <TextBox x:Name="PasswordBox"
+                             FontSize="14"
+                             Padding="14,12"
+                             Foreground="White"
+                             Background="#1c1c1c"
+                             BorderBrush="#393939"
+                             BorderThickness="1"
+                             CornerRadius="10"
+                             PasswordChar="•"
+                             Watermark="Enter password"/>
+                </StackPanel>
 
+                <!-- ERROR MESSAGE -->
                 <TextBlock x:Name="ErrorLabel"
                            Foreground="#FF4D4D"
-                           FontSize="14"
+                           FontSize="13"
                            FontWeight="Medium"
                            HorizontalAlignment="Center"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Margin="0,15,0,0"
+                           Margin="0,4,0,0"
                            IsVisible="False"/>
 
+                <!-- SUBMIT BUTTON -->
                 <Button x:Name="LoginButton"
-                        Content="Login"
-                        FontSize="18"
+                        Content="Sign In ➔"
+                        FontSize="15"
                         FontWeight="Bold"
                         Background="White"
-                        Foreground="Black"
-                        Margin="0,20,0,0"
-                        HorizontalAlignment="Center"
+                        Foreground="#141414"
+                        HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
-                        Width="160"
-                        Height="48"
-                        Click="Login_Click"/>
+                        Height="46"
+                        CornerRadius="10"
+                        Margin="0,8,0,0"
+                        Cursor="Hand"
+                        Click="Login_Click"
+                        IsDefault="True"
+                        Classes="login-btn"/>
+
+                <!-- SIGN UP LINK -->
+                <Button x:Name="SignUpButton"
+                        Content="Don't have an account? Sign Up"
+                        FontSize="13"
+                        FontWeight="Normal"
+                        Foreground="#9E9EA0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        HorizontalAlignment="Center"
+                        Margin="0,4,0,0"
+                        Cursor="Hand"
+                        Click="SignUp_Click"
+                        Classes="signup-btn"/>
+
             </StackPanel>
 
         </Border>
+
+        <!-- STYLES -->
+        <Grid.Styles>
+            <Style Selector="Button.login-btn:pointerover /template/ ContentPresenter">
+                <Setter Property="Background" Value="#E0E0E0"/>
+                <Setter Property="Foreground" Value="#141414"/>
+            </Style>
+            <Style Selector="Button.signup-btn:pointerover /template/ ContentPresenter">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#3B82F6"/>
+            </Style>
+            <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                <Setter Property="Background" Value="#1C1C24"/>
+            </Style>
+        </Grid.Styles>
 
     </Grid>
 </UserControl>

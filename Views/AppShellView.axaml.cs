@@ -15,5 +15,10 @@ public partial class AppShellView : UserControl
     public void NavigatePage(Control page)
     {
         PageContent.Content = page;
+
+        if (TopUserPanel != null)
+        {
+            TopUserPanel.IsVisible = page is not TuneView && page is not TicketView;
+        }
     }
 }

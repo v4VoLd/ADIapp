@@ -1,58 +1,70 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
              x:Class="ADIapp.Views.SettingsView">
 
-    <StackPanel HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Width="500"
-                Spacing="28">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid MinHeight="600" Margin="32,40">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="560"
+                        Spacing="28">
 
-        <!-- TITLE -->
-        <TextBlock Text="Settings"
-                   FontSize="36"
-                   FontWeight="Bold"
-                   Foreground="White"
-                   HorizontalAlignment="Center"/>
+                <!-- TITLE HEADER -->
+                <StackPanel Spacing="6" HorizontalAlignment="Center">
+                    <TextBlock x:Name="TitleText"
+                               Text="Settings"
+                               FontSize="32"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="SettingsSubtitleText"
+                               Text="Customize application preferences and display language"
+                               FontSize="13"
+                               Foreground="#A0A0B0"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
 
-        <!-- DARK MODE
-        <StackPanel Spacing="10">
-            <TextBlock Text="Dark mode"
-                       FontSize="16"
-                       FontWeight="Bold"
-                       Foreground="White"/>
+                <!-- CARD CONTAINER -->
+                <Border Background="#181818"
+                        BorderBrush="#2D2D2D"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="32,28">
+                    <StackPanel Spacing="20">
 
-            <Border Background="#1F1F1F"
-                    CornerRadius="10"
-                    Padding="14">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Dark mode"
-                               Foreground="#CFCFCF"
-                               VerticalAlignment="Center"/>
-                    <ToggleSwitch Grid.Column="1"/>
-                </Grid>
-            </Border>
-        </StackPanel> -->
+                        <!-- LANGUAGE SECTION -->
+                        <StackPanel Spacing="10">
+                            <TextBlock x:Name="LanguageLabelText"
+                                       Text="Language / Langue"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="#E0E0E0"/>
 
-        <!-- LANGUAGE -->
-        <StackPanel Spacing="10">
-            <TextBlock Text="Language"
-                       FontSize="16"
-                       FontWeight="Bold"
-                       Foreground="White"
-                       Height="18"/>
+                            <ComboBox x:Name="LanguageComboBox"
+                                      HorizontalAlignment="Stretch"
+                                      Height="42"
+                                      Background="#252525"
+                                      Foreground="White"
+                                      BorderBrush="#3D3D3D"
+                                      BorderThickness="1"
+                                      CornerRadius="8"
+                                      Padding="14,8"
+                                      VerticalContentAlignment="Center"
+                                      SelectionChanged="Language_SelectionChanged">
+                                <ComboBoxItem Content="English 🇺🇸" Tag="en" Padding="12,8"/>
+                                <ComboBoxItem Content="Français 🇫🇷" Tag="fr" Padding="12,8"/>
+                            </ComboBox>
+                        </StackPanel>
 
-            <Border Background="#1F1F1F"
-                    CornerRadius="10"
-                    Padding="14"
-                    BorderThickness="0">
-                <ComboBox SelectedIndex="0">
-                    <ComboBoxItem Content="English"/>
-                    <ComboBoxItem Content="Arabic"/>
-                    <ComboBoxItem Content="French"/>
-                </ComboBox>
-            </Border>
-        </StackPanel>
-
-    </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 
 </UserControl>
