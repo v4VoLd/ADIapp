@@ -38,15 +38,6 @@
 						</StackPanel>
 					</Button>
 
-					<!-- SETTINGS -->
-					<Button Click="Settings_Click"
-							Classes="sidebar-nav">
-						<StackPanel Orientation="Horizontal" Spacing="16">
-							<TextBlock Text="⚙️" FontSize="20" VerticalAlignment="Center"/>
-							<TextBlock x:Name="NavSettingsText" Text="Settings" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
-						</StackPanel>
-					</Button>
-
 					<!-- TICKETS -->
 					<Button Click="Tickets_Click"
 							Classes="sidebar-nav">
@@ -62,6 +53,15 @@
 						<StackPanel Orientation="Horizontal" Spacing="16">
 							<TextBlock Text="📦" FontSize="20" VerticalAlignment="Center"/>
 							<TextBlock x:Name="NavOrdersText" Text="Orders" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						</StackPanel>
+					</Button>
+
+					<!-- SETTINGS -->
+					<Button Click="Settings_Click"
+							Classes="sidebar-nav">
+						<StackPanel Orientation="Horizontal" Spacing="16">
+							<TextBlock Text="⚙️" FontSize="20" VerticalAlignment="Center"/>
+							<TextBlock x:Name="NavSettingsText" Text="Settings" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
 						</StackPanel>
 					</Button>
 

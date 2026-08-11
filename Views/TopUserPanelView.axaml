@@ -135,6 +135,19 @@
 						<!-- Notifications will be added dynamically here -->
 					</StackPanel>
 				</ScrollViewer>
+
+				<Separator Height="1" Background="#2A2A2A"/>
+
+				<Button x:Name="SeeAllNotifsBtn"
+						Content="See All Notifications ➔"
+						Click="SeeAllNotifications_Click"
+						FontSize="12"
+						FontWeight="SemiBold"
+						Foreground="#4DFF8A"
+						Background="Transparent"
+						BorderThickness="0"
+						HorizontalAlignment="Center"
+						Cursor="Hand"/>
 			</StackPanel>
 		</Border>
 

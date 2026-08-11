@@ -39,6 +39,7 @@ public partial class SidebarView : UserControl
         if (NavHomeText != null) NavHomeText.Text = LanguageService.Get("Sidebar_Home");
         if (NavSettingsText != null) NavSettingsText.Text = LanguageService.Get("Sidebar_Settings");
         if (NavTicketsText != null) NavTicketsText.Text = LanguageService.Get("Sidebar_Tickets");
+        if (NavOrdersText != null) NavOrdersText.Text = LanguageService.Get("Orders_Title");
         if (NavInfoText != null) NavInfoText.Text = LanguageService.Get("Sidebar_Info");
         if (NavLogoutText != null) NavLogoutText.Text = LanguageService.Get("Sidebar_Logout");
         if (LicenseExpTitleText != null) LicenseExpTitleText.Text = LanguageService.Get("Sidebar_LicenseExp");

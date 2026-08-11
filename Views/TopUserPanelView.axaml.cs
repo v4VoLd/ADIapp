@@ -77,6 +77,8 @@ public partial class TopUserPanelView : UserControl
         if (ClearAllBtn != null) ClearAllBtn.Content = LanguageService.Get("TopPanel_ClearAll");
         if (AccountBtn != null) AccountBtn.Content = LanguageService.Get("TopPanel_Account");
         if (LogoutBtn != null) LogoutBtn.Content = LanguageService.Get("TopPanel_Logout");
+        var seeAllBtn = this.FindControl<Button>("SeeAllNotifsBtn");
+        if (seeAllBtn != null) seeAllBtn.Content = LanguageService.Get("TopPanel_SeeAll");
     }
 
     private MainWindow? Window =>
@@ -115,6 +117,13 @@ public partial class TopUserPanelView : UserControl
     private void ClearNotifications_Click(object? sender, RoutedEventArgs e)
     {
         NotificationService.ClearAll();
+    }
+
+    private void SeeAllNotifications_Click(object? sender, RoutedEventArgs e)
+    {
+        var notificationMenu = this.FindControl<Border>("NotificationMenu");
+        if (notificationMenu != null) notificationMenu.IsVisible = false;
+        Window?.Navigate(new NotificationsView());
     }
 
     // 👉 Account
@@ -203,6 +212,8 @@ public partial class TopUserPanelView : UserControl
         bool hasUnread = false;
         foreach (var notif in list)
         {
+            if (notif == null) continue;
+            string notifId = notif.Id;
             if (!notif.IsRead) hasUnread = true;
 
             var notifBorder = new Border
@@ -218,13 +229,13 @@ public partial class TopUserPanelView : UserControl
                 ColumnDefinitions = new ColumnDefinitions("*,Auto")
             };
 
-            var textStack = new StackPanel { Spacing = 4 };
+            var textStack = new StackPanel { Spacing = 4, Margin = new Thickness(0, 0, 8, 0) };
             textStack.Children.Add(new TextBlock
             {
                 Text = notif.Message,
                 Foreground = Avalonia.Media.Brushes.White,
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                FontSize = 13
+                FontSize = 12
             });
             var displayDate = notif.CreatedAt.Kind == DateTimeKind.Utc ? notif.CreatedAt.ToLocalTime() : notif.CreatedAt;
             textStack.Children.Add(new TextBlock
@@ -233,8 +244,26 @@ public partial class TopUserPanelView : UserControl
                 Foreground = Avalonia.Media.Brushes.Gray,
                 FontSize = 10
             });
-
+            Grid.SetColumn(textStack, 0);
             grid.Children.Add(textStack);
+
+            var deleteBtn = new Button
+            {
+                Content = "✕",
+                FontSize = 10,
+                Padding = new Thickness(6, 2),
+                Background = Avalonia.Media.Brushes.Transparent,
+                Foreground = Avalonia.Media.Brush.Parse("#AAAAAA"),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
+                CornerRadius = new CornerRadius(4),
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+            };
+            deleteBtn.Click += (s, e) =>
+            {
+                NotificationService.DeleteNotification(notifId);
+            };
+            Grid.SetColumn(deleteBtn, 1);
+            grid.Children.Add(deleteBtn);
 
             notifBorder.Child = grid;
             notificationsList.Children.Add(notifBorder);

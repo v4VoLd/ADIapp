@@ -127,8 +127,7 @@ public partial class TuneView : UserControl
         if (LblSwSizeText != null) LblSwSizeText.Text = LanguageService.Get("Tune_SwSize");
 
         if (AvailableTunesTitleText != null) AvailableTunesTitleText.Text = LanguageService.Get("Tune_AvailableTunes");
-        if (OriginalFileButton != null) OriginalFileButton.Content = LanguageService.Get("Tune_OriginalFile");
-        if (SaveButton != null) SaveButton.Content = LanguageService.Get("Tune_Save");
+        UpdateSummaryAndSaveButton();
     }
 
     private void OnEcuIdentified(string hash, EcuIdentifyData data)
@@ -1135,26 +1134,25 @@ public partial class TuneView : UserControl
 
         if (SaveButton != null)
         {
-            if (selectedCount > 0)
+            if (string.IsNullOrEmpty(_pendingFileHash))
             {
-                SaveButton.Content = $"Save Order ({selectedCount} Selected • {totalTokens} CBT)";
+                SaveButton.Content = "📁 Select ECU File to Upload";
                 SaveButton.Background = Avalonia.Media.Brushes.White;
                 SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
             }
             else
             {
-                SaveButton.Content = "Save Order";
-                SaveButton.Background = Avalonia.Media.Brush.Parse("#E2E8F0");
-                SaveButton.Foreground = Avalonia.Media.Brush.Parse("#64748B");
+                if (selectedCount > 0)
+                {
+                    SaveButton.Content = $"Order Selected Tuning Services ({selectedCount} Selected • {totalTokens} CBT)";
+                }
+                else
+                {
+                    SaveButton.Content = "Order Selected Tuning Services";
+                }
+                SaveButton.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+                SaveButton.Foreground = Avalonia.Media.Brushes.Black;
             }
-        }
-
-        var saveBtn = this.FindControl<Button>("SaveButton");
-        if (saveBtn != null)
-        {
-            saveBtn.Content = "Order Selected Tuning Services";
-            saveBtn.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
-            saveBtn.Foreground = Avalonia.Media.Brushes.Black;
         }
     }
 

@@ -1,0 +1,105 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
+             x:Class="ADIapp.Views.NotificationsView">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid MinHeight="600" Margin="32,30">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Width="760"
+                        Spacing="24">
+
+                <!-- TITLE HEADER & BACK BUTTON -->
+                <Grid ColumnDefinitions="Auto,*">
+                    <Button Grid.Column="0"
+                            x:Name="BackButton"
+                            Click="Back_Click"
+                            Content="← Back"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="#CFCFCF"
+                            Background="#242430"
+                            Padding="14,8"
+                            CornerRadius="10"
+                            VerticalAlignment="Center"
+                            Cursor="Hand"/>
+
+                    <StackPanel Grid.Column="1" Spacing="4" Margin="20,0,0,0">
+                        <TextBlock x:Name="NotificationsTitleBlock"
+                                   Text="Notifications &amp; Alerts"
+                                   FontSize="28"
+                                   FontWeight="Bold"
+                                   Foreground="White"/>
+                        <TextBlock x:Name="NotificationsSubtitleBlock"
+                                   Text="View and manage all system updates, order alerts, and messages."
+                                   FontSize="13"
+                                   Foreground="#A0A0B0"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- CARD CONTAINER -->
+                <Border Background="#181818"
+                        BorderBrush="#2D2D2D"
+                        BorderThickness="1"
+                        CornerRadius="18"
+                        Padding="28,24">
+                    <StackPanel Spacing="20">
+
+                        <!-- TOP TOOLBAR -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock x:Name="NotificationCountBlock"
+                                       Text="All Notifications"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       VerticalAlignment="Center"/>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                                <Button x:Name="MarkAllReadBtn"
+                                        Content="Mark All Read"
+                                        Click="MarkAllRead_Click"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Background="#252525"
+                                        Foreground="#E0E0E0"
+                                        BorderBrush="#3D3D3D"
+                                        BorderThickness="1"
+                                        Padding="14,8"
+                                        CornerRadius="8"
+                                        Cursor="Hand"/>
+
+                                <Button x:Name="ClearAllBtn"
+                                        Content="Clear All"
+                                        Click="ClearAll_Click"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Background="#3A1C1C"
+                                        Foreground="#FF8080"
+                                        BorderBrush="#5C2626"
+                                        BorderThickness="1"
+                                        Padding="14,8"
+                                        CornerRadius="8"
+                                        Cursor="Hand"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Separator Height="1" Background="#2A2A2A"/>
+
+                        <!-- NOTIFICATIONS LIST CONTAINER -->
+                        <StackPanel x:Name="NotificationsListPanel" Spacing="10">
+                            <!-- Items dynamically populated in C# code-behind -->
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+
+</UserControl>

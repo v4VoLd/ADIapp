@@ -66,6 +66,21 @@ public static class NotificationService
         _ = ApiService.MarkAllNotificationsAsReadAsync();
     }
 
+    public static void DeleteNotification(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return;
+
+        lock (Notifications)
+        {
+            Notifications.RemoveAll(n => n.Id == id);
+        }
+
+        NotificationsUpdated?.Invoke();
+
+        // Sync with backend database
+        _ = ApiService.DeleteNotificationAsync(id);
+    }
+
     public static void ClearAll()
     {
         lock (Notifications)

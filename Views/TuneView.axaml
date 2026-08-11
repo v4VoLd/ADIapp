@@ -100,7 +100,7 @@
                     <TextBlock x:Name="VehicleSubtitleText"
                                Text="Upload a binary file or select an active task to inspect specifications."
                                FontSize="12"
-                               Foreground="#888888"/>
+                               Foreground="#4DFF8A"/>
                 </StackPanel>
             </StackPanel>
         </Grid>
@@ -363,48 +363,19 @@
                             Margin="0,15,0,0"
                             Spacing="18">
 
-                    <Button x:Name="OriginalFileButton"
-                            Width="170"
-                            Height="44"
-                            Background="#242630"
-                            BorderBrush="#383C4A"
-                            BorderThickness="1"
-                            Foreground="White"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center"
-                            CornerRadius="12"
-                            FontWeight="SemiBold"
-                            Content="Original file"
-                            Click="OriginalFile_Click"
-                            Cursor="Hand"/>
-
                     <Button x:Name="SaveButton"
-                            MinWidth="220"
-                            Height="44"
-                            Padding="24,0"
+                            MinWidth="280"
+                            Height="46"
+                            Padding="32,0"
                             Background="White"
                             Foreground="#141414"
                             FontWeight="Bold"
-                            FontSize="13"
+                            FontSize="14"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
                             CornerRadius="12"
-                            Content="Save Order"
+                            Content="📁 Select ECU File to Upload"
                             Click="Save_Click"
-                            Cursor="Hand"/>
-
-                    <Button x:Name="DtcOffButton"
-                            Width="170"
-                            Height="44"
-                            Background="#242630"
-                            BorderBrush="#383C4A"
-                            BorderThickness="1"
-                            Foreground="White"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center"
-                            CornerRadius="12"
-                            FontWeight="SemiBold"
-                            Content="DTC Off"
                             Cursor="Hand"/>
 
                 </StackPanel>

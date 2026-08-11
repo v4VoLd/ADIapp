@@ -288,6 +288,24 @@ public class ApiService
         }
     }
 
+    public static async Task<bool> DeleteNotificationAsync(string id)
+    {
+        if (string.IsNullOrEmpty(AccessToken) || string.IsNullOrEmpty(id))
+            return false;
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"notifications/{id}");
+            var response = await _httpClient.DeleteAsync(requestUri);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error deleting notification {id}: {ex.Message}", ex);
+            return false;
+        }
+    }
+
     public static async Task<List<ProcessingFileDto>> GetProcessingFilesAsync()
     {
         if (string.IsNullOrEmpty(AccessToken))

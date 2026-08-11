@@ -30,6 +30,8 @@ public partial class OrderHistoryView : UserControl
         this.AttachedToVisualTree += (s, e) =>
         {
             WebSocketManager.OrderUpdated += OnOrderUpdated;
+            LanguageService.LanguageChanged += OnLanguageChanged;
+            UpdateLocalizedText();
 
             _pollTimer = new Avalonia.Threading.DispatcherTimer
             {
@@ -44,8 +46,20 @@ public partial class OrderHistoryView : UserControl
         this.DetachedFromVisualTree += (s, e) =>
         {
             WebSocketManager.OrderUpdated -= OnOrderUpdated;
+            LanguageService.LanguageChanged -= OnLanguageChanged;
             _pollTimer?.Stop();
         };
+    }
+
+    private void OnLanguageChanged()
+    {
+        Dispatcher.UIThread.Post(() => UpdateLocalizedText());
+    }
+
+    private void UpdateLocalizedText()
+    {
+        if (TitleBlock != null) TitleBlock.Text = LanguageService.Get("Orders_Title");
+        if (SubtitleBlock != null) SubtitleBlock.Text = LanguageService.Get("Orders_Subtitle");
     }
 
     private void OnOrderUpdated()
