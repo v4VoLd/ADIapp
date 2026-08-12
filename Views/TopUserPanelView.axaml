@@ -173,7 +173,9 @@
 						Classes="dropdown-item"
 						Click="Account_Click"/>
 
-				<Button Content="Token"
+				<Button 
+						x:Name="TokenBtn"
+						Content="Token"
 						Classes="dropdown-item"
 						Click="Token_Click"/>
 

@@ -21,12 +21,14 @@
                 <Grid RowDefinitions="Auto,*,Auto">
                     <!-- List Header -->
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
-                        <TextBlock Text="Support Tickets"
+                        <TextBlock x:Name="SupportTicketsHeaderBlock"
+                                   Text="Support Tickets"
                                    FontSize="18"
                                    FontWeight="Bold"
                                    Foreground="White"
                                    VerticalAlignment="Center"/>
-                        <Button Grid.Column="1"
+                        <Button x:Name="NewTicketButton"
+                                Grid.Column="1"
                                 Content="+ New Ticket"
                                 Background="#3A86FF"
                                 Foreground="White"
@@ -109,23 +111,23 @@
             <Border Width="500" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Background="#1E1E1E" BorderBrush="#3D3D3D" BorderThickness="1" CornerRadius="12" Padding="24">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Create New Support Ticket" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock x:Name="NewTicketModalTitleBlock" Text="Create New Support Ticket" FontSize="20" FontWeight="Bold" Foreground="White"/>
 
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Subject / Title" FontSize="12" Foreground="#AAAAAA"/>
+                        <TextBlock x:Name="SubjectLabelBlock" Text="Subject / Title" FontSize="12" Foreground="#AAAAAA"/>
                         <TextBox x:Name="NewSubjectInput" Watermark="e.g. ECU support, payment inquiry..." Height="40" Background="#2B2B2B" Foreground="White"/>
                     </StackPanel>
 
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Message Content" FontSize="12" Foreground="#AAAAAA"/>
+                        <TextBlock x:Name="ContentLabelBlock" Text="Message Content" FontSize="12" Foreground="#AAAAAA"/>
                         <TextBox x:Name="NewContentInput" Watermark="Describe your issue in detail..." Height="120" AcceptsReturn="True" TextWrapping="Wrap" Background="#2B2B2B" Foreground="White"/>
                     </StackPanel>
 
                     <TextBlock x:Name="TicketModalErrorText" Foreground="#FF5252" FontSize="12" IsVisible="False" TextWrapping="Wrap"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,8,0,0">
-                        <Button Content="Cancel" Click="CancelNewTicket_Click" Background="#333333" Foreground="White" CornerRadius="6" Padding="16,8"/>
-                        <Button Content="Submit Ticket" Click="SubmitNewTicket_Click" Background="#3A86FF" Foreground="White" FontWeight="Bold" CornerRadius="6" Padding="16,8"/>
+                        <Button x:Name="CancelNewTicketButton" Content="Cancel" Click="CancelNewTicket_Click" Background="#333333" Foreground="White" CornerRadius="6" Padding="16,8"/>
+                        <Button x:Name="SubmitNewTicketButton" Content="Submit Ticket" Click="SubmitNewTicket_Click" Background="#3A86FF" Foreground="White" FontWeight="Bold" CornerRadius="6" Padding="16,8"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

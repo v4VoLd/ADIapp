@@ -443,7 +443,7 @@ public partial class TuneView : UserControl
 
                     var downloadBtn = new Button
                     {
-                        Content = "⬇ Download Mod File",
+                        Content = LanguageService.Get("Download_ModFile"),
                         Background = Avalonia.Media.Brush.Parse("#4DFF8A"),
                         Foreground = Avalonia.Media.Brushes.Black,
                         FontWeight = Avalonia.Media.FontWeight.Bold,
@@ -491,7 +491,7 @@ public partial class TuneView : UserControl
                             else
                             {
                                 downloadBtn.IsEnabled = true;
-                                downloadBtn.Content = "⬇ Download Mod File";
+                                downloadBtn.Content = LanguageService.Get("Download_ModFile");
                             }
                         }
                     };

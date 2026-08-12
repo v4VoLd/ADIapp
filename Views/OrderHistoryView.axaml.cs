@@ -58,8 +58,18 @@ public partial class OrderHistoryView : UserControl
 
     private void UpdateLocalizedText()
     {
+        var TabAll = this.FindControl<Button>("TabAll");
+        var TabCompleted = this.FindControl<Button>("TabCompleted");
+        var TabCanceled = this.FindControl<Button>("TabCanceled");
+        var TabEcuTickets = this.FindControl<Button>("TabEcuTickets");
+        var TitleBlock = this.FindControl<TextBlock>("TitleBlock");
+        var SubtitleBlock = this.FindControl<TextBlock>("SubtitleBlock");
         if (TitleBlock != null) TitleBlock.Text = LanguageService.Get("Orders_Title");
         if (SubtitleBlock != null) SubtitleBlock.Text = LanguageService.Get("Orders_Subtitle");
+        if (TabAll != null) TabAll.Content = LanguageService.Get("Orders_All");
+        if (TabCompleted != null) TabCompleted.Content = LanguageService.Get("Orders_Completed");
+        if (TabCanceled != null) TabCanceled.Content = LanguageService.Get("Orders_Canceled");
+        if (TabEcuTickets != null) TabEcuTickets.Content = LanguageService.Get("Orders_EcuTickets");
     }
 
     private void OnOrderUpdated()
@@ -167,10 +177,10 @@ public partial class OrderHistoryView : UserControl
     {
         return filter switch
         {
-            "Completed" => "No completed orders found.",
-            "Canceled" => "No canceled orders found.",
-            "EcuTickets" => "No pending ECU support tickets found.",
-            _ => "No order or request history found."
+            "Completed" => LanguageService.Get("Orders_NoCompletedOrders"),
+            "Canceled" => LanguageService.Get("Orders_NoCanceledOrders"),
+            "EcuTickets" => LanguageService.Get("Orders_NoEcuTickets"),
+            _ => LanguageService.Get("Orders_NoOrderHistory")
         };
     }
 
@@ -193,7 +203,7 @@ public partial class OrderHistoryView : UserControl
         var titleStack = new StackPanel { Spacing = 2 };
         titleStack.Children.Add(new TextBlock
         {
-            Text = $"⚡ Order #{order.Id}",
+            Text = $" {LanguageService.Get("Orders_Title")} #{order.Id}",
             FontSize = 15,
             FontWeight = FontWeight.Bold,
             Foreground = Brushes.White
@@ -211,7 +221,8 @@ public partial class OrderHistoryView : UserControl
         Grid.SetColumn(titleStack, 0);
 
         // Status Badge
-        string statusText = order.Status.Replace("_", " ").ToUpper();
+        string statusKey = order.Status.Replace("_", " ").ToUpper();
+        string statusText = LanguageService.Get(statusKey);
         string statusColor = order.Status.ToLower() switch
         {
             "completed" or "finished" => "#4DFF8A",
@@ -254,7 +265,7 @@ public partial class OrderHistoryView : UserControl
                     Margin = new Thickness(0, 0, 6, 4),
                     Child = new TextBlock
                     {
-                        Text = $"{svc.Name} ({svc.Price} Token)",
+                        Text = $"{svc.Name} ({svc.Price} {LanguageService.Get("Token_Unit")})",
                         FontSize = 11,
                         Foreground = Brush.Parse("#E0E0E0")
                     }
@@ -268,7 +279,7 @@ public partial class OrderHistoryView : UserControl
 
         var priceText = new TextBlock
         {
-            Text = $"Total: {order.TotalPrice} Token(s)",
+            Text = $"{LanguageService.Get("Orders_Total")}: {order.TotalPrice} {LanguageService.Get("Total_Cost_Tokens")}",
             FontSize = 13,
             FontWeight = FontWeight.SemiBold,
             Foreground = Brush.Parse("#FFB74D"),
@@ -302,7 +313,7 @@ public partial class OrderHistoryView : UserControl
 
                 var downloadBtn = new Button
                 {
-                    Content = "⬇ Download Mod File",
+                    Content = LanguageService.Get("Download_ModFile"),
                     Background = Brush.Parse("#4DFF8A"),
                     Foreground = Brushes.Black,
                     FontWeight = FontWeight.Bold,
@@ -348,7 +359,7 @@ public partial class OrderHistoryView : UserControl
                         else
                         {
                             downloadBtn.IsEnabled = true;
-                            downloadBtn.Content = "⬇ Download Mod File";
+                            downloadBtn.Content = LanguageService.Get("Download_ModFile");
                         }
                     }
                 };

@@ -59,11 +59,37 @@ public partial class TicketView : UserControl
 
     private void UpdateLocalizedText()
     {
-        var title = this.FindControl<TextBlock>("TicketTitleBlock");
-        if (title != null) title.Text = LanguageService.Get("Ticket_Title");
+        var headerTitle = this.FindControl<TextBlock>("SupportTicketsHeaderBlock");
+        if (headerTitle != null) headerTitle.Text = LanguageService.Get("Ticket_HeaderTitle");
 
-        var subtitle = this.FindControl<TextBlock>("TicketSubtitleBlock");
-        if (subtitle != null) subtitle.Text = LanguageService.Get("Ticket_Subtitle");
+        if (NewTicketButton != null) NewTicketButton.Content = LanguageService.Get("Ticket_NewTicket");
+
+        if (_selectedTicket == null && TicketSubjectText != null)
+        {
+            TicketSubjectText.Text = LanguageService.Get("Ticket_SelectPrompt");
+        }
+
+        if (ReplyInput != null) ReplyInput.Watermark = LanguageService.Get("Ticket_ReplyWatermark");
+        if (SendReplyButton != null) SendReplyButton.Content = LanguageService.Get("Ticket_SendReply");
+
+        var modalTitle = this.FindControl<TextBlock>("NewTicketModalTitleBlock");
+        if (modalTitle != null) modalTitle.Text = LanguageService.Get("Ticket_CreateTitle");
+
+        var subjectLabel = this.FindControl<TextBlock>("SubjectLabelBlock");
+        if (subjectLabel != null) subjectLabel.Text = LanguageService.Get("Ticket_SubjectLabel");
+
+        if (NewSubjectInput != null) NewSubjectInput.Watermark = LanguageService.Get("Ticket_SubjectPlaceholder");
+
+        var contentLabel = this.FindControl<TextBlock>("ContentLabelBlock");
+        if (contentLabel != null) contentLabel.Text = LanguageService.Get("Ticket_ContentLabel");
+
+        if (NewContentInput != null) NewContentInput.Watermark = LanguageService.Get("Ticket_ContentPlaceholder");
+
+        var cancelBtn = this.FindControl<Button>("CancelNewTicketButton");
+        if (cancelBtn != null) cancelBtn.Content = LanguageService.Get("Ticket_Cancel");
+
+        var submitBtn = this.FindControl<Button>("SubmitNewTicketButton");
+        if (submitBtn != null) submitBtn.Content = LanguageService.Get("Ticket_SubmitTicket");
     }
 
     private void OnTicketUpdated()
@@ -169,7 +195,7 @@ public partial class TicketView : UserControl
                 Padding = new Thickness(6, 2),
                 Child = new TextBlock
                 {
-                    Text = ticket.DisplayStatus,
+                    Text = GetLocalizedStatus(ticket.Status, ticket.DisplayStatus),
                     FontSize = 9,
                     FontWeight = FontWeight.Bold,
                     Foreground = Brushes.White
@@ -215,7 +241,7 @@ public partial class TicketView : UserControl
 
         if (TicketNumberText != null) TicketNumberText.Text = ticket.TicketNumber;
         if (TicketSubjectText != null) TicketSubjectText.Text = ticket.Subject;
-        if (TicketStatusText != null) TicketStatusText.Text = ticket.DisplayStatus;
+        if (TicketStatusText != null) TicketStatusText.Text = GetLocalizedStatus(ticket.Status, ticket.DisplayStatus);
 
         if (TicketStatusBadge != null)
         {
@@ -243,11 +269,19 @@ public partial class TicketView : UserControl
         RenderMessages(ticket.Messages);
     }
 
+    private string GetLocalizedStatus(string? status, string? fallbackDisplay)
+    {
+        if (string.IsNullOrEmpty(status)) return fallbackDisplay ?? "";
+        string key = status.ToUpper();
+        string translated = LanguageService.Get(key);
+        return translated != key ? translated : (fallbackDisplay ?? status.ToUpper());
+    }
+
     private void ClearDetailView()
     {
         _selectedTicket = null;
         if (TicketNumberText != null) TicketNumberText.Text = "#TK-0000";
-        if (TicketSubjectText != null) TicketSubjectText.Text = "No tickets available";
+        if (TicketSubjectText != null) TicketSubjectText.Text = LanguageService.Get("Ticket_NoTickets");
         if (TicketStatusText != null) TicketStatusText.Text = "NONE";
         if (MessagesPanel != null) MessagesPanel.Children.Clear();
     }

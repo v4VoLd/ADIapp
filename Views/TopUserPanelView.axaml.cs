@@ -79,6 +79,8 @@ public partial class TopUserPanelView : UserControl
         if (LogoutBtn != null) LogoutBtn.Content = LanguageService.Get("TopPanel_Logout");
         var seeAllBtn = this.FindControl<Button>("SeeAllNotifsBtn");
         if (seeAllBtn != null) seeAllBtn.Content = LanguageService.Get("TopPanel_SeeAll");
+        if (TokenBtn != null) TokenBtn.Content = LanguageService.Get("TopPanel_TokenMenu");
+        if (OrderHistoryBtn != null) OrderHistoryBtn.Content = LanguageService.Get("TopPanel_OrderHistory");
     }
 
     private MainWindow? Window =>

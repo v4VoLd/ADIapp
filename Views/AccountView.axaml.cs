@@ -126,7 +126,7 @@ public partial class AccountView : UserControl
         {
             if (statusText != null)
             {
-                statusText.Text = "First name and Last name are required.";
+                statusText.Text = LanguageService.Get("Account_FirstNameAndLastNameRequired");
                 statusText.Foreground = Avalonia.Media.Brush.Parse("#FF5252");
                 statusText.IsVisible = true;
             }
@@ -141,7 +141,7 @@ public partial class AccountView : UserControl
 
         if (statusText != null)
         {
-            statusText.Text = success ? "Account profile updated successfully!" : $"Failed to update account: {msg}";
+            statusText.Text = success ? LanguageService.Get("Account_ProfileUpdatedSuccessfully") : LanguageService.Get("Account_FailedToUpdateAccount");
             statusText.Foreground = Avalonia.Media.Brush.Parse(success ? "#4DFF8A" : "#FF5252");
             statusText.IsVisible = true;
         }
