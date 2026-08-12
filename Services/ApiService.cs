@@ -757,5 +757,26 @@ public class ApiService
             return (false, ex.Message);
         }
     }
+
+    public static async Task<UpdateCheckResponse?> CheckForUpdatesAsync(string currentVersion, string platform)
+    {
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"check-update?version={Uri.EscapeDataString(currentVersion)}&platform={Uri.EscapeDataString(platform)}");
+            var response = await _httpClient.GetAsync(requestUri);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<UpdateCheckResponse>(responseString, options);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error checking for updates: {ex.Message}", ex);
+            return null;
+        }
+    }
 }
 

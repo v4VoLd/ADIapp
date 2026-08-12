@@ -19,4 +19,6 @@ public static class AppConfig
     public const string WebsocketPort = "443";
 
     public const bool WebsocketEncrypted = true;
+
+    public const string AppVersion = "1.0.0";
 }

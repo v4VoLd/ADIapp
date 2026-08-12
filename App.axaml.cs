@@ -17,6 +17,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow();
             Helpers.MacDockHelper.SetDockIcon();
+            _ = System.Threading.Tasks.Task.Run(() => Services.UpdateService.CheckAndPerformUpdateAsync());
         }
 
         base.OnFrameworkInitializationCompleted();
