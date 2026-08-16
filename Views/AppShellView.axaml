@@ -15,7 +15,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- ===================== SIDEBAR ===================== -->
-        <views:SidebarView Grid.Column="0"/>
+        <views:SidebarView x:Name="Sidebar" Grid.Column="0"/>
 
         <!-- ===================== MAIN ===================== -->
         <Grid Grid.Column="1">

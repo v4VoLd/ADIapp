@@ -67,11 +67,26 @@ public partial class SidebarView : UserControl
     private MainWindow? Window =>
         this.FindAncestorOfType<MainWindow>();
 
-    private void Select(Button button)
+    public void HighlightForPage(Control page)
+    {
+        Button? target = page switch
+        {
+            HomeView => HomeBtn,
+            TicketView => TicketsBtn,
+            OrderHistoryView => OrdersBtn,
+            SettingsView => SettingsBtn,
+            InfoView => InfoBtn,
+            _ => null
+        };
+
+        Select(target);
+    }
+
+    private void Select(Button? button)
     {
         _selectedButton?.Classes.Remove("selected");
         _selectedButton = button;
-        _selectedButton.Classes.Add("selected");
+        _selectedButton?.Classes.Add("selected");
     }
 
     private void Home_Click(object? s, RoutedEventArgs e)

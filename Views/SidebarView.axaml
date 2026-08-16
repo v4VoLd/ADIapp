@@ -39,7 +39,8 @@
 					</Button>
 
 					<!-- TICKETS -->
-					<Button Click="Tickets_Click"
+					<Button x:Name="TicketsBtn"
+							Click="Tickets_Click"
 							Classes="sidebar-nav">
 						<StackPanel Orientation="Horizontal" Spacing="16">
 							<TextBlock Text="🎫" FontSize="20" VerticalAlignment="Center"/>
@@ -48,7 +49,8 @@
 					</Button>
 
 					<!-- ORDERS -->
-					<Button Click="Orders_Click"
+					<Button x:Name="OrdersBtn"
+							Click="Orders_Click"
 							Classes="sidebar-nav">
 						<StackPanel Orientation="Horizontal" Spacing="16">
 							<TextBlock Text="📦" FontSize="20" VerticalAlignment="Center"/>
@@ -57,7 +59,8 @@
 					</Button>
 
 					<!-- SETTINGS -->
-					<Button Click="Settings_Click"
+					<Button x:Name="SettingsBtn"
+							Click="Settings_Click"
 							Classes="sidebar-nav">
 						<StackPanel Orientation="Horizontal" Spacing="16">
 							<TextBlock Text="⚙️" FontSize="20" VerticalAlignment="Center"/>
@@ -66,7 +69,8 @@
 					</Button>
 
 					<!-- INFO -->
-					<Button Click="Info_Click"
+					<Button x:Name="InfoBtn"
+							Click="Info_Click"
 							Classes="sidebar-nav">
 						<StackPanel Orientation="Horizontal" Spacing="16">
 							<TextBlock Text="ℹ️" FontSize="20" VerticalAlignment="Center"/>

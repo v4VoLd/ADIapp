@@ -16,6 +16,8 @@ public partial class AppShellView : UserControl
     {
         PageContent.Content = page;
 
+        Sidebar?.HighlightForPage(page);
+
         if (TopUserPanel != null)
         {
             TopUserPanel.IsVisible = page is not TuneView && page is not TicketView;
