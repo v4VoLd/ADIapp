@@ -1,5 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
 echo ========================================================
 echo   Building ADI Application Windows Setup Installer (.exe)
@@ -18,16 +18,16 @@ if not exist "dist" mkdir "dist"
 
 set "ISCC_PATH=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 
-if not exist "%ISCC_PATH%" (
-    echo.
-    echo Warning: Inno Setup compiler not found at %ISCC_PATH%
-    echo Published self-contained binaries are ready in:
-    echo   bin\Release\net9.0\win-x64\publish
-    echo To build the .exe installer, download Inno Setup from https://jrsoftware.org/isinfo.php
-    pause
-    exit /b 0
-)
+if exist "%ISCC_PATH%" goto RUN_ISCC
 
+echo.
+echo Warning: Inno Setup compiler not found at "%ISCC_PATH%"
+echo Published self-contained binaries are ready in:
+echo   bin\Release\net9.0\win-x64\publish
+echo To build the .exe installer, download Inno Setup from https://jrsoftware.org/isinfo.php
+exit /b 0
+
+:RUN_ISCC
 echo -> Compiling Inno Setup wizard installer...
 "%ISCC_PATH%" installer\windows\setup.iss
 if %ERRORLEVEL% NEQ 0 (
@@ -39,4 +39,3 @@ echo ========================================================
 echo Windows Setup Installer created successfully in dist\
 echo ========================================================
 dir dist\*.exe
-pause

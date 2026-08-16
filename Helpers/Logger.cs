@@ -12,6 +12,8 @@ public static class Logger
     private static readonly string LogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.log");
 
     public static void Info(string message) => Log("INFO", message);
+    public static void Warn(string message) => Log("WARN", message);
+    public static void Warning(string message) => Log("WARN", message);
     public static void Error(string message, Exception? ex = null) => Log("ERROR", $"{message}{(ex != null ? $"\n{ex}" : "")}");
     public static void Debug(string message) => Log("DEBUG", message);
 

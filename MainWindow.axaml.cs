@@ -16,9 +16,12 @@ public partial class MainWindow : Window
 #endif
         try
         {
-            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/sidebar_logo.ico")));
+            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/app_icon.ico")));
         }
-        catch { }
+        catch (System.Exception ex)
+        {
+            Helpers.Logger.Error($"Failed to set window icon: {ex.Message}", ex);
+        }
         if (Helpers.VmDetector.IsVirtualMachine())
         {
             MainContent.Content = new VmBlockedView();
