@@ -35,43 +35,86 @@
                         BorderThickness="1"
                         CornerRadius="16"
                         Padding="36,32">
-                    <StackPanel Spacing="20" HorizontalAlignment="Center">
+                    <StackPanel Spacing="16" HorizontalAlignment="Center" Width="480">
 
-                        <!-- TOKEN DISPLAY BOX -->
+                        <!-- AVAILABLE TOKEN DISPLAY BOX -->
                         <Border Background="#252525"
                                 BorderBrush="#3D3D3D"
                                 BorderThickness="1"
                                 CornerRadius="12"
-                                Padding="28,20"
-                                HorizontalAlignment="Center"
-                                MinWidth="260">
-                            <StackPanel Orientation="Horizontal"
-                                        Spacing="16"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center">
-                                <Border Background="#1F1F1F"
+                                Padding="24,18"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Background="#1F1F1F"
                                         CornerRadius="10"
                                         Width="44"
-                                        Height="44">
+                                        Height="44"
+                                        Margin="0,0,16,0">
                                     <TextBlock Text="🪙"
                                                FontSize="22"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"/>
                                 </Border>
                                 
-                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                                     <TextBlock x:Name="AvailableBalanceLabelBlock"
                                                Text="Available Balance"
-                                               FontSize="11"
+                                               FontSize="12"
                                                FontWeight="SemiBold"
                                                Foreground="#A0A0B0"/>
-                                    <TextBlock x:Name="TokenText"
-                                               Text="8 Token"
-                                               FontSize="22"
-                                               FontWeight="Bold"
-                                               Foreground="White"/>
+                                    <TextBlock x:Name="AvailableDescBlock"
+                                               Text="Ready for new file requests"
+                                               FontSize="11"
+                                               Foreground="#707080"/>
                                 </StackPanel>
-                            </StackPanel>
+
+                                <TextBlock Grid.Column="2" x:Name="TokenText"
+                                           Text="0 Tokens"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="#4DFF8A"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- RESERVED TOKEN DISPLAY BOX -->
+                        <Border Background="#252525"
+                                BorderBrush="#3D3D3D"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="24,18"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Background="#1F1F1F"
+                                        CornerRadius="10"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="0,0,16,0">
+                                    <TextBlock Text="⏳"
+                                               FontSize="22"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock x:Name="ReservedBalanceLabelBlock"
+                                               Text="Reserved Balance"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#A0A0B0"/>
+                                    <TextBlock x:Name="ReservedDescBlock"
+                                               Text="Held by processing / pending orders"
+                                               FontSize="11"
+                                               Foreground="#707080"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2" x:Name="ReservedTokenText"
+                                           Text="0 Tokens"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="#FFA500"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
                         </Border>
 
                     </StackPanel>

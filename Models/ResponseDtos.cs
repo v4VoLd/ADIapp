@@ -48,6 +48,12 @@ public class UserDto
     [JsonPropertyName("availableCredit")]
     public double AvailableCredit { get; set; }
 
+    [JsonPropertyName("reservedCredit")]
+    public double ReservedCredit { get; set; }
+
+    [JsonPropertyName("effectiveAvailableCredit")]
+    public double EffectiveAvailableCredit { get; set; }
+
     [JsonPropertyName("availableUnit")]
     public double AvailableUnit { get; set; }
 

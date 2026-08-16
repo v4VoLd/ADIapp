@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using ADIapp.Services;
+using ADIapp.Models;
 
 namespace ADIapp.Views;
 
@@ -14,6 +15,7 @@ public partial class TokenView : UserControl
     {
         base.OnInitialized();
         WebSocketManager.OrderUpdated += OnOrderUpdated;
+        ApiService.CurrentUserChanged += OnCurrentUserChanged;
         UpdateLocalizedText();
         LanguageService.LanguageChanged += OnLanguageChanged;
 
@@ -31,12 +33,18 @@ public partial class TokenView : UserControl
     {
         base.OnDetachedFromVisualTree(e);
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
+        ApiService.CurrentUserChanged -= OnCurrentUserChanged;
         LanguageService.LanguageChanged -= OnLanguageChanged;
     }
 
-    private void OnOrderUpdated()
+    private void OnCurrentUserChanged(UserDto? user)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() => PopulateToken());
+    }
+
+    private async void OnOrderUpdated()
+    {
+        await ApiService.FetchProfileAsync();
     }
 
     private void OnLanguageChanged()
@@ -54,16 +62,35 @@ public partial class TokenView : UserControl
 
         var availLabel = this.FindControl<TextBlock>("AvailableBalanceLabelBlock");
         if (availLabel != null) availLabel.Text = LanguageService.Get("Token_AvailableBalance");
+
+        var availDesc = this.FindControl<TextBlock>("AvailableDescBlock");
+        if (availDesc != null) availDesc.Text = LanguageService.Get("Token_AvailableDesc");
+
+        var reservedLabel = this.FindControl<TextBlock>("ReservedBalanceLabelBlock");
+        if (reservedLabel != null) reservedLabel.Text = LanguageService.Get("Token_ReservedBalance");
+
+        var reservedDesc = this.FindControl<TextBlock>("ReservedDescBlock");
+        if (reservedDesc != null) reservedDesc.Text = LanguageService.Get("Token_ReservedDesc");
+
+        PopulateToken();
     }
 
     private void PopulateToken()
     {
         if (ApiService.CurrentUser != null)
         {
+            string unit = LanguageService.Get("Token_Unit");
+
             var tokenText = this.FindControl<TextBlock>("TokenText");
             if (tokenText != null)
             {
-                tokenText.Text = $"{ApiService.CurrentUser.AvailableCredit} Token";
+                tokenText.Text = $"{ApiService.CurrentUser.AvailableCredit} {unit}";
+            }
+
+            var reservedTokenText = this.FindControl<TextBlock>("ReservedTokenText");
+            if (reservedTokenText != null)
+            {
+                reservedTokenText.Text = $"{ApiService.CurrentUser.ReservedCredit} {unit}";
             }
         }
     }

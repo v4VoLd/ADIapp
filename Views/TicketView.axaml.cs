@@ -398,22 +398,36 @@ public partial class TicketView : UserControl
             return;
 
         string content = ReplyInput.Text.Trim();
-        if (SendReplyButton != null) SendReplyButton.IsEnabled = false;
-
-        var res = await ApiService.SendTicketReplyAsync(_selectedTicket.Id, content);
-        if (SendReplyButton != null) SendReplyButton.IsEnabled = true;
-
-        if (res.Success)
+        if (SendReplyButton != null)
         {
-            ReplyInput.Text = string.Empty;
-            await LoadTicketsAsync();
+            SendReplyButton.IsEnabled = false;
+            SendReplyButton.Content = "Sending...";
         }
-        else
+
+        try
         {
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is Window window)
+            var res = await ApiService.SendTicketReplyAsync(_selectedTicket.Id, content);
+
+            if (res.Success)
             {
-                await MessageBox(window, $"Failed to send reply: {res.Message}");
+                ReplyInput.Text = string.Empty;
+                await LoadTicketsAsync();
+            }
+            else
+            {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel is Window window)
+                {
+                    await MessageBox(window, $"Failed to send reply: {res.Message}");
+                }
+            }
+        }
+        finally
+        {
+            if (SendReplyButton != null)
+            {
+                SendReplyButton.IsEnabled = true;
+                SendReplyButton.Content = LanguageService.Get("Ticket_Send") != "Ticket_Send" ? LanguageService.Get("Ticket_Send") : "Send Reply";
             }
         }
     }

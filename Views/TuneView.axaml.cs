@@ -23,7 +23,6 @@ public partial class TuneView : UserControl
     private bool _isProcessing;
     private Border? _activeBorder;
 
-    private Avalonia.Threading.DispatcherTimer? _pollTimer;
     private List<ServiceDto>? _currentServices;
     private string _activeFilter = "ALL";
     private readonly Dictionary<int, bool> _serviceSelectionStates = new();
@@ -49,13 +48,6 @@ public partial class TuneView : UserControl
         WebSocketManager.EcuIdentified += OnEcuIdentified;
         WebSocketManager.OrderUpdated += OnOrderUpdated;
 
-        _pollTimer = new Avalonia.Threading.DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(5)
-        };
-        _pollTimer.Tick += (s, e) => _ = LoadProcessingFilesAsync();
-        _pollTimer.Start();
-
         LanguageService.LanguageChanged += OnLanguageChanged;
         UpdateLocalizedText();
         await LoadProcessingFilesAsync();
@@ -66,7 +58,6 @@ public partial class TuneView : UserControl
         base.OnDetachedFromVisualTree(e);
         WebSocketManager.EcuIdentified -= OnEcuIdentified;
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
-        _pollTimer?.Stop();
         LanguageService.LanguageChanged -= OnLanguageChanged;
     }
 
@@ -381,30 +372,8 @@ public partial class TuneView : UserControl
                 _activeBorder = itemBorder;
             }
 
-            var cardGrid = new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitions("*,Auto")
-            };
-
-            var stack = new StackPanel { Spacing = 6, Margin = new Thickness(0, 0, 8, 0) };
+            var stack = new StackPanel { Spacing = 6 };
             string truncatedHash = fileHashStr.Length > 12 ? fileHashStr.Substring(0, 12) + "..." : fileHashStr;
-
-            var removeBtn = new Button
-            {
-                Content = "✕",
-                FontSize = 10,
-                Padding = new Thickness(6, 2),
-                Background = Avalonia.Media.Brushes.Transparent,
-                Foreground = Avalonia.Media.Brush.Parse("#AAAAAA"),
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
-                CornerRadius = new CornerRadius(4),
-                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
-            };
-            removeBtn.Click += (s, e) =>
-            {
-                sidebar.Children.Remove(itemBorder);
-            };
-            Grid.SetColumn(removeBtn, 1);
 
             if (file.IsOrder)
             {
@@ -576,10 +545,7 @@ public partial class TuneView : UserControl
                 });
             }
 
-            Grid.SetColumn(stack, 0);
-            cardGrid.Children.Add(stack);
-            cardGrid.Children.Add(removeBtn);
-            itemBorder.Child = cardGrid;
+            itemBorder.Child = stack;
 
             string fileHash = fileHashStr;
             itemBorder.PointerPressed += async (s, e) =>
@@ -1349,6 +1315,7 @@ public partial class TuneView : UserControl
             if (success)
             {
                 ResetWorkspace();
+                await ApiService.FetchProfileAsync();
                 await LoadProcessingFilesAsync();
             }
         }

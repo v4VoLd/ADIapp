@@ -21,10 +21,12 @@ public class ApiService
     static ApiService()
     {
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        _httpClient.Timeout = TimeSpan.FromSeconds(15);
     }
 
     public static string? AccessToken { get; private set; }
     public static UserDto? CurrentUser { get; private set; }
+    public static event Action<UserDto?>? CurrentUserChanged;
 
     // ─────────────────────────────────────────────────────────────
     // Auth
@@ -73,6 +75,7 @@ public class ApiService
             {
                 AccessToken  = apiResponse.Data.AccessToken;
                 CurrentUser  = apiResponse.Data.User;
+                CurrentUserChanged?.Invoke(CurrentUser);
 
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", AccessToken);
@@ -92,6 +95,7 @@ public class ApiService
     {
         AccessToken = null;
         CurrentUser = null;
+        CurrentUserChanged?.Invoke(null);
         _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 
@@ -118,6 +122,7 @@ public class ApiService
             if (apiResponse != null && apiResponse.Success && apiResponse.Data?.User != null)
             {
                 CurrentUser = apiResponse.Data.User;
+                CurrentUserChanged?.Invoke(CurrentUser);
                 return (true, "Profile loaded");
             }
 
@@ -760,21 +765,30 @@ public class ApiService
 
     public static async Task<UpdateCheckResponse?> CheckForUpdatesAsync(string currentVersion, string platform)
     {
+        if (!NetworkHelper.IsNetworkAvailable())
+            return null;
+
         try
         {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"check-update?version={Uri.EscapeDataString(currentVersion)}&platform={Uri.EscapeDataString(platform)}");
-            var response = await _httpClient.GetAsync(requestUri);
+            var response = await _httpClient.GetAsync(requestUri, cts.Token);
 
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var responseString = await response.Content.ReadAsStringAsync();
+            var responseString = await response.Content.ReadAsStringAsync(cts.Token);
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             return JsonSerializer.Deserialize<UpdateCheckResponse>(responseString, options);
         }
+        catch (OperationCanceledException)
+        {
+            Logger.Warning("Update check timed out (server unreachable or offline).");
+            return null;
+        }
         catch (Exception ex)
         {
-            Logger.Error($"Error checking for updates: {ex.Message}", ex);
+            Logger.Warning($"Error checking for updates: {ex.Message}");
             return null;
         }
     }

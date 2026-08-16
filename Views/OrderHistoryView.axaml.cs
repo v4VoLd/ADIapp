@@ -21,8 +21,6 @@ public partial class OrderHistoryView : UserControl
     private List<OrderHistoryItemDto> _tickets = new();
     private string _activeFilter = "All";
 
-    private Avalonia.Threading.DispatcherTimer? _pollTimer;
-
     public OrderHistoryView()
     {
         InitializeComponent();
@@ -33,13 +31,6 @@ public partial class OrderHistoryView : UserControl
             LanguageService.LanguageChanged += OnLanguageChanged;
             UpdateLocalizedText();
 
-            _pollTimer = new Avalonia.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(5)
-            };
-            _pollTimer.Tick += (sender, args) => _ = LoadHistoryAsync();
-            _pollTimer.Start();
-
             _ = LoadHistoryAsync();
         };
 
@@ -47,7 +38,6 @@ public partial class OrderHistoryView : UserControl
         {
             WebSocketManager.OrderUpdated -= OnOrderUpdated;
             LanguageService.LanguageChanged -= OnLanguageChanged;
-            _pollTimer?.Stop();
         };
     }
 
@@ -82,6 +72,7 @@ public partial class OrderHistoryView : UserControl
 
     private async Task LoadHistoryAsync()
     {
+        _ = ApiService.FetchProfileAsync();
         var response = await ApiService.GetOrderHistoryAsync();
         if (response != null)
         {

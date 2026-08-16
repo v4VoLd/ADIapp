@@ -27,6 +27,7 @@ public partial class TopUserPanelView : UserControl
         NotificationService.NotificationsUpdated += OnNotificationsUpdated;
         WebSocketManager.OrderUpdated += OnOrderUpdated;
         LanguageService.LanguageChanged += OnLanguageChanged;
+        ApiService.CurrentUserChanged += OnCurrentUserChanged;
 
         UpdateNotificationsList();
         UpdateLocalizedText();
@@ -39,11 +40,17 @@ public partial class TopUserPanelView : UserControl
         NotificationService.NotificationsUpdated -= OnNotificationsUpdated;
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
         LanguageService.LanguageChanged -= OnLanguageChanged;
+        ApiService.CurrentUserChanged -= OnCurrentUserChanged;
     }
 
-    private void OnOrderUpdated()
+    private void OnCurrentUserChanged(UserDto? user)
     {
         Dispatcher.UIThread.Post(() => UpdateUserInfo());
+    }
+
+    private async void OnOrderUpdated()
+    {
+        await ApiService.FetchProfileAsync();
     }
 
     private void UpdateUserInfo()
@@ -54,6 +61,12 @@ public partial class TopUserPanelView : UserControl
             if (nameBlock != null)
             {
                 nameBlock.Text = $"{ApiService.CurrentUser.FirstName} {ApiService.CurrentUser.LastName}".Trim();
+            }
+
+            if (UserTokenBlock != null)
+            {
+                var credit = ApiService.CurrentUser.AvailableCredit;
+                UserTokenBlock.Text = $"{LanguageService.Get("TopPanel_Token")} {credit}";
             }
         }
     }
