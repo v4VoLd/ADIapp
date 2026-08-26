@@ -48,8 +48,11 @@ public partial class TuneView : UserControl
         WebSocketManager.EcuIdentified += OnEcuIdentified;
         WebSocketManager.OrderUpdated += OnOrderUpdated;
 
+        OrderProcessingManager.StateChanged += OnOrderProcessingStateChanged;
+
         LanguageService.LanguageChanged += OnLanguageChanged;
         UpdateLocalizedText();
+        UpdateOrderProgressModal();
         await LoadProcessingFilesAsync();
     }
 
@@ -58,7 +61,34 @@ public partial class TuneView : UserControl
         base.OnDetachedFromVisualTree(e);
         WebSocketManager.EcuIdentified -= OnEcuIdentified;
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
+        OrderProcessingManager.StateChanged -= OnOrderProcessingStateChanged;
         LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnOrderProcessingStateChanged()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            UpdateOrderProgressModal();
+        });
+    }
+
+    private void UpdateOrderProgressModal()
+    {
+        if (OrderProgressOverlay != null)
+        {
+            OrderProgressOverlay.IsVisible = OrderProcessingManager.IsProcessing;
+        }
+        if (OrderProgressTitle != null)
+        {
+            OrderProgressTitle.Text = LanguageService.Get("Tune_ProcessingOrder");
+        }
+        if (OrderProgressStatus != null)
+        {
+            OrderProgressStatus.Text = !string.IsNullOrEmpty(OrderProcessingManager.StatusText)
+                ? OrderProcessingManager.StatusText
+                : LanguageService.Get("Tune_WaitingTuning");
+        }
     }
 
     private void OnLanguageChanged()
@@ -427,40 +457,28 @@ public partial class TuneView : UserControl
                         downloadBtn.IsEnabled = false;
                         downloadBtn.Content = "Downloading...";
 
-                        var topLevel = TopLevel.GetTopLevel(this);
-                        if (topLevel is Window window)
+                        var (success, msg) = await DownloadAndSaveFileAsync(
+                            targetDownloadUrl,
+                            fileName,
+                            progressText => downloadBtn.Content = progressText
+                        );
+
+                        if (success)
                         {
-                            var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+                            downloadBtn.Content = "✓ Downloaded";
+                            NotificationService.AddNotification($"download_done_{fileName}", $"File download completed: {fileName}", "info");
+                        }
+                        else
+                        {
+                            downloadBtn.IsEnabled = true;
+                            downloadBtn.Content = LanguageService.Get("Download_ModFile");
+                            if (!string.IsNullOrEmpty(msg))
                             {
-                                Title = "Save Modified Tuning File",
-                                SuggestedFileName = fileName
-                            });
-
-                            if (saveFile != null)
-                            {
-                                using var stream = await saveFile.OpenWriteAsync();
-                                var progress = new System.Progress<double>(p =>
+                                var topLevel = TopLevel.GetTopLevel(this);
+                                if (topLevel is Window window)
                                 {
-                                    downloadBtn.Content = $"Downloading {p:F0}%...";
-                                });
-
-                                var (success, msg) = await ApiService.DownloadFileToStreamAsync(targetDownloadUrl, stream, progress);
-                                if (success)
-                                {
-                                    downloadBtn.Content = "✓ Downloaded";
-                                    NotificationService.AddNotification($"download_done_{fileName}", $"File download completed: {fileName}", "info");
-                                }
-                                else
-                                {
-                                    downloadBtn.IsEnabled = true;
-                                    downloadBtn.Content = "Retry Download";
                                     await MessageBox(window, $"Download failed: {msg}");
                                 }
-                            }
-                            else
-                            {
-                                downloadBtn.IsEnabled = true;
-                                downloadBtn.Content = LanguageService.Get("Download_ModFile");
                             }
                         }
                     };
@@ -1289,7 +1307,7 @@ public partial class TuneView : UserControl
             var window = topLevel as Window;
             if (window != null)
             {
-                await MessageBox(window, "Please select at least one service to order.");
+                await MessageBox(window, LanguageService.Get("Tune_SelectServiceRequired"));
             }
             return;
         }
@@ -1298,25 +1316,38 @@ public partial class TuneView : UserControl
         if (saveButton != null)
         {
             saveButton.IsEnabled = false;
-            saveButton.Content = "Saving...";
+            saveButton.Content = LanguageService.Get("Tune_Downloading");
         }
+
+        string orderedHash = _pendingFileHash;
 
         try
         {
-            var (success, message) = await ApiService.CreateOrderAsync(_pendingFileHash, selectedServiceIds, selectedServiceNames);
+            var (success, message) = await ApiService.CreateOrderAsync(orderedHash, selectedServiceIds, selectedServiceNames);
 
-            var topLevel = TopLevel.GetTopLevel(this);
-            var window = topLevel as Window;
-            if (window != null)
+            if (!success)
             {
-                await MessageBox(window, message);
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel is Window win)
+                {
+                    await MessageBox(win, message);
+                }
+                return;
             }
 
-            if (success)
+            // Start global tracking (handles polling, persistent indicator across tabs, and native Save dialog)
+            OrderProcessingManager.StartTrackingOrder(orderedHash);
+
+            ResetWorkspace();
+            _ = ApiService.FetchProfileAsync();
+            _ = LoadProcessingFilesAsync();
+        }
+        catch (Exception ex)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window win)
             {
-                ResetWorkspace();
-                await ApiService.FetchProfileAsync();
-                await LoadProcessingFilesAsync();
+                await MessageBox(win, $"Error: {ex.Message}");
             }
         }
         finally
@@ -1326,6 +1357,42 @@ public partial class TuneView : UserControl
                 saveButton.IsEnabled = true;
                 UpdateSummaryAndSaveButton();
             }
+        }
+    }
+
+    private async Task<(bool Success, string Message)> DownloadAndSaveFileAsync(
+        string downloadUrl,
+        string suggestedFileName,
+        Action<string>? onProgress = null)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is not Window window)
+            return (false, "Window not available");
+
+        try
+        {
+            var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Save Modified Tuning File",
+                SuggestedFileName = suggestedFileName
+            });
+
+            if (saveFile == null)
+                return (false, string.Empty); // User canceled picker
+
+            onProgress?.Invoke("Downloading...");
+
+            using var stream = await saveFile.OpenWriteAsync();
+            var progress = new System.Progress<double>(p =>
+            {
+                onProgress?.Invoke($"Downloading {p:F0}%...");
+            });
+
+            return await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
         }
     }
 

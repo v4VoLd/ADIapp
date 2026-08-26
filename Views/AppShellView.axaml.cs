@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia.Threading;
+using ADIapp.Services;
 
 namespace ADIapp.Views;
 
@@ -7,6 +9,8 @@ public partial class AppShellView : UserControl
     public AppShellView()
     {
         InitializeComponent();
+
+        OrderProcessingManager.Initialize();
     }
 
     /// <summary>
@@ -24,3 +28,4 @@ public partial class AppShellView : UserControl
         }
     }
 }
+

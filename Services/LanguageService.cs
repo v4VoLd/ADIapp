@@ -193,7 +193,18 @@ public static class LanguageService
             ["Tune_FilterAll"] = "All Options",
             ["Tune_FilterPerf"] = "🚀 Performance",
             ["Tune_FilterDeletes"] = "🛡️ Deletes",
-            ["Tune_FilterFeatures"] = "⚡ Special Features"
+            ["Tune_FilterFeatures"] = "⚡ Special Features",
+            ["Tune_ProcessingOrder"] = "Processing Order...",
+            ["Tune_WaitingTuning"] = "Submitting order and waiting for ECU tuning...",
+            ["Tune_CompletedTitle"] = "🎉 Tuning Completed!",
+            ["Tune_ReadyDownload"] = "Your modified file is ready for download.",
+            ["Tune_SaveModFile"] = "💾 Download",
+            ["Tune_CloseLater"] = "Close / Later",
+            ["Tune_Downloading"] = "Downloading...",
+            ["Tune_SavedSuccess"] = "File saved successfully: {0}",
+            ["Tune_DownloadCanceled"] = "Download canceled.",
+            ["Tune_OrderCanceled"] = "Order was canceled or rejected by the tuning server.",
+            ["Tune_SelectServiceRequired"] = "Please select at least one service to order."
         },
         ["fr"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -369,7 +380,18 @@ public static class LanguageService
             ["Tune_FilterAll"] = "Toutes les options",
             ["Tune_FilterPerf"] = "🚀 Performance",
             ["Tune_FilterDeletes"] = "🛡️ Suppressions",
-            ["Tune_FilterFeatures"] = "⚡ Options spéciales"
+            ["Tune_FilterFeatures"] = "⚡ Options spéciales",
+            ["Tune_ProcessingOrder"] = "Traitement de la commande...",
+            ["Tune_WaitingTuning"] = "Envoi de la commande et attente de la reprogrammation...",
+            ["Tune_CompletedTitle"] = "🎉 Reprogrammation terminée !",
+            ["Tune_ReadyDownload"] = "Votre fichier modifié est prêt à être téléchargé.",
+            ["Tune_SaveModFile"] = "💾 Télécharger",
+            ["Tune_CloseLater"] = "Fermer / Plus tard",
+            ["Tune_Downloading"] = "Téléchargement...",
+            ["Tune_SavedSuccess"] = "Fichier enregistré avec succès : {0}",
+            ["Tune_DownloadCanceled"] = "Téléchargement annulé.",
+            ["Tune_OrderCanceled"] = "La commande a été annulée ou rejetée par le serveur de tuning.",
+            ["Tune_SelectServiceRequired"] = "Veuillez sélectionner au moins un service à commander."
         },
         ["es"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -546,7 +568,18 @@ public static class LanguageService
             ["Tune_FilterAll"] = "Todas las opciones",
             ["Tune_FilterPerf"] = "🚀 Rendimiento",
             ["Tune_FilterDeletes"] = "🛡️ Eliminaciones",
-            ["Tune_FilterFeatures"] = "⚡ Funciones especiales"
+            ["Tune_FilterFeatures"] = "⚡ Funciones especiales",
+            ["Tune_ProcessingOrder"] = "Procesando pedido...",
+            ["Tune_WaitingTuning"] = "Enviando pedido y esperando la reprogramación de la ECU...",
+            ["Tune_CompletedTitle"] = "🎉 ¡Reprogramación completada!",
+            ["Tune_ReadyDownload"] = "Tu archivo modificado está listo para descargar.",
+            ["Tune_SaveModFile"] = "💾 Descargar",
+            ["Tune_CloseLater"] = "Cerrar / Más tarde",
+            ["Tune_Downloading"] = "Descargando...",
+            ["Tune_SavedSuccess"] = "Archivo guardado correctamente: {0}",
+            ["Tune_DownloadCanceled"] = "Descarga cancelada.",
+            ["Tune_OrderCanceled"] = "El pedido fue cancelado o rechazado por el servidor de tuning.",
+            ["Tune_SelectServiceRequired"] = "Por favor, selecciona al menos un servicio para pedir."
         },
         ["de"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -723,7 +756,18 @@ public static class LanguageService
             ["Tune_FilterAll"] = "Alle Optionen",
             ["Tune_FilterPerf"] = "🚀 Leistung",
             ["Tune_FilterDeletes"] = "🛡️ Deaktivierungen",
-            ["Tune_FilterFeatures"] = "⚡ Spezialfunktionen"
+            ["Tune_FilterFeatures"] = "⚡ Spezialfunktionen",
+            ["Tune_ProcessingOrder"] = "Bestellung wird verarbeitet...",
+            ["Tune_WaitingTuning"] = "Bestellung wird übermittelt und auf ECU-Tuning gewartet...",
+            ["Tune_CompletedTitle"] = "🎉 Tuning abgeschlossen!",
+            ["Tune_ReadyDownload"] = "Ihre modifizierte Datei steht zum Download bereit.",
+            ["Tune_SaveModFile"] = "💾 Download",
+            ["Tune_CloseLater"] = "Schließen / Später",
+            ["Tune_Downloading"] = "Wird heruntergeladen...",
+            ["Tune_SavedSuccess"] = "Datei erfolgreich gespeichert: {0}",
+            ["Tune_DownloadCanceled"] = "Download abgebrochen.",
+            ["Tune_OrderCanceled"] = "Bestellung wurde vom Tuning-Server storniert oder abgelehnt.",
+            ["Tune_SelectServiceRequired"] = "Bitte wählen Sie mindestens einen Service zur Bestellung aus."
         }
     };
 

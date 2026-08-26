@@ -351,7 +351,26 @@
                                    Margin="0,4,0,6"/>
                     </StackPanel>
                 </ScrollViewer>
-
+                <Border Name="DropZone"
+                        Grid.Row="1"
+                        IsVisible="{Binding !IsVisible, ElementName=ServicesContainer}"
+                        DragDrop.AllowDrop="True"
+                        Background="#141414" 
+                        BorderBrush="#262832"
+                        BorderThickness="2"
+                        CornerRadius="14"
+                        Padding="40"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                        <TextBlock Text="📁" FontSize="32" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Drag and drop files here " 
+                        FontSize="13"
+                        Foreground="#888888"
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
                 <!-- ACTION BUTTONS -->
                 <StackPanel Grid.Row="2"
                             Orientation="Horizontal"
@@ -377,6 +396,49 @@
                 </StackPanel>
 
             </Grid>
+        </Border>
+
+        <!-- ORDER PROCESSING MODAL (SPINNER & STATUS ONLY) -->
+        <Border x:Name="OrderProgressOverlay"
+                Grid.RowSpan="2"
+                Grid.ColumnSpan="2"
+                Background="#D0000000"
+                IsVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border Background="#1C1C1E"
+                    BorderBrush="#2A2D3A"
+                    BorderThickness="1"
+                    CornerRadius="18"
+                    Padding="32"
+                    MaxWidth="480"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel Spacing="20" HorizontalAlignment="Center">
+                    <ProgressBar x:Name="OrderProgressBar"
+                                 IsIndeterminate="True"
+                                 Width="260"
+                                 Height="6"
+                                 Foreground="#4DFF8A"
+                                 Background="#2C2E3B"
+                                 CornerRadius="3"
+                                 HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="OrderProgressTitle"
+                               Text="Processing Order..."
+                               FontSize="17"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="OrderProgressStatus"
+                               Text="Submitting order and waiting for ECU tuning..."
+                               FontSize="12"
+                               Foreground="#9CA3AF"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               MaxWidth="380"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
         </Border>
 
     </Grid>
