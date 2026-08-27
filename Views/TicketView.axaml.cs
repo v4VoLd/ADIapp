@@ -458,7 +458,7 @@ public partial class TicketView : UserControl
         {
             if (TicketModalErrorText != null)
             {
-                TicketModalErrorText.Text = "Please enter both subject and message content.";
+                TicketModalErrorText.Text = LanguageService.Get("Ticket_SubjectAndMessageRequired");
                 TicketModalErrorText.IsVisible = true;
             }
             return;
@@ -479,7 +479,7 @@ public partial class TicketView : UserControl
         {
             if (TicketModalErrorText != null)
             {
-                TicketModalErrorText.Text = string.IsNullOrEmpty(res.Message) ? "Failed to create ticket. Please try again." : res.Message;
+                TicketModalErrorText.Text = string.IsNullOrEmpty(res.Message) ? LanguageService.Get("Ticket_FailedToCreate") : res.Message;
                 TicketModalErrorText.IsVisible = true;
             }
         }

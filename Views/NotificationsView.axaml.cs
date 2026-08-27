@@ -59,7 +59,7 @@ public partial class NotificationsView : UserControl
 
         if (NotificationCountBlock != null)
         {
-            NotificationCountBlock.Text = $"All Notifications ({list.Count})";
+            NotificationCountBlock.Text = string.Format(LanguageService.Get("Notifications_AllCount"), list.Count);
         }
 
         if (list.Count == 0)
@@ -89,7 +89,7 @@ public partial class NotificationsView : UserControl
 
             emptyStack.Children.Add(new TextBlock
             {
-                Text = "You are all caught up! New alerts will appear here.",
+                Text = LanguageService.Get("Notifications_AllCaughtUp"),
                 FontSize = 13,
                 Foreground = Brush.Parse("#888888"),
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
@@ -188,7 +188,7 @@ public partial class NotificationsView : UserControl
             // 4. INDIVIDUAL DELETE BUTTON 🗑️
             var deleteBtn = new Button
             {
-                Content = "🗑️ Delete",
+                Content = LanguageService.Get("Notifications_Delete"),
                 FontSize = 11,
                 FontWeight = FontWeight.SemiBold,
                 Foreground = Brush.Parse("#FF8080"),

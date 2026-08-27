@@ -11,11 +11,14 @@ namespace ADIapp.Services;
 public static class OrderProcessingManager
 {
     private static string? _activeOrderFileHash;
+    private static int? _activeOrderId;
     private static bool _isProcessing;
     private static string _statusText = string.Empty;
     private static bool _isDownloading;
+    private static System.Threading.CancellationTokenSource? _safetyPollCts;
 
     public static string? ActiveOrderFileHash => _activeOrderFileHash;
+    public static int? ActiveOrderId => _activeOrderId;
     public static bool IsProcessing => _isProcessing;
     public static string StatusText => _statusText;
 
@@ -27,102 +30,108 @@ public static class OrderProcessingManager
         WebSocketManager.OrderUpdated += OnWebSocketOrderUpdated;
     }
 
-    public static void StartTrackingOrder(string fileHash)
+    public static void StartTrackingOrder(string fileHash, int? orderId = null)
     {
         _activeOrderFileHash = fileHash;
+        _activeOrderId = orderId;
         _isProcessing = true;
         _statusText = LanguageService.Get("Tune_WaitingTuning");
         StateChanged?.Invoke();
 
-        // 1. Initial instant check in case backend finished during request
-        _ = CheckAndHandleOrderCompletionAsync(fileHash);
+        // 1. Immediate check in case the backend completed synchronously
+        _ = CheckAndHandleOrderCompletionAsync();
 
-        // 2. Slow safety fallback check in case websocket packet dropped
-        _ = FallbackSafetyCheckAsync(fileHash);
+        // 2. Safety net: periodic background fallback check every 6s in case WebSocket drops
+        StartSafetyFallbackPolling();
     }
 
     public static void StopTracking()
     {
+        _safetyPollCts?.Cancel();
+        _safetyPollCts = null;
         _activeOrderFileHash = null;
+        _activeOrderId = null;
         _isProcessing = false;
         _statusText = string.Empty;
         StateChanged?.Invoke();
     }
 
+    private static void StartSafetyFallbackPolling()
+    {
+        _safetyPollCts?.Cancel();
+        _safetyPollCts = new System.Threading.CancellationTokenSource();
+        var token = _safetyPollCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            for (int i = 0; i < 15; i++) // Poll up to ~90 seconds
+            {
+                try
+                {
+                    await Task.Delay(6000, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
+                if (token.IsCancellationRequested || !_isProcessing) return;
+
+                bool handled = await CheckAndHandleOrderCompletionAsync();
+                if (handled) return;
+            }
+        }, token);
+    }
+
     private static void OnWebSocketOrderUpdated()
     {
-        if (string.IsNullOrEmpty(_activeOrderFileHash) || !_isProcessing)
+        if ((!_activeOrderId.HasValue && string.IsNullOrEmpty(_activeOrderFileHash)) || !_isProcessing)
             return;
 
-        // WebSocket event received: trigger instant status resolution (0ms delay)
+        // WebSocket event received: trigger instant status resolution (0ms delay, event-driven)
         Dispatcher.UIThread.Post(async () =>
         {
-            await CheckAndHandleOrderCompletionAsync(_activeOrderFileHash);
+            await CheckAndHandleOrderCompletionAsync();
         });
     }
 
-    private static async Task FallbackSafetyCheckAsync(string fileHash)
+    private static async Task<bool> CheckAndHandleOrderCompletionAsync()
     {
-        // Check only 4 times at 15s intervals (up to 60s total) purely as a safety net
-        for (int i = 0; i < 4; i++)
-        {
-            await Task.Delay(15000);
-
-            if (_activeOrderFileHash != fileHash || !_isProcessing)
-                return;
-
-            bool handled = await CheckAndHandleOrderCompletionAsync(fileHash);
-            if (handled)
-                return;
-        }
-
-        // Timeout fallback
-        if (_activeOrderFileHash == fileHash)
-        {
-            _isProcessing = false;
-            _statusText = string.Empty;
-            StateChanged?.Invoke();
-        }
-    }
-
-    private static async Task<bool> CheckAndHandleOrderCompletionAsync(string fileHash)
-    {
-        if (_isDownloading) return false;
+        if (_isDownloading || (!_activeOrderId.HasValue && string.IsNullOrEmpty(_activeOrderFileHash))) 
+            return false;
 
         try
         {
             var history = await ApiService.GetOrderHistoryAsync();
-            if (history?.Orders != null)
+            if (history?.Orders != null && history.Orders.Count > 0)
             {
+                // Priority 1: Match by exact Order ID. Priority 2: Fallback to fileHash
                 var matchingOrder = history.Orders.FirstOrDefault(o =>
-                    (!string.IsNullOrEmpty(o.FileReceived) && o.FileReceived.Contains(fileHash, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(o.FileSent) && o.FileSent.Contains(fileHash, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(o.DownloadUrl) && o.DownloadUrl.Contains(fileHash, StringComparison.OrdinalIgnoreCase))
+                    (_activeOrderId.HasValue && o.Id == _activeOrderId.Value) ||
+                    (!string.IsNullOrEmpty(_activeOrderFileHash) && 
+                        ((o.FileReceived?.Contains(_activeOrderFileHash, StringComparison.OrdinalIgnoreCase) == true) ||
+                         (o.FileSent?.Contains(_activeOrderFileHash, StringComparison.OrdinalIgnoreCase) == true) ||
+                         (o.DownloadUrl?.Contains(_activeOrderFileHash, StringComparison.OrdinalIgnoreCase) == true)))
                 );
-
-                if (matchingOrder == null && history.Orders.Count > 0)
-                {
-                    matchingOrder = history.Orders[0];
-                }
 
                 if (matchingOrder != null)
                 {
                     if (matchingOrder.IsCompleted)
                     {
-                        _isProcessing = false;
-                        _activeOrderFileHash = null;
-                        _statusText = string.Empty;
-                        StateChanged?.Invoke();
+                        StopTracking();
+                        if (matchingOrder.IsDownloadExpired)
+                        {
+                            NotificationService.AddNotification($"order_expired_{matchingOrder.Id}", "Download link for this tuning file has expired.", "warning");
+                            return true;
+                        }
 
                         await PromptAndDownloadFileAsync(matchingOrder);
                         return true;
                     }
                     else if (matchingOrder.IsCanceled)
                     {
-                        _isProcessing = false;
-                        _activeOrderFileHash = null;
-                        _statusText = string.Empty;
-                        StateChanged?.Invoke();
+                        StopTracking();
+                        NotificationService.AddNotification($"order_canceled_{matchingOrder.Id}", LanguageService.Get("Tune_OrderCanceled"), "error");
                         return true;
                     }
                 }
@@ -148,7 +157,7 @@ public static class OrderProcessingManager
             if (window == null) return;
 
             string downloadUrl = order.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{order.Id}";
-            string fileName = order.FileSent ?? $"order_{order.Id}_mod.bin";
+            string fileName = GenerateSuggestedFileName(order);
 
             var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
             {
@@ -182,4 +191,38 @@ public static class OrderProcessingManager
             _isDownloading = false;
         }
     }
+
+    public static string GenerateSuggestedFileName(OrderHistoryItemDto order)
+    {
+        // 1. Determine order/file base name
+        string? baseCandidate = !string.IsNullOrWhiteSpace(order.FileReceived)
+            ? order.FileReceived
+            : (!string.IsNullOrWhiteSpace(order.Title) ? order.Title : (!string.IsNullOrWhiteSpace(order.FileSent) ? order.FileSent : $"Order_{order.Id}"));
+
+        string extension = ".bin";
+        string baseName = $"order_{order.Id}";
+
+            // 2. Extract services done
+        if (order.Services != null && order.Services.Count > 0)
+        {
+            var serviceNames = order.Services
+                .Where(s => !string.IsNullOrWhiteSpace(s.Name))
+                .Select(s =>
+                {
+                    var parts = s.Name.Split(new[] { ' ', '-', '/', '\\', '+', '•', ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    return string.Join("_", parts);
+                })
+                .Where(s => !string.IsNullOrWhiteSpace(s));
+
+            string joinedServices = string.Join("_", serviceNames);
+            if (!string.IsNullOrWhiteSpace(joinedServices))
+            {
+                return $"{baseName}_{joinedServices}{extension}";
+            }
+        }
+
+        return $"{baseName}{extension}";
+    }
 }
+
+

@@ -380,10 +380,10 @@ public class ApiService
         }
     }
 
-    public static async Task<(bool Success, string Message)> CreateOrderAsync(string fileHash, List<int> serviceIds, List<string>? serviceNames = null, string comment = "Created from Desktop App")
+    public static async Task<(bool Success, string Message, int? OrderId)> CreateOrderAsync(string fileHash, List<int> serviceIds, List<string>? serviceNames = null, string comment = "Created from Desktop App")
     {
         if (string.IsNullOrEmpty(AccessToken))
-            return (false, "Not authenticated.");
+            return (false, "Not authenticated.", null);
 
         try
         {
@@ -417,18 +417,42 @@ public class ApiService
                 message = msgProp.GetString() ?? "";
             }
 
+            int? orderId = null;
+            if (root.TryGetProperty("data", out var dataProp))
+            {
+                if (dataProp.ValueKind == JsonValueKind.Object)
+                {
+                    if (dataProp.TryGetProperty("id", out var idProp) && idProp.TryGetInt32(out int idVal))
+                    {
+                        orderId = idVal;
+                    }
+                    else if (dataProp.TryGetProperty("order_id", out var oidProp) && oidProp.TryGetInt32(out int oidVal))
+                    {
+                        orderId = oidVal;
+                    }
+                }
+                else if (dataProp.ValueKind == JsonValueKind.Number && dataProp.TryGetInt32(out int numId))
+                {
+                    orderId = numId;
+                }
+            }
+            else if (root.TryGetProperty("order_id", out var rootOid) && rootOid.TryGetInt32(out int rootOidVal))
+            {
+                orderId = rootOidVal;
+            }
+
             if (success)
             {
                 _ = FetchProfileAsync();
-                return (true, "Order created successfully.");
+                return (true, "Order created successfully.", orderId);
             }
 
-            return (false, string.IsNullOrEmpty(message) ? "Failed to create order." : message);
+            return (false, string.IsNullOrEmpty(message) ? "Failed to create order." : message, null);
         }
         catch (Exception ex)
         {
             Logger.Error($"Error creating order: {ex.Message}", ex);
-            return (false, $"Connection error: {ex.Message}");
+            return (false, $"Connection error: {ex.Message}", null);
         }
     }
 

@@ -47,11 +47,13 @@ public partial class TuneView : UserControl
         base.OnInitialized();
         WebSocketManager.EcuIdentified += OnEcuIdentified;
         WebSocketManager.OrderUpdated += OnOrderUpdated;
+        ApiService.CurrentUserChanged += OnCurrentUserChanged;
 
         OrderProcessingManager.StateChanged += OnOrderProcessingStateChanged;
 
         LanguageService.LanguageChanged += OnLanguageChanged;
         UpdateLocalizedText();
+        UpdateDailyQuotaUi();
         UpdateOrderProgressModal();
         await LoadProcessingFilesAsync();
     }
@@ -61,8 +63,17 @@ public partial class TuneView : UserControl
         base.OnDetachedFromVisualTree(e);
         WebSocketManager.EcuIdentified -= OnEcuIdentified;
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
+        ApiService.CurrentUserChanged -= OnCurrentUserChanged;
         OrderProcessingManager.StateChanged -= OnOrderProcessingStateChanged;
         LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnCurrentUserChanged(Models.UserDto? user)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            UpdateDailyQuotaUi();
+        });
     }
 
     private void OnOrderProcessingStateChanged()
@@ -96,6 +107,7 @@ public partial class TuneView : UserControl
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
             UpdateLocalizedText();
+            UpdateDailyQuotaUi();
         });
     }
 
@@ -104,7 +116,40 @@ public partial class TuneView : UserControl
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
             _ = LoadProcessingFilesAsync();
+            _ = ApiService.FetchProfileAsync();
         });
+    }
+
+    private void UpdateDailyQuotaUi()
+    {
+        var quotaTitle = this.FindControl<TextBlock>("TuneDailyQuotaTitleText");
+        var quotaValue = this.FindControl<TextBlock>("TuneDailyQuotaValueText");
+
+        if (quotaTitle != null)
+        {
+            quotaTitle.Text = LanguageService.Get("Sidebar_DailyQuota");
+        }
+
+        if (quotaValue != null)
+        {
+            var user = ApiService.CurrentUser;
+            if (user != null && user.HasDailyLimit)
+            {
+                int used = user.TodayOrdersCount ?? 0;
+                int limit = user.OrderLimit!.Value;
+                quotaValue.Text = $"{used} / {limit} files";
+                quotaValue.Foreground = user.HasReachedDailyLimit
+                    ? Avalonia.Media.Brush.Parse("#FF4D4D")
+                    : Avalonia.Media.Brush.Parse("#4DFF8A");
+            }
+            else
+            {
+                quotaValue.Text = LanguageService.Get("Quota_Unlimited");
+                quotaValue.Foreground = Avalonia.Media.Brush.Parse("#4DFF8A");
+            }
+        }
+
+        UpdateSummaryAndSaveButton();
     }
 
     private void Back_Click(object? sender, RoutedEventArgs e)
@@ -178,14 +223,14 @@ public partial class TuneView : UserControl
 
                 if (isFailed || effectiveServices == null || effectiveServices.Count == 0)
                 {
-                    if (StatusText != null) StatusText.Text = "Unsupported ECU";
+                    if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusUnsupported");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
                     RenderUnsupportedEcuUi(data ?? new EcuIdentifyData { FileHash = hash });
                 }
                 else
                 {
                     RenderDynamicServices(effectiveServices);
-                    if (StatusText != null) StatusText.Text = "Identified";
+                    if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
                 }
 
@@ -455,7 +500,7 @@ public partial class TuneView : UserControl
                     downloadBtn.Click += async (s, e) =>
                     {
                         downloadBtn.IsEnabled = false;
-                        downloadBtn.Content = "Downloading...";
+                        downloadBtn.Content = LanguageService.Get("Tune_Downloading");
 
                         var (success, msg) = await DownloadAndSaveFileAsync(
                             targetDownloadUrl,
@@ -465,8 +510,8 @@ public partial class TuneView : UserControl
 
                         if (success)
                         {
-                            downloadBtn.Content = "✓ Downloaded";
-                            NotificationService.AddNotification($"download_done_{fileName}", $"File download completed: {fileName}", "info");
+                            downloadBtn.Content = LanguageService.Get("Tune_Downloaded");
+                            NotificationService.AddNotification($"download_done_{fileName}", string.Format(LanguageService.Get("Tune_FileDownloadCompleted"), fileName), "info");
                         }
                         else
                         {
@@ -477,7 +522,7 @@ public partial class TuneView : UserControl
                                 var topLevel = TopLevel.GetTopLevel(this);
                                 if (topLevel is Window window)
                                 {
-                                    await MessageBox(window, $"Download failed: {msg}");
+                                    await MessageBox(window, string.Format(LanguageService.Get("Tune_DownloadFailed"), msg));
                                 }
                             }
                         }
@@ -507,7 +552,7 @@ public partial class TuneView : UserControl
                 var statusPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 6 };
                 statusPanel.Children.Add(new TextBlock
                 {
-                    Text = $"TICKET • {statusText}",
+                    Text = string.Format(LanguageService.Get("Tune_StatusTicket"), statusText),
                     Foreground = Avalonia.Media.Brush.Parse(statusColor),
                     FontSize = 10,
                     FontWeight = Avalonia.Media.FontWeight.Bold
@@ -520,7 +565,7 @@ public partial class TuneView : UserControl
                     int ticketId = file.TicketId.Value;
                     var viewBtn = new Button
                     {
-                        Content = "💬 View Ticket",
+                        Content = LanguageService.Get("Tune_ViewTicket"),
                         Background = Avalonia.Media.Brush.Parse("#FF9800"),
                         Foreground = Avalonia.Media.Brushes.Black,
                         FontWeight = Avalonia.Media.FontWeight.Bold,
@@ -556,7 +601,7 @@ public partial class TuneView : UserControl
 
                 stack.Children.Add(new TextBlock
                 {
-                    Text = isCompleted ? "MAP IDENTIFIED" : "IDENTIFICATION PENDING",
+                    Text = isCompleted ? LanguageService.Get("Tune_MapIdentified") : LanguageService.Get("Tune_IdentPending"),
                     Foreground = Avalonia.Media.Brush.Parse(isCompleted ? "#4DFF8A" : "#FFA500"),
                     FontSize = 10,
                     FontWeight = Avalonia.Media.FontWeight.Bold
@@ -585,8 +630,10 @@ public partial class TuneView : UserControl
         }
     }
 
-    private void SetCardsPendingState(string stateText = "Pending...")
+    private void SetCardsPendingState(string? stateText = null)
     {
+        stateText ??= LanguageService.Get("Tune_StatusPending");
+
         var vehTitle = this.FindControl<TextBlock>("VehicleTitleText");
         var vehSub = this.FindControl<TextBlock>("VehicleSubtitleText");
 
@@ -607,12 +654,12 @@ public partial class TuneView : UserControl
         var ecuSoftware = this.FindControl<TextBlock>("EcuSoftwareText");
         var ecuSize = this.FindControl<TextBlock>("EcuSoftwareSizeText");
 
-        if (vehTitle != null) vehTitle.Text = "Vehicle & ECU Information";
+        if (vehTitle != null) vehTitle.Text = LanguageService.Get("Tune_Title");
         if (vehSub != null)
         {
-            vehSub.Text = stateText.Equals("Not Loaded", StringComparison.OrdinalIgnoreCase) || stateText.Equals("-", StringComparison.OrdinalIgnoreCase)
-                ? "Upload a binary file or select an active task to inspect specifications."
-                : $"Status: {stateText}";
+            vehSub.Text = stateText.Equals("Not Loaded", StringComparison.OrdinalIgnoreCase) || stateText.Equals("-", StringComparison.OrdinalIgnoreCase) || stateText == LanguageService.Get("Tune_StatusNotLoaded")
+                ? LanguageService.Get("Tune_Subtitle")
+                : string.Format(LanguageService.Get("Tune_StatusPrefix"), stateText);
         }
 
         if (vehProducer != null) vehProducer.Text = stateText;
@@ -637,9 +684,10 @@ public partial class TuneView : UserControl
     {
         _pendingFileHash = hash;
 
-        SetCardsPendingState("Checking status...");
+        string checkingText = LanguageService.Get("Tune_StatusChecking");
+        SetCardsPendingState(checkingText);
 
-        if (StatusText != null) StatusText.Text = "Checking status...";
+        if (StatusText != null) StatusText.Text = checkingText;
         if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
         if (ServicesContainer != null) ServicesContainer.IsVisible = false;
 
@@ -655,13 +703,13 @@ public partial class TuneView : UserControl
 
                 if (isFailed || !response.Data.IsSupported || effectiveServices == null || effectiveServices.Count == 0)
                 {
-                    if (StatusText != null) StatusText.Text = "Unsupported ECU";
+                    if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusUnsupported");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
                     RenderUnsupportedEcuUi(response.Data);
                 }
                 else
                 {
-                    if (StatusText != null) StatusText.Text = "Identified";
+                    if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
                     RenderDynamicServices(effectiveServices);
                 }
@@ -670,16 +718,16 @@ public partial class TuneView : UserControl
             }
             else
             {
-                SetCardsPendingState("Pending...");
+                SetCardsPendingState(LanguageService.Get("Tune_StatusPending"));
 
-                if (StatusText != null) StatusText.Text = "Processing...";
+                if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusProcessing");
                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
                 if (ServicesContainer != null) ServicesContainer.IsVisible = false;
             }
         }
         else
         {
-            if (StatusText != null) StatusText.Text = "Failed";
+            if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusFailed");
             if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF4D4D");
 
             if (response.Data != null)
@@ -689,7 +737,7 @@ public partial class TuneView : UserControl
             }
             else
             {
-                SetCardsPendingState("Failed");
+                SetCardsPendingState(LanguageService.Get("Tune_StatusFailed"));
             }
             if (ServicesContainer != null) ServicesContainer.IsVisible = true;
         }
@@ -717,7 +765,7 @@ public partial class TuneView : UserControl
 
         stack.Children.Add(new TextBlock
         {
-            Text = "⚠️ ECU File Not Found in Database",
+            Text = LanguageService.Get("Tune_EcuNotFoundTitle"),
             FontSize = 15,
             FontWeight = Avalonia.Media.FontWeight.Bold,
             Foreground = Avalonia.Media.Brush.Parse("#FFB74D")
@@ -725,7 +773,7 @@ public partial class TuneView : UserControl
 
         stack.Children.Add(new TextBlock
         {
-            Text = "This ECU reference is not mapped to services yet. Submit a support ticket so our technical team can add it for you.",
+            Text = LanguageService.Get("Tune_EcuNotFoundDesc"),
             FontSize = 12,
             Foreground = Avalonia.Media.Brush.Parse("#CCCCCC"),
             TextWrapping = Avalonia.Media.TextWrapping.Wrap
@@ -733,7 +781,7 @@ public partial class TuneView : UserControl
 
         var submitBtn = new Button
         {
-            Content = "📩 Submit Support Ticket for this ECU",
+            Content = LanguageService.Get("Tune_SubmitTicketForEcu"),
             Background = Avalonia.Media.Brush.Parse("#FF9800"),
             Foreground = Avalonia.Media.Brushes.Black,
             FontWeight = Avalonia.Media.FontWeight.Bold,
@@ -745,7 +793,7 @@ public partial class TuneView : UserControl
         submitBtn.Click += async (s, e) =>
         {
             submitBtn.IsEnabled = false;
-            submitBtn.Content = "Sending Ticket...";
+            submitBtn.Content = LanguageService.Get("Tune_SendingTicket");
 
             string ecuName = !string.IsNullOrWhiteSpace(data?.EcuBrand) || !string.IsNullOrWhiteSpace(data?.EcuModel)
                 ? $"{data?.EcuBrand} {data?.EcuModel}".Trim()
@@ -775,14 +823,14 @@ public partial class TuneView : UserControl
             var res = await ApiService.CreateTicketAsync(subject, sb.ToString().Trim(), metadata);
             if (res.Success)
             {
-                submitBtn.Content = "✓ Support Ticket Sent";
+                submitBtn.Content = LanguageService.Get("Tune_TicketSent");
                 submitBtn.Background = Avalonia.Media.Brush.Parse("#4CAF50");
                 submitBtn.Foreground = Avalonia.Media.Brushes.White;
             }
             else
             {
                 submitBtn.IsEnabled = true;
-                submitBtn.Content = "Retry Sending Ticket";
+                submitBtn.Content = LanguageService.Get("Tune_RetryTicket");
             }
         };
 
@@ -972,7 +1020,7 @@ public partial class TuneView : UserControl
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
                 Child = new TextBlock
                 {
-                    Text = "✓ SELECTED",
+                    Text = LanguageService.Get("Tune_BadgeSelected"),
                     FontSize = 9,
                     FontWeight = Avalonia.Media.FontWeight.Bold,
                     Foreground = Avalonia.Media.Brush.Parse("#0F172A")
@@ -1003,14 +1051,14 @@ public partial class TuneView : UserControl
             if (service.IsIncludedInSubscription)
             {
                 priceDisplay = service.RemainingQuota.HasValue
-                    ? $"✨ Included ({service.RemainingQuota.Value} left)"
-                    : "✨ Included in Plan";
+                    ? string.Format(LanguageService.Get("Tune_IncludedLeft"), service.RemainingQuota.Value)
+                    : LanguageService.Get("Tune_IncludedPlan");
             }
             else
             {
                 priceDisplay = !string.IsNullOrWhiteSpace(service.Price) && service.Price != "Included" && service.Price != "Free"
                     ? $"🪙 {service.Price} CBT"
-                    : "✨ Included";
+                    : LanguageService.Get("Tune_Included");
             }
 
             var priceText = new TextBlock
@@ -1123,11 +1171,24 @@ public partial class TuneView : UserControl
 
         if (SaveButton != null)
         {
+            bool hasReachedDailyLimit = ApiService.CurrentUser?.HasReachedDailyLimit == true;
+
             if (string.IsNullOrEmpty(_pendingFileHash))
             {
-                SaveButton.Content = LanguageService.Get("Tune_SelectEcuFile");
-                SaveButton.Background = Avalonia.Media.Brushes.White;
-                SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
+                if (hasReachedDailyLimit)
+                {
+                    SaveButton.Content = LanguageService.Get("Tune_DailyLimitReachedShort");
+                    SaveButton.Background = Avalonia.Media.Brush.Parse("#252525");
+                    SaveButton.Foreground = Avalonia.Media.Brush.Parse("#888888");
+                    SaveButton.IsEnabled = false;
+                }
+                else
+                {
+                    SaveButton.Content = LanguageService.Get("Tune_SelectEcuFile");
+                    SaveButton.Background = Avalonia.Media.Brushes.White;
+                    SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
+                    SaveButton.IsEnabled = true;
+                }
             }
             else
             {
@@ -1143,6 +1204,7 @@ public partial class TuneView : UserControl
                 }
                 SaveButton.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
                 SaveButton.Foreground = Avalonia.Media.Brushes.Black;
+                SaveButton.IsEnabled = true;
             }
         }
     }
@@ -1151,10 +1213,21 @@ public partial class TuneView : UserControl
     {
         if (_isProcessing) return;
 
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
+        if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window window)
+            {
+                int limit = ApiService.CurrentUser.OrderLimit ?? 0;
+                await MessageBox(window, string.Format(LanguageService.Get("Tune_DailyLimitReached"), limit));
+            }
+            return;
+        }
 
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        var topLevelPicker = TopLevel.GetTopLevel(this);
+        if (topLevelPicker == null) return;
+
+        var files = await topLevelPicker.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Select ECU Binary File",
             AllowMultiple = false,
@@ -1175,6 +1248,12 @@ public partial class TuneView : UserControl
 
     private void OnFileDragOver(object? sender, DragEventArgs e)
     {
+        if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
+        {
+            e.DragEffects = DragDropEffects.None;
+            return;
+        }
+
         if (e.DataTransfer.Contains(DataFormat.File))
         {
             e.DragEffects = DragDropEffects.Copy;
@@ -1188,6 +1267,17 @@ public partial class TuneView : UserControl
     private async void OnFileDrop(object? sender, DragEventArgs e)
     {
         if (_isProcessing) return;
+
+        if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window window)
+            {
+                int limit = ApiService.CurrentUser.OrderLimit ?? 0;
+                await MessageBox(window, string.Format(LanguageService.Get("Tune_DailyLimitReached"), limit));
+            }
+            return;
+        }
 
 #pragma warning disable CS0618
         var files = e.Data.GetFiles();
@@ -1210,9 +1300,10 @@ public partial class TuneView : UserControl
     private async Task ProcessAndUploadFileAsync(string filePath)
     {
         _isProcessing = true;
-        SetCardsPendingState("Uploading...");
+        string uploadingText = LanguageService.Get("Tune_StatusUploading");
+        SetCardsPendingState(uploadingText);
 
-        if (StatusText != null) StatusText.Text = "Uploading...";
+        if (StatusText != null) StatusText.Text = uploadingText;
         if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
         if (ServicesContainer != null) ServicesContainer.IsVisible = false;
 
@@ -1228,15 +1319,15 @@ public partial class TuneView : UserControl
             {
                 PopulateEcuInfo(response.Data);
                 RenderDynamicServices(response.Data.GetEffectiveServices());
-                if (StatusText != null) StatusText.Text = "Identified";
+                if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
                 if (ServicesContainer != null) ServicesContainer.IsVisible = true;
             }
             else
             {
-                SetCardsPendingState("Pending...");
+                SetCardsPendingState(LanguageService.Get("Tune_StatusPending"));
 
-                if (StatusText != null) StatusText.Text = "Processing...";
+                if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusProcessing");
                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
                 if (ServicesContainer != null) ServicesContainer.IsVisible = false;
             }
@@ -1244,15 +1335,26 @@ public partial class TuneView : UserControl
         else
         {
             _pendingFileHash = null;
-            if (StatusText != null) StatusText.Text = "Failed";
+            if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusFailed");
             if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF4D4D");
-            SetCardsPendingState("Failed");
+            SetCardsPendingState(LanguageService.Get("Tune_StatusFailed"));
             if (ServicesContainer != null) ServicesContainer.IsVisible = false;
         }
     }
 
     private async void Save_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window window)
+            {
+                int limit = ApiService.CurrentUser.OrderLimit ?? 0;
+                await MessageBox(window, string.Format(LanguageService.Get("Tune_DailyLimitReached"), limit));
+            }
+            return;
+        }
+
         if (string.IsNullOrEmpty(_pendingFileHash))
         {
             await OpenFilePickerAndUploadAsync();
@@ -1323,7 +1425,7 @@ public partial class TuneView : UserControl
 
         try
         {
-            var (success, message) = await ApiService.CreateOrderAsync(orderedHash, selectedServiceIds, selectedServiceNames);
+            var (success, message, orderId) = await ApiService.CreateOrderAsync(orderedHash, selectedServiceIds, selectedServiceNames);
 
             if (!success)
             {
@@ -1336,7 +1438,7 @@ public partial class TuneView : UserControl
             }
 
             // Start global tracking (handles polling, persistent indicator across tabs, and native Save dialog)
-            OrderProcessingManager.StartTrackingOrder(orderedHash);
+            OrderProcessingManager.StartTrackingOrder(orderedHash, orderId);
 
             ResetWorkspace();
             _ = ApiService.FetchProfileAsync();
@@ -1373,19 +1475,19 @@ public partial class TuneView : UserControl
         {
             var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
             {
-                Title = "Save Modified Tuning File",
+                Title = LanguageService.Get("Tune_SavePickerTitle"),
                 SuggestedFileName = suggestedFileName
             });
 
             if (saveFile == null)
                 return (false, string.Empty); // User canceled picker
 
-            onProgress?.Invoke("Downloading...");
+            onProgress?.Invoke(LanguageService.Get("Tune_Downloading"));
 
             using var stream = await saveFile.OpenWriteAsync();
             var progress = new System.Progress<double>(p =>
             {
-                onProgress?.Invoke($"Downloading {p:F0}%...");
+                onProgress?.Invoke($"{LanguageService.Get("Tune_Downloading")} {p:F0}%...");
             });
 
             return await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
@@ -1414,9 +1516,9 @@ public partial class TuneView : UserControl
             _activeBorder = null;
         }
 
-        SetCardsPendingState("Not Loaded");
+        SetCardsPendingState(LanguageService.Get("Tune_StatusNotLoaded"));
 
-        if (StatusText != null) StatusText.Text = "Ready";
+        if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusReady");
         if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brushes.Gray;
         if (ServicesContainer != null) ServicesContainer.IsVisible = false;
 

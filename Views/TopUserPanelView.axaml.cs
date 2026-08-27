@@ -211,7 +211,7 @@ public partial class TopUserPanelView : UserControl
         {
             notificationsList.Children.Add(new TextBlock
             {
-                Text = "No notifications",
+                Text = LanguageService.Get("Notifications_NoNotifications"),
                 Foreground = Avalonia.Media.Brushes.Gray,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                 Margin = new Thickness(0, 16, 0, 16),

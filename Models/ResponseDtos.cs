@@ -59,6 +59,19 @@ public class UserDto
 
     [JsonPropertyName("subscriptionEndDate")]
     public string? SubscriptionEndDate { get; set; }
+
+    [JsonPropertyName("order_limit")]
+    public int? OrderLimit { get; set; }
+
+    [JsonPropertyName("today_orders_count")]
+    public int? TodayOrdersCount { get; set; }
+
+    [JsonPropertyName("remaining_daily_limit")]
+    public int? RemainingDailyLimit { get; set; }
+
+    public bool HasDailyLimit => OrderLimit.HasValue && OrderLimit.Value > 0;
+    public int RemainingDailyTunes => RemainingDailyLimit ?? (HasDailyLimit ? Math.Max(0, OrderLimit!.Value - (TodayOrdersCount ?? 0)) : int.MaxValue);
+    public bool HasReachedDailyLimit => HasDailyLimit && RemainingDailyTunes <= 0;
 }
 
 public class EcuIdentifyResponse
