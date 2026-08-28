@@ -20,5 +20,5 @@ public static class AppConfig
 
     public const bool WebsocketEncrypted = true;
 
-    public const string AppVersion = "1.0.0";
+    public const string AppVersion = "1.0.1";
 }
