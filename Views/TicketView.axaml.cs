@@ -144,7 +144,7 @@ public partial class TicketView : UserControl
         {
             TicketListPanel.Children.Add(new TextBlock
             {
-                Text = "No tickets yet. Click '+ New Ticket' to create one.",
+                Text = LanguageService.Get("Ticket_NoTicketsPrompt"),
                 Foreground = Brush.Parse("#888888"),
                 FontSize = 13,
                 TextWrapping = TextWrapping.Wrap,
@@ -401,7 +401,7 @@ public partial class TicketView : UserControl
         if (SendReplyButton != null)
         {
             SendReplyButton.IsEnabled = false;
-            SendReplyButton.Content = "Sending...";
+            SendReplyButton.Content = LanguageService.Get("Ticket_Sending");
         }
 
         try
@@ -418,7 +418,8 @@ public partial class TicketView : UserControl
                 var topLevel = TopLevel.GetTopLevel(this);
                 if (topLevel is Window window)
                 {
-                    await MessageBox(window, $"Failed to send reply: {res.Message}");
+                    string errFmt = LanguageService.Get("Ticket_SendFailed");
+                    await MessageBox(window, string.Format(errFmt, res.Message));
                 }
             }
         }
@@ -427,7 +428,7 @@ public partial class TicketView : UserControl
             if (SendReplyButton != null)
             {
                 SendReplyButton.IsEnabled = true;
-                SendReplyButton.Content = LanguageService.Get("Ticket_Send") != "Ticket_Send" ? LanguageService.Get("Ticket_Send") : "Send Reply";
+                SendReplyButton.Content = LanguageService.Get("Ticket_Send");
             }
         }
     }

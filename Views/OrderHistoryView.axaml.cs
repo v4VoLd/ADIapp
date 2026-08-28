@@ -324,7 +324,19 @@ public partial class OrderHistoryView : UserControl
                         var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
                         {
                             Title = LanguageService.Get("Tune_SavePickerTitle"),
-                            SuggestedFileName = fileName
+                            SuggestedFileName = fileName,
+                            DefaultExtension = "bin",
+                            FileTypeChoices = new[]
+                            {
+                                new Avalonia.Platform.Storage.FilePickerFileType("Binary File (*.bin)")
+                                {
+                                    Patterns = new[] { "*.bin" }
+                                },
+                                new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)")
+                                {
+                                    Patterns = new[] { "*.*" }
+                                }
+                            }
                         });
 
                         if (saveFile != null)

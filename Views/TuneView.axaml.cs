@@ -122,6 +122,7 @@ public partial class TuneView : UserControl
 
     private void UpdateDailyQuotaUi()
     {
+        /* Quota UI disabled
         var quotaTitle = this.FindControl<TextBlock>("TuneDailyQuotaTitleText");
         var quotaValue = this.FindControl<TextBlock>("TuneDailyQuotaValueText");
 
@@ -148,6 +149,7 @@ public partial class TuneView : UserControl
                 quotaValue.Foreground = Avalonia.Media.Brush.Parse("#4DFF8A");
             }
         }
+        */
 
         UpdateSummaryAndSaveButton();
     }
@@ -168,9 +170,6 @@ public partial class TuneView : UserControl
         if (VehicleTitleText != null) VehicleTitleText.Text = LanguageService.Get("Tune_Title");
         if (VehicleSubtitleText != null) VehicleSubtitleText.Text = LanguageService.Get("Tune_Subtitle");
         if (BackButton != null) BackButton.Content = LanguageService.Get("Tune_Back");
-        if (ActiveTasksTitleText != null) ActiveTasksTitleText.Text = LanguageService.Get("Tune_ActiveTasks");
-        if (NewFileButton != null) NewFileButton.Content = LanguageService.Get("Tune_NewUpload");
-        if (NoActiveTasksText != null) NoActiveTasksText.Text = LanguageService.Get("Tune_NoActiveTasks");
 
         if (VehSpecsTitleText != null) VehSpecsTitleText.Text = LanguageService.Get("Tune_VehSpecs");
         if (LblProducerText != null) LblProducerText.Text = LanguageService.Get("Tune_Producer");
@@ -203,6 +202,9 @@ public partial class TuneView : UserControl
         if (filterPerf != null) filterPerf.Content = LanguageService.Get("Tune_FilterPerf");
         if (filterDeletes != null) filterDeletes.Content = LanguageService.Get("Tune_FilterDeletes");
         if (filterFeatures != null) filterFeatures.Content = LanguageService.Get("Tune_FilterFeatures");
+
+        var dragDropHint = this.FindControl<TextBlock>("DragDropHintText");
+        if (dragDropHint != null) dragDropHint.Text = LanguageService.Get("Tune_DragAndDrop");
 
         UpdateSummaryAndSaveButton();
     }
@@ -381,21 +383,21 @@ public partial class TuneView : UserControl
 
                             if (isFailed || effectiveServices == null || effectiveServices.Count == 0)
                             {
-                                if (StatusText != null) StatusText.Text = "Unsupported ECU";
+                                if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusUnsupported");
                                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
                                 RenderUnsupportedEcuUi(response.Data);
                             }
                             else
                             {
                                 RenderDynamicServices(effectiveServices);
-                                if (StatusText != null) StatusText.Text = "Identified";
+                                if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
                                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
                             }
 
                             if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                             _renderedFileHash = _pendingFileHash;
 
-                            NotificationService.AddNotification($"ecu_done_{_pendingFileHash}", "File tuning / ECU identification completed!", "info");
+                            NotificationService.AddNotification($"ecu_done_{_pendingFileHash}", LanguageService.Get("Tune_EcuIdentDone"), "info");
                         });
                     }
                 }
@@ -1171,10 +1173,13 @@ public partial class TuneView : UserControl
 
         if (SaveButton != null)
         {
+            /* Quota limit check disabled
             bool hasReachedDailyLimit = ApiService.CurrentUser?.HasReachedDailyLimit == true;
+            */
 
             if (string.IsNullOrEmpty(_pendingFileHash))
             {
+                /*
                 if (hasReachedDailyLimit)
                 {
                     SaveButton.Content = LanguageService.Get("Tune_DailyLimitReachedShort");
@@ -1183,6 +1188,7 @@ public partial class TuneView : UserControl
                     SaveButton.IsEnabled = false;
                 }
                 else
+                */
                 {
                     SaveButton.Content = LanguageService.Get("Tune_SelectEcuFile");
                     SaveButton.Background = Avalonia.Media.Brushes.White;
@@ -1213,6 +1219,7 @@ public partial class TuneView : UserControl
     {
         if (_isProcessing) return;
 
+        /* Quota limit check disabled
         if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -1223,13 +1230,14 @@ public partial class TuneView : UserControl
             }
             return;
         }
+        */
 
         var topLevelPicker = TopLevel.GetTopLevel(this);
         if (topLevelPicker == null) return;
 
         var files = await topLevelPicker.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Select ECU Binary File",
+            Title = LanguageService.Get("Tune_SelectEcuBinaryFile"),
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
@@ -1248,11 +1256,13 @@ public partial class TuneView : UserControl
 
     private void OnFileDragOver(object? sender, DragEventArgs e)
     {
+        /* Quota limit check disabled
         if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
         {
             e.DragEffects = DragDropEffects.None;
             return;
         }
+        */
 
         if (e.DataTransfer.Contains(DataFormat.File))
         {
@@ -1268,6 +1278,7 @@ public partial class TuneView : UserControl
     {
         if (_isProcessing) return;
 
+        /* Quota limit check disabled
         if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -1278,10 +1289,11 @@ public partial class TuneView : UserControl
             }
             return;
         }
+        */
 
-#pragma warning disable CS0618
+        #pragma warning disable CS0618
         var files = e.Data.GetFiles();
-#pragma warning restore CS0618
+        #pragma warning restore CS0618
         if (files != null)
         {
             var file = files.FirstOrDefault(f =>
@@ -1344,6 +1356,7 @@ public partial class TuneView : UserControl
 
     private async void Save_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        /* Quota limit check disabled
         if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
         {
             var topLevel = TopLevel.GetTopLevel(this);
@@ -1354,6 +1367,7 @@ public partial class TuneView : UserControl
             }
             return;
         }
+        */
 
         if (string.IsNullOrEmpty(_pendingFileHash))
         {
@@ -1476,7 +1490,19 @@ public partial class TuneView : UserControl
             var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
             {
                 Title = LanguageService.Get("Tune_SavePickerTitle"),
-                SuggestedFileName = suggestedFileName
+                SuggestedFileName = suggestedFileName,
+                DefaultExtension = "bin",
+                FileTypeChoices = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("Binary File (*.bin)")
+                    {
+                        Patterns = new[] { "*.bin" }
+                    },
+                    new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)")
+                    {
+                        Patterns = new[] { "*.*" }
+                    }
+                }
             });
 
             if (saveFile == null)

@@ -121,7 +121,7 @@ public static class OrderProcessingManager
                         StopTracking();
                         if (matchingOrder.IsDownloadExpired)
                         {
-                            NotificationService.AddNotification($"order_expired_{matchingOrder.Id}", "Download link for this tuning file has expired.", "warning");
+                            NotificationService.AddNotification($"order_expired_{matchingOrder.Id}", LanguageService.Get("Tune_LinkExpired"), "warning");
                             return true;
                         }
 
@@ -161,8 +161,20 @@ public static class OrderProcessingManager
 
             var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
             {
-                Title = "Save Modified Tuning File",
-                SuggestedFileName = fileName
+                Title = LanguageService.Get("Tune_SavePickerTitle"),
+                SuggestedFileName = fileName,
+                DefaultExtension = "bin",
+                FileTypeChoices = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("Binary File (*.bin)")
+                    {
+                        Patterns = new[] { "*.bin" }
+                    },
+                    new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)")
+                    {
+                        Patterns = new[] { "*.*" }
+                    }
+                }
             });
 
             if (saveFile != null)
@@ -200,7 +212,7 @@ public static class OrderProcessingManager
             : (!string.IsNullOrWhiteSpace(order.Title) ? order.Title : (!string.IsNullOrWhiteSpace(order.FileSent) ? order.FileSent : $"Order_{order.Id}"));
 
         string extension = ".bin";
-        string baseName = $"order_{order.Id}";
+        string baseName = "ADI-Preformance";
 
             // 2. Extract services done
         if (order.Services != null && order.Services.Count > 0)
