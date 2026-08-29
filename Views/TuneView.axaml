@@ -60,12 +60,11 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*" ColumnDefinitions="250,*">
+    <Grid RowDefinitions="Auto,*">
 
-        <!-- TITLE / HEADER WITH BACK BUTTON -->
+        <!-- TITLE / HEADER WITH BACK BUTTON & DAILY QUOTA -->
         <Grid Grid.Row="0"
-              Grid.ColumnSpan="2"
-              ColumnDefinitions="Auto,*"
+              ColumnDefinitions="*,Auto"
               Margin="30,20,30,10">
 
             <StackPanel Grid.Column="0"
@@ -103,54 +102,43 @@
                                Foreground="#4DFF8A"/>
                 </StackPanel>
             </StackPanel>
-        </Grid>
 
-        <!-- SIDEBAR TASKS LIST -->
-        <Border Grid.Row="1"
-                Grid.Column="0"
-                Margin="30,10,10,30"
-                Padding="16,20"
-                CornerRadius="22"
-                Background="#141414"
-                Opacity="0.92"
-                VerticalAlignment="Stretch">
-            <Grid RowDefinitions="Auto,Auto,*">
-                <TextBlock Grid.Row="0"
-                           x:Name="ActiveTasksTitleText"
-                           Text="Active Tasks"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           Margin="0,0,0,15"/>
-                <Button Grid.Row="1"
-                        x:Name="NewFileButton"
-                        Content="+ New Upload"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
-                        Background="#252525"
-                        Foreground="White"
-                        FontWeight="SemiBold"
-                        CornerRadius="10"
-                        Margin="0,0,0,15"
-                        Padding="0,10"
-                        Click="NewFileButton_Click"/>
-                <ScrollViewer Grid.Row="2">
-                    <StackPanel x:Name="ActiveFilesList" Spacing="8">
-                        <TextBlock x:Name="NoActiveTasksText"
-                                   Text="No active tasks" 
-                                   Foreground="Gray" 
-                                   FontSize="12" 
-                                   HorizontalAlignment="Center" 
-                                   Margin="0,20,0,0"/>
+            <!-- DAILY QUOTA BADGE (COMMENTED OUT)
+            <Border Grid.Column="1"
+                    Background="#18181A"
+                    BorderBrush="#2A2D3A"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="14,8"
+                    VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Border Width="30"
+                            Height="30"
+                            CornerRadius="8"
+                            Background="#24242A"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="⚡" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Spacing="1" VerticalAlignment="Center">
+                        <TextBlock x:Name="TuneDailyQuotaTitleText"
+                                   Text="Daily Quota"
+                                   FontSize="10"
+                                   Foreground="#9E9EA0"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock x:Name="TuneDailyQuotaValueText"
+                                   Text="Unlimited"
+                                   FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="#4DFF8A"/>
                     </StackPanel>
-                </ScrollViewer>
-            </Grid>
-        </Border>
+                </StackPanel>
+            </Border>
+            -->
+        </Grid>
 
         <!-- MAIN CARD -->
         <Border Grid.Row="1"
-                Grid.Column="1"
-                Margin="10,10,30,30"
+                Margin="30,10,30,30"
                 Padding="24,20"
                 CornerRadius="22"
                 Background="#1C1C1C"
@@ -351,7 +339,27 @@
                                    Margin="0,4,0,6"/>
                     </StackPanel>
                 </ScrollViewer>
-
+                <Border Name="DropZone"
+                        Grid.Row="1"
+                        IsVisible="{Binding !IsVisible, ElementName=ServicesContainer}"
+                        DragDrop.AllowDrop="True"
+                        Background="#141414" 
+                        BorderBrush="#262832"
+                        BorderThickness="2"
+                        CornerRadius="14"
+                        Padding="40"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                        <TextBlock Text="📁" FontSize="32" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="DragDropHintText"
+                                   Text="Drag and drop files here" 
+                                   FontSize="13"
+                                   Foreground="#888888"
+                                   HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
                 <!-- ACTION BUTTONS -->
                 <StackPanel Grid.Row="2"
                             Orientation="Horizontal"
@@ -377,6 +385,49 @@
                 </StackPanel>
 
             </Grid>
+        </Border>
+
+        <!-- ORDER PROCESSING MODAL (SPINNER & STATUS ONLY) -->
+        <Border x:Name="OrderProgressOverlay"
+                Grid.RowSpan="2"
+                Grid.ColumnSpan="2"
+                Background="#D0000000"
+                IsVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border Background="#1C1C1E"
+                    BorderBrush="#2A2D3A"
+                    BorderThickness="1"
+                    CornerRadius="18"
+                    Padding="32"
+                    MaxWidth="480"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel Spacing="20" HorizontalAlignment="Center">
+                    <ProgressBar x:Name="OrderProgressBar"
+                                 IsIndeterminate="True"
+                                 Width="260"
+                                 Height="6"
+                                 Foreground="#4DFF8A"
+                                 Background="#2C2E3B"
+                                 CornerRadius="3"
+                                 HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="OrderProgressTitle"
+                               Text="Processing Order..."
+                               FontSize="17"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="OrderProgressStatus"
+                               Text="Submitting order and waiting for ECU tuning..."
+                               FontSize="12"
+                               Foreground="#9CA3AF"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               MaxWidth="380"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
         </Border>
 
     </Grid>

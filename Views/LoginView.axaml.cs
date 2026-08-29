@@ -86,14 +86,14 @@ public partial class LoginView : UserControl
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            errorLabel.Text = "Please enter your username or email.";
+            errorLabel.Text = LanguageService.Get("Login_UsernameRequired");
             errorLabel.IsVisible = true;
             return;
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            errorLabel.Text = "Please enter your password.";
+            errorLabel.Text = LanguageService.Get("Login_PasswordRequired");
             errorLabel.IsVisible = true;
             return;
         }

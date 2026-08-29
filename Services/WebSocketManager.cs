@@ -88,7 +88,7 @@ public static class WebSocketManager
             Logger.Info($"[WebSocket] Received OrderUpdated event: {eventData.Data}");
             OrderUpdated?.Invoke();
 
-            NotificationService.AddNotification(Guid.NewGuid().ToString(), "Your order status has been updated!", "info");
+            NotificationService.AddNotification(Guid.NewGuid().ToString(), LanguageService.Get("Tune_OrderStatusUpdated"), "info");
             _ = ApiService.FetchProfileAsync();
         }
         catch (Exception ex)
@@ -157,7 +157,7 @@ public static class WebSocketManager
                 }
                 else
                 {
-                    message = "New notification received.";
+                    message = LanguageService.Get("Tune_NewNotification");
                 }
             }
 
@@ -166,7 +166,7 @@ public static class WebSocketManager
         catch (Exception ex)
         {
             Logger.Error($"Error parsing notification payload: {ex.Message}", ex);
-            NotificationService.AddNotification(Guid.NewGuid().ToString(), "New notification received.", "Info");
+            NotificationService.AddNotification(Guid.NewGuid().ToString(), LanguageService.Get("Tune_NewNotification"), "Info");
         }
     }
 

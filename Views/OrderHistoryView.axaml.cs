@@ -285,7 +285,7 @@ public partial class OrderHistoryView : UserControl
             {
                 var expiredBtn = new Button
                 {
-                    Content = "⏰ Download Expired",
+                    Content = LanguageService.Get("Tune_DownloadExpired"),
                     Background = Brush.Parse("#333333"),
                     Foreground = Brush.Parse("#888888"),
                     FontWeight = FontWeight.SemiBold,
@@ -300,7 +300,7 @@ public partial class OrderHistoryView : UserControl
             else if (!string.IsNullOrEmpty(order.DownloadUrl) || order.Id > 0)
             {
                 string downloadUrl = order.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{order.Id}";
-                string fileName = order.FileSent ?? $"order_{order.Id}_mod.bin";
+                string fileName = OrderProcessingManager.GenerateSuggestedFileName(order);
 
                 var downloadBtn = new Button
                 {
@@ -316,15 +316,27 @@ public partial class OrderHistoryView : UserControl
                 downloadBtn.Click += async (s, e) =>
                 {
                     downloadBtn.IsEnabled = false;
-                    downloadBtn.Content = "Downloading...";
+                    downloadBtn.Content = LanguageService.Get("Tune_Downloading");
 
                     var topLevel = TopLevel.GetTopLevel(this);
                     if (topLevel is Window window)
                     {
                         var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
                         {
-                            Title = "Save Modified Tuning File",
-                            SuggestedFileName = fileName
+                            Title = LanguageService.Get("Tune_SavePickerTitle"),
+                            SuggestedFileName = fileName,
+                            DefaultExtension = "bin",
+                            FileTypeChoices = new[]
+                            {
+                                new Avalonia.Platform.Storage.FilePickerFileType("Binary File (*.bin)")
+                                {
+                                    Patterns = new[] { "*.bin" }
+                                },
+                                new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)")
+                                {
+                                    Patterns = new[] { "*.*" }
+                                }
+                            }
                         });
 
                         if (saveFile != null)
@@ -332,19 +344,23 @@ public partial class OrderHistoryView : UserControl
                             using var stream = await saveFile.OpenWriteAsync();
                             var progress = new System.Progress<double>(p =>
                             {
-                                downloadBtn.Content = $"Downloading {p:F0}%...";
+                                downloadBtn.Content = $"{LanguageService.Get("Tune_Downloading")} {p:F0}%...";
                             });
 
                             var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
                             if (success)
                             {
-                                downloadBtn.Content = "✓ Downloaded";
-                                NotificationService.AddNotification($"download_done_{order.Id}", $"File download completed: {fileName}", "info");
+                                downloadBtn.Content = LanguageService.Get("Tune_Downloaded");
+                                NotificationService.AddNotification(
+                                    $"download_done_{order.Id}",
+                                    string.Format(LanguageService.Get("Tune_FileDownloadCompleted"), fileName),
+                                    "info"
+                                );
                             }
                             else
                             {
                                 downloadBtn.IsEnabled = true;
-                                downloadBtn.Content = "Retry Download";
+                                downloadBtn.Content = LanguageService.Get("Tune_RetryDownload");
                             }
                         }
                         else
@@ -381,7 +397,7 @@ public partial class OrderHistoryView : UserControl
         var headerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
 
         var titleStack = new StackPanel { Spacing = 2 };
-        string titleText = !string.IsNullOrEmpty(ticket.Title) ? ticket.Title : $"Unfound ECU Request #{ticket.TicketNumber}";
+        string titleText = !string.IsNullOrEmpty(ticket.Title) ? ticket.Title : string.Format(LanguageService.Get("Tune_UnfoundEcuRequest"), ticket.TicketNumber);
         titleStack.Children.Add(new TextBlock
         {
             Text = $"📩 {titleText}",
@@ -401,7 +417,8 @@ public partial class OrderHistoryView : UserControl
         }
         Grid.SetColumn(titleStack, 0);
 
-        string statusText = $"TICKET • {ticket.Status.Replace("_", " ").ToUpper()}";
+        string rawStatus = ticket.Status.Replace("_", " ").ToUpper();
+        string statusText = string.Format(LanguageService.Get("Tune_StatusTicket"), rawStatus);
         var statusBadge = new Border
         {
             Background = Brush.Parse("#FF9800"),
@@ -448,7 +465,7 @@ public partial class OrderHistoryView : UserControl
         int ticketId = ticket.Id;
         var viewBtn = new Button
         {
-            Content = "💬 Open Support Discussion",
+            Content = LanguageService.Get("Tune_OpenDiscussion"),
             Background = Brush.Parse("#FF9800"),
             Foreground = Brushes.Black,
             FontWeight = FontWeight.Bold,
