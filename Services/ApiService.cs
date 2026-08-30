@@ -81,6 +81,9 @@ public class ApiService
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", AccessToken);
 
+                // Persist session token securely on local machine
+                SecureStorageHelper.SaveToken(AccessToken);
+
                 return (true, "Login successful", CurrentUser);
             }
 
@@ -92,12 +95,45 @@ public class ApiService
         }
     }
 
+    public static async Task<(bool Success, UserDto? User)> TryAutoLoginAsync()
+    {
+        try
+        {
+            string? savedToken = SecureStorageHelper.LoadToken();
+            if (string.IsNullOrWhiteSpace(savedToken))
+            {
+                return (false, null);
+            }
+
+            AccessToken = savedToken;
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var (success, _) = await FetchProfileAsync();
+            if (success && CurrentUser != null)
+            {
+                return (true, CurrentUser);
+            }
+
+            // Session expired on server (e.g. 30 days elapsed or revoked)
+            Logout();
+            return (false, null);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[ApiService] Auto-login failed: {ex.Message}", ex);
+            Logout();
+            return (false, null);
+        }
+    }
+
     public static void Logout()
     {
         AccessToken = null;
         CurrentUser = null;
         CurrentUserChanged?.Invoke(null);
         _httpClient.DefaultRequestHeaders.Authorization = null;
+        SecureStorageHelper.ClearToken();
     }
 
     // ─────────────────────────────────────────────────────────────

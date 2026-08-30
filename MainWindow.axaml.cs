@@ -29,6 +29,44 @@ public partial class MainWindow : Window
         else
         {
             MainContent.Content = new LoginView();
+            CheckAutoLoginAsync();
+        }
+    }
+
+    private async void CheckAutoLoginAsync()
+    {
+        if (Helpers.SecureStorageHelper.HasSavedSession())
+        {
+            try
+            {
+                var (success, user) = await Services.ApiService.TryAutoLoginAsync();
+                if (success && user != null)
+                {
+                    Navigate(new HomeView());
+
+                    try
+                    {
+                        await Services.WebSocketManager.InitializeAsync(user.Id);
+                    }
+                    catch (System.Exception wsEx)
+                    {
+                        Helpers.Logger.Error($"WebSocket initialization error: {wsEx.Message}", wsEx);
+                    }
+
+                    try
+                    {
+                        await Services.NotificationService.LoadNotificationsAsync();
+                    }
+                    catch (System.Exception notifEx)
+                    {
+                        Helpers.Logger.Error($"Notification loading error: {notifEx.Message}", notifEx);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Helpers.Logger.Error($"Auto-login startup check failed: {ex.Message}", ex);
+            }
         }
     }
 
