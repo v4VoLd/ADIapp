@@ -18,6 +18,10 @@ public partial class SidebarView : UserControl
     protected override void OnInitialized()
     {
         base.OnInitialized();
+        if (AppVersionText != null)
+        {
+            AppVersionText.Text = $"v{Config.AppConfig.AppVersion}";
+        }
         UpdateExpirationDate();
         UpdateLocalizedText();
         LanguageService.LanguageChanged += OnLanguageChanged;
@@ -129,7 +133,7 @@ public partial class SidebarView : UserControl
         if (confirm)
         {
             Select((Button)s!);
-            ApiService.Logout();
+            await ApiService.LogoutAsync();
             window.Navigate(new LoginView());
         }
     }

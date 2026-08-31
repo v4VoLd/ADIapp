@@ -33,7 +33,7 @@ public class ApiService
     // Auth
     // ─────────────────────────────────────────────────────────────
 
-    public static async Task<(bool Success, string Message, UserDto? currentUser)> LoginAsync(string email, string password)
+    public static async Task<(bool Success, string Message, UserDto? currentUser)> LoginAsync(string email, string password, bool remember = true)
     {
         try
         {
@@ -41,6 +41,7 @@ public class ApiService
             {
                 Email = email,
                 Password = password,
+                Remember = remember,
                 Hardware = new HardwarePayload
                 {
                     DeviceId  = HardwareHelper.GetDeviceId(),
@@ -81,17 +82,25 @@ public class ApiService
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", AccessToken);
 
-                // Persist session token securely on local machine
-                SecureStorageHelper.SaveToken(AccessToken);
+                if (remember)
+                {
+                    // Persist session token securely on local machine (30 days auto-login)
+                    SecureStorageHelper.SaveToken(AccessToken);
+                }
+                else
+                {
+                    SecureStorageHelper.ClearToken();
+                }
 
-                return (true, "Login successful", CurrentUser);
+                return (true, LanguageService.Get("Login_Success"), CurrentUser);
             }
 
-            return (false, apiResponse?.Message ?? "Login failed. Please check your credentials.", null);
+            string errorMsg = ExtractErrorMessage(apiResponse, LanguageService.Get("Login_Failed"));
+            return (false, errorMsg, null);
         }
         catch (Exception ex)
         {
-            return (false, $"Connection error: {ex.Message}", null);
+            return (false, string.Format(LanguageService.Get("Common_ConnectionError"), ex.Message), null);
         }
     }
 
@@ -127,6 +136,31 @@ public class ApiService
         }
     }
 
+    public static async Task LogoutAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(AccessToken))
+            {
+                var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "logout");
+                var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+                await _httpClient.PostAsync(requestUri, content);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[ApiService] Error during backend logout: {ex.Message}", ex);
+        }
+
+        try
+        {
+            await WebSocketManager.DisconnectAsync();
+        }
+        catch { }
+
+        Logout();
+    }
+
     public static void Logout()
     {
         AccessToken = null;
@@ -134,6 +168,34 @@ public class ApiService
         CurrentUserChanged?.Invoke(null);
         _httpClient.DefaultRequestHeaders.Authorization = null;
         SecureStorageHelper.ClearToken();
+    }
+
+    public static string ExtractErrorMessage(ApiResponseWrapper? res, string defaultMsg = "Operation failed.")
+    {
+        if (res == null) return defaultMsg;
+
+        if (res.Errors != null && res.Errors.Count > 0)
+        {
+            var list = new List<string>();
+            foreach (var kvp in res.Errors)
+            {
+                if (kvp.Value != null)
+                {
+                    list.AddRange(kvp.Value);
+                }
+            }
+            if (list.Count > 0)
+            {
+                return string.Join("\n", list);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(res.ErrorCode))
+        {
+            return LanguageService.Get(res.ErrorCode);
+        }
+
+        return !string.IsNullOrWhiteSpace(res.Message) ? res.Message : defaultMsg;
     }
 
     // ─────────────────────────────────────────────────────────────

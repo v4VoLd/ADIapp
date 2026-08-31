@@ -92,37 +92,46 @@
 				</StackPanel>
 			</ScrollViewer>
 
-			<!-- 3. FOOTER: LICENSE CARD -->
-			<Border Grid.Row="2"
-					Background="#141414"
-					BorderThickness="0"
-					CornerRadius="14"
-					Padding="14,12"
-					Margin="0,16,0,0">
-				<Grid ColumnDefinitions="Auto,*">
-					<Border Grid.Column="0"
-							Width="36"
-							Height="36"
-							CornerRadius="10"
-							Background="#242424"
-							Margin="0,0,12,0"
-							VerticalAlignment="Center">
-						<TextBlock Text="🛡️" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-					</Border>
-					<StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-						<TextBlock x:Name="LicenseExpTitleText"
-								   Text="License Expiration"
-								   FontSize="11"
-								   Foreground="#9E9EA0"
-								   FontWeight="Normal"/>
-						<TextBlock x:Name="LicenseExpirationText"
-								   Text="01/01/2026"
-								   FontSize="13"
-								   FontWeight="Bold"
-								   Foreground="White"/>
-					</StackPanel>
-				</Grid>
-			</Border>
+			<!-- 3. FOOTER: LICENSE CARD & APP VERSION -->
+			<StackPanel Grid.Row="2" Spacing="8" Margin="0,16,0,0">
+				<Border Background="#141414"
+						BorderThickness="0"
+						CornerRadius="14"
+						Padding="14,12">
+					<Grid ColumnDefinitions="Auto,*">
+						<Border Grid.Column="0"
+								Width="36"
+								Height="36"
+								CornerRadius="10"
+								Background="#242424"
+								Margin="0,0,12,0"
+								VerticalAlignment="Center">
+							<TextBlock Text="🛡️" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+						</Border>
+						<StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+							<TextBlock x:Name="LicenseExpTitleText"
+									   Text="License Expiration"
+									   FontSize="11"
+									   Foreground="#9E9EA0"
+									   FontWeight="Normal"/>
+							<TextBlock x:Name="LicenseExpirationText"
+									   Text="01/01/2026"
+									   FontSize="13"
+									   FontWeight="Bold"
+									   Foreground="White"/>
+						</StackPanel>
+					</Grid>
+				</Border>
+
+				<!-- APP VERSION -->
+				<TextBlock x:Name="AppVersionText"
+						   Text="v1.0.1"
+						   FontSize="12"
+						   FontWeight="SemiBold"
+						   Foreground="#9E9EA0"
+						   HorizontalAlignment="Center"
+						   Margin="0,2,0,0"/>
+			</StackPanel>
 
 		</Grid>
 

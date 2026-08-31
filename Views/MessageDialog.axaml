@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="460"
+        d:DesignHeight="220"
+        x:Class="ADIapp.Views.MessageDialog"
+        Title="Notice"
+        Icon="/Assets/sidebar_logo.png"
+        Width="460"
+        MinHeight="200"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+	<Border Background="#141414"
+			BorderBrush="#2D2D2D"
+			BorderThickness="1"
+			CornerRadius="16"
+			Padding="24"
+			BoxShadow="0 8 32 0 #80000000">
+
+		<Grid RowDefinitions="*,Auto">
+			<!-- Header & Message -->
+			<StackPanel Grid.Row="0" VerticalAlignment="Top" Spacing="8">
+				<TextBlock x:Name="DialogTitleText"
+						   Text="Notice"
+						   FontSize="18"
+						   FontWeight="Bold"
+						   Foreground="White"/>
+				<TextBlock x:Name="DialogMessageText"
+						   Text="Operation message details"
+						   FontSize="13"
+						   Foreground="#A0A0B0"
+						   TextWrapping="Wrap"
+						   LineHeight="20"/>
+			</StackPanel>
+
+			<!-- Buttons -->
+			<StackPanel Grid.Row="1"
+						Orientation="Horizontal"
+						HorizontalAlignment="Right"
+						Margin="0,24,0,0">
+
+				<Button x:Name="OkButton"
+						Content="OK"
+						IsDefault="True"
+						IsCancel="True"
+						Click="Ok_Click"
+						Classes="dialog-ok"/>
+			</StackPanel>
+		</Grid>
+
+		<!-- Styles for Dialog Buttons -->
+		<Border.Styles>
+			<Style Selector="Button.dialog-ok">
+				<Setter Property="Background" Value="White"/>
+				<Setter Property="Foreground" Value="#141414"/>
+				<Setter Property="FontWeight" Value="Bold"/>
+				<Setter Property="FontSize" Value="14"/>
+				<Setter Property="Padding" Value="28,10"/>
+				<Setter Property="CornerRadius" Value="8"/>
+				<Setter Property="Cursor" Value="Hand"/>
+			</Style>
+			<Style Selector="Button.dialog-ok:pointerover /template/ ContentPresenter">
+				<Setter Property="Background" Value="#E0E0E0"/>
+				<Setter Property="Foreground" Value="#141414"/>
+			</Style>
+		</Border.Styles>
+	</Border>
+</Window>

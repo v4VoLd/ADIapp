@@ -12,6 +12,12 @@ public class ApiResponseWrapper
     [JsonPropertyName("message")]
     public string? Message { get; set; }
 
+    [JsonPropertyName("error_code")]
+    public string? ErrorCode { get; set; }
+
+    [JsonPropertyName("errors")]
+    public Dictionary<string, List<string>>? Errors { get; set; }
+
     [JsonPropertyName("data")]
     public LoginResponseData? Data { get; set; }
 }

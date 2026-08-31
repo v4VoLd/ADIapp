@@ -64,11 +64,11 @@ public static class OrderProcessingManager
 
         _ = Task.Run(async () =>
         {
-            for (int i = 0; i < 15; i++) // Poll up to ~90 seconds
+            while (!token.IsCancellationRequested && _isProcessing)
             {
                 try
                 {
-                    await Task.Delay(6000, token);
+                    await Task.Delay(2500, token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -77,8 +77,12 @@ public static class OrderProcessingManager
 
                 if (token.IsCancellationRequested || !_isProcessing) return;
 
-                bool handled = await CheckAndHandleOrderCompletionAsync();
-                if (handled) return;
+                // Only poll via HTTP if WebSocket is NOT connected
+                if (!WebSocketManager.IsConnected)
+                {
+                    bool handled = await CheckAndHandleOrderCompletionAsync();
+                    if (handled) return;
+                }
             }
         }, token);
     }
