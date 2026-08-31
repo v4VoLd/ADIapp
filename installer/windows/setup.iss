@@ -1,6 +1,6 @@
 ; Inno Setup Script for ADI Application (Windows)
 #define MyAppName "ADI Application"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "ADI Performance"
 #define MyAppURL "https://adi-performance.com"
 #define MyAppExeName "ADIapp.exe"
