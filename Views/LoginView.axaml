@@ -82,6 +82,18 @@
                              Watermark="Enter password"/>
                 </StackPanel>
 
+                <!-- REMEMBER ME CHECKBOX -->
+                <CheckBox x:Name="RememberMeCheckBox"
+                          IsChecked="False"
+                          Cursor="Hand"
+                          Margin="0,2,0,0">
+                    <TextBlock x:Name="RememberMeText"
+                               Text="Remember me for 30 days"
+                               FontSize="12"
+                               Foreground="#A0A0B0"
+                               VerticalAlignment="Center"/>
+                </CheckBox>
+
                 <!-- ERROR MESSAGE -->
                 <TextBlock x:Name="ErrorLabel"
                            Foreground="#FF4D4D"

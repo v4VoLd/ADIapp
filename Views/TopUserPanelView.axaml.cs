@@ -179,7 +179,7 @@ public partial class TopUserPanelView : UserControl
         var confirm = await dialog.ShowDialog<bool>(window);
         if (confirm)
         {
-            ApiService.Logout();
+            await ApiService.LogoutAsync();
             window.Navigate(new LoginView());
         }
     }
@@ -290,29 +290,8 @@ public partial class TopUserPanelView : UserControl
         }
     }
 
-    // Simple message dialog (kept for backward compatibility if needed)
     private async System.Threading.Tasks.Task MessageBox(Window window, string message)
     {
-        var dialog = new Window
-        {
-            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://ADIapp/Assets/sidebar_logo.png"))),
-            Width = 280,
-            Height = 120,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Content = new Border
-            {
-                Padding = new Thickness(20),
-                Background = Avalonia.Media.Brushes.Black,
-                Child = new TextBlock
-                {
-                    Text = message,
-                    Foreground = Avalonia.Media.Brushes.White,
-                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
-                }
-            }
-        };
-
-        await dialog.ShowDialog(window);
+        await MessageDialog.ShowAsync(window, message, "Notice");
     }
 }

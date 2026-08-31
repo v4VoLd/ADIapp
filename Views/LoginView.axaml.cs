@@ -38,6 +38,7 @@ public partial class LoginView : UserControl
         var subTitleLbl = this.FindControl<TextBlock>("WelcomeSubtitleText");
         var userLbl = this.FindControl<TextBlock>("UsernameLabelText");
         var passLbl = this.FindControl<TextBlock>("PasswordLabelText");
+        var rememberMeLbl = this.FindControl<TextBlock>("RememberMeText");
         var btn = this.FindControl<Button>("LoginButton");
         var signUpBtn = this.FindControl<Button>("SignUpButton");
         var emailBox = this.FindControl<TextBox>("EmailBox");
@@ -46,6 +47,7 @@ public partial class LoginView : UserControl
         if (subTitleLbl != null) subTitleLbl.Text = LanguageService.Get("Login_Subtitle");
         if (userLbl != null) userLbl.Text = LanguageService.Get("Login_Username");
         if (passLbl != null) passLbl.Text = LanguageService.Get("Login_Password");
+        if (rememberMeLbl != null) rememberMeLbl.Text = LanguageService.Get("Login_RememberMe");
         if (btn != null) btn.Content = LanguageService.Get("Login_Submit");
         if (signUpBtn != null) signUpBtn.Content = LanguageService.Get("Login_NoAccount");
         if (emailBox != null) emailBox.Watermark = LanguageService.Get("Login_UsernamePlaceholder");
@@ -69,6 +71,7 @@ public partial class LoginView : UserControl
     {
         var emailBox = this.FindControl<TextBox>("EmailBox");
         var passwordBox = this.FindControl<TextBox>("PasswordBox");
+        var rememberMeCheck = this.FindControl<CheckBox>("RememberMeCheckBox");
         var errorLabel = this.FindControl<TextBlock>("ErrorLabel");
         var loginButton = this.FindControl<Button>("LoginButton");
 
@@ -83,6 +86,7 @@ public partial class LoginView : UserControl
 
         string email = emailBox.Text ?? string.Empty;
         string password = passwordBox.Text ?? string.Empty;
+        bool rememberMe = rememberMeCheck?.IsChecked ?? false;
 
         if (string.IsNullOrWhiteSpace(email))
         {
@@ -101,12 +105,13 @@ public partial class LoginView : UserControl
         // Set loading UI state
         emailBox.IsEnabled = false;
         passwordBox.IsEnabled = false;
+        if (rememberMeCheck != null) rememberMeCheck.IsEnabled = false;
         loginButton.IsEnabled = false;
         loginButton.Content = LanguageService.Get("Login_SigningIn");
 
         try
         {
-            var (success, message, currentUser) = await ApiService.LoginAsync(email, password);
+            var (success, message, currentUser) = await ApiService.LoginAsync(email, password, rememberMe);
 
             if (success)
             {
@@ -131,6 +136,9 @@ public partial class LoginView : UserControl
                     {
                         Logger.Error($"Notification loading error: {notifEx.Message}", notifEx);
                     }
+
+                    // Check for application updates after login
+                    _ = System.Threading.Tasks.Task.Run(() => UpdateService.CheckAndPerformUpdateAsync());
                 }
             }
             else
@@ -150,6 +158,7 @@ public partial class LoginView : UserControl
             // Re-enable controls
             emailBox.IsEnabled = true;
             passwordBox.IsEnabled = true;
+            if (rememberMeCheck != null) rememberMeCheck.IsEnabled = true;
             loginButton.IsEnabled = true;
             loginButton.Content = LanguageService.Get("Login_Submit");
         }

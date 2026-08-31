@@ -28,45 +28,92 @@ public partial class MainWindow : Window
         }
         else
         {
-            MainContent.Content = new LoginView();
-            CheckAutoLoginAsync();
+            if (Helpers.SecureStorageHelper.HasSavedSession())
+            {
+                // Show clean splash loading screen while verifying saved session (eliminates LoginView flash)
+                MainContent.Content = CreateLoadingSplash();
+                CheckAutoLoginAsync();
+            }
+            else
+            {
+                MainContent.Content = new LoginView();
+            }
         }
+    }
+
+    private Control CreateLoadingSplash()
+    {
+        var grid = new Grid
+        {
+            Background = Avalonia.Media.Brush.Parse("#0D0D11"),
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch
+        };
+
+        var stack = new StackPanel
+        {
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            Spacing = 16
+        };
+
+        try
+        {
+            var logo = new Image
+            {
+                Source = new Avalonia.Media.Imaging.Bitmap(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/sidebar_logo.png"))),
+                Width = 200,
+                Height = 100,
+                Stretch = Avalonia.Media.Stretch.Uniform
+            };
+            stack.Children.Add(logo);
+        }
+        catch { }
+
+        grid.Children.Add(stack);
+        return grid;
     }
 
     private async void CheckAutoLoginAsync()
     {
-        if (Helpers.SecureStorageHelper.HasSavedSession())
+        try
         {
-            try
+            var (success, user) = await Services.ApiService.TryAutoLoginAsync();
+            if (success && user != null)
             {
-                var (success, user) = await Services.ApiService.TryAutoLoginAsync();
-                if (success && user != null)
+                Navigate(new HomeView());
+
+                try
                 {
-                    Navigate(new HomeView());
-
-                    try
-                    {
-                        await Services.WebSocketManager.InitializeAsync(user.Id);
-                    }
-                    catch (System.Exception wsEx)
-                    {
-                        Helpers.Logger.Error($"WebSocket initialization error: {wsEx.Message}", wsEx);
-                    }
-
-                    try
-                    {
-                        await Services.NotificationService.LoadNotificationsAsync();
-                    }
-                    catch (System.Exception notifEx)
-                    {
-                        Helpers.Logger.Error($"Notification loading error: {notifEx.Message}", notifEx);
-                    }
+                    await Services.WebSocketManager.InitializeAsync(user.Id);
                 }
+                catch (System.Exception wsEx)
+                {
+                    Helpers.Logger.Error($"WebSocket initialization error: {wsEx.Message}", wsEx);
+                }
+
+                try
+                {
+                    await Services.NotificationService.LoadNotificationsAsync();
+                }
+                catch (System.Exception notifEx)
+                {
+                    Helpers.Logger.Error($"Notification loading error: {notifEx.Message}", notifEx);
+                }
+
+                // Check for application updates after auto-login
+                _ = System.Threading.Tasks.Task.Run(() => Services.UpdateService.CheckAndPerformUpdateAsync());
             }
-            catch (System.Exception ex)
+            else
             {
-                Helpers.Logger.Error($"Auto-login startup check failed: {ex.Message}", ex);
+                // Auto-login failed / session expired: show login view
+                MainContent.Content = new LoginView();
             }
+        }
+        catch (System.Exception ex)
+        {
+            Helpers.Logger.Error($"Auto-login startup check failed: {ex.Message}", ex);
+            MainContent.Content = new LoginView();
         }
     }
 

@@ -14,10 +14,10 @@
         WindowStartupLocation="CenterOwner"
         SystemDecorations="None"
         Background="Transparent"
-        TransparencyLevelHint="AcrylicBlur, None">
+        TransparencyLevelHint="Transparent">
 
 	<Border Background="#141414"
-			BorderBrush="#141414"
+			BorderBrush="#2D2D2D"
 			BorderThickness="1"
 			CornerRadius="16"
 			Padding="24"

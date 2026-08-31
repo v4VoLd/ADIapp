@@ -488,27 +488,6 @@ public partial class TicketView : UserControl
 
     private async Task MessageBox(Window window, string message)
     {
-        var dialog = new Window
-        {
-            Width = 320,
-            Height = 140,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Content = new Border
-            {
-                Padding = new Thickness(20),
-                Background = Brush.Parse("#1F1F1F"),
-                CornerRadius = new CornerRadius(8),
-                Child = new TextBlock
-                {
-                    Text = message,
-                    Foreground = Brushes.White,
-                    TextWrapping = TextWrapping.Wrap,
-                    VerticalAlignment = VerticalAlignment.Center
-                }
-            }
-        };
-
-        await dialog.ShowDialog(window);
+        await MessageDialog.ShowAsync(window, message, "Notice");
     }
 }

@@ -64,11 +64,11 @@ public static class OrderProcessingManager
 
         _ = Task.Run(async () =>
         {
-            for (int i = 0; i < 15; i++) // Poll up to ~90 seconds
+            while (!token.IsCancellationRequested && _isProcessing)
             {
                 try
                 {
-                    await Task.Delay(6000, token);
+                    await Task.Delay(2500, token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -77,8 +77,12 @@ public static class OrderProcessingManager
 
                 if (token.IsCancellationRequested || !_isProcessing) return;
 
-                bool handled = await CheckAndHandleOrderCompletionAsync();
-                if (handled) return;
+                // Only poll via HTTP if WebSocket is NOT connected
+                if (!WebSocketManager.IsConnected)
+                {
+                    bool handled = await CheckAndHandleOrderCompletionAsync();
+                    if (handled) return;
+                }
             }
         }, token);
     }
@@ -152,47 +156,50 @@ public static class OrderProcessingManager
 
         try
         {
-            var lifetime = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
-            var window = lifetime?.MainWindow;
-            if (window == null) return;
-
-            string downloadUrl = order.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{order.Id}";
-            string fileName = GenerateSuggestedFileName(order);
-
-            var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+            await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                Title = LanguageService.Get("Tune_SavePickerTitle"),
-                SuggestedFileName = fileName,
-                DefaultExtension = "bin",
-                FileTypeChoices = new[]
+                var lifetime = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                var window = lifetime?.MainWindow;
+                if (window == null) return;
+
+                string downloadUrl = order.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{order.Id}";
+                string fileName = GenerateSuggestedFileName(order);
+
+                var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
                 {
-                    new Avalonia.Platform.Storage.FilePickerFileType("Binary File (*.bin)")
+                    Title = LanguageService.Get("Tune_SavePickerTitle"),
+                    SuggestedFileName = fileName,
+                    DefaultExtension = "bin",
+                    FileTypeChoices = new[]
                     {
-                        Patterns = new[] { "*.bin" }
-                    },
-                    new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)")
+                        new Avalonia.Platform.Storage.FilePickerFileType("Binary File (*.bin)")
+                        {
+                            Patterns = new[] { "*.bin" }
+                        },
+                        new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)")
+                        {
+                            Patterns = new[] { "*.*" }
+                        }
+                    }
+                });
+
+                if (saveFile != null)
+                {
+                    using var stream = await saveFile.OpenWriteAsync();
+                    var progress = new System.Progress<double>(p => { });
+
+                    var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
+                    if (success)
                     {
-                        Patterns = new[] { "*.*" }
+                        NotificationService.AddNotification(
+                            $"order_download_{order.Id}",
+                            string.Format(LanguageService.Get("Tune_SavedSuccess"), fileName),
+                            "info"
+                        );
+                        _ = ApiService.FetchProfileAsync();
                     }
                 }
             });
-
-            if (saveFile != null)
-            {
-                using var stream = await saveFile.OpenWriteAsync();
-                var progress = new System.Progress<double>(p => { });
-
-                var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
-                if (success)
-                {
-                    NotificationService.AddNotification(
-                        $"order_download_{order.Id}",
-                        string.Format(LanguageService.Get("Tune_SavedSuccess"), fileName),
-                        "info"
-                    );
-                    _ = ApiService.FetchProfileAsync();
-                }
-            }
         }
         catch (Exception ex)
         {

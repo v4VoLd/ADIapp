@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using PusherClient;
 using ADIapp.Models;
@@ -27,44 +28,123 @@ public static class WebSocketManager
     public static event Action? TicketUpdated;
     public static event Action? OrderUpdated;
 
+    private static int _currentUserId;
+    private static bool _isConnecting;
+    private static CancellationTokenSource? _reconnectCts;
+
     public static async Task InitializeAsync(int userId)
     {
-        // Prevent initializing twice
-        if (_client != null && _client.State == ConnectionState.Connected)
-            return;
+        _currentUserId = userId;
 
-        var authorizer = new HttpAuthorizer(AppConfig.BroadcastingAuthUrl)
+        // Cancel previous reconnect task if any
+        _reconnectCts?.Cancel();
+        _reconnectCts = new CancellationTokenSource();
+
+        await StartConnectionLoopAsync(_reconnectCts.Token);
+    }
+
+    public static async Task DisconnectAsync()
+    {
+        _reconnectCts?.Cancel();
+        _reconnectCts = null;
+
+        if (_client != null)
         {
-            AuthenticationHeader = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiService.AccessToken)
-        };
+            try
+            {
+                await _client.DisconnectAsync();
+            }
+            catch { }
+        }
+    }
 
-        var Host = AppConfig.WebSocketHost;
-        var customPort = AppConfig.WebsocketPort;
-
-        _client = new Pusher(AppConfig.PusherAppKey, new PusherOptions
-        {
-            Host      = customPort != "" ? Host + ":" + customPort : Host,
-            Encrypted = AppConfig.WebsocketEncrypted,
-            Cluster   = null,
-            Authorizer = authorizer
-        });
+    private static async Task StartConnectionLoopAsync(CancellationToken token)
+    {
+        if (_isConnecting) return;
+        _isConnecting = true;
 
         try
         {
-            await _client.ConnectAsync();
+            int retryDelaySeconds = 3;
+            const int maxRetryDelaySeconds = 15;
 
-            _userChannel = await _client.SubscribeAsync($"private-App.Models.User.{userId}");
-            _userChannel.Bind("Illuminate\\Notifications\\Events\\BroadcastNotificationCreated", OnNotificationReceived);
-            _userChannel.Bind("EcuIdentified", OnEcuIdentifiedEvent);
-            _userChannel.Bind("TicketUpdated", OnTicketUpdatedEvent);
-            _userChannel.Bind("OrderUpdated", OnOrderUpdatedEvent);
-            _userChannel.Bind("OrderStatusUpdated", OnOrderUpdatedEvent);
+            while (!token.IsCancellationRequested)
+            {
+                if (_client != null && _client.State == ConnectionState.Connected)
+                {
+                    break;
+                }
+
+                Logger.Info("[WebSocket] Attempting to connect...");
+
+                try
+                {
+                    var authorizer = new HttpAuthorizer(AppConfig.BroadcastingAuthUrl)
+                    {
+                        AuthenticationHeader = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiService.AccessToken)
+                    };
+
+                    var host = AppConfig.WebSocketHost;
+
+                    if (_client != null)
+                    {
+                        try { await _client.DisconnectAsync(); } catch { }
+                    }
+
+                    _client = new Pusher(AppConfig.PusherAppKey, new PusherOptions
+                    {
+                        Host       = host,
+                        Encrypted  = AppConfig.WebsocketEncrypted,
+                        Cluster    = null,
+                        Authorizer = authorizer
+                    });
+
+                    _client.ConnectionStateChanged += (sender, state) =>
+                    {
+                        Logger.Info($"[WebSocket] Connection state changed to: {state}");
+                        if (state == ConnectionState.Disconnected && _reconnectCts != null && !_reconnectCts.IsCancellationRequested)
+                        {
+                            Logger.Warn("[WebSocket] Disconnected from server. Scheduling reconnect...");
+                            _ = Task.Run(() => StartConnectionLoopAsync(_reconnectCts.Token));
+                        }
+                    };
+
+                    _client.Error += (sender, error) =>
+                    {
+                        Logger.Warn($"[WebSocket] Error event received: {error.Message}");
+                    };
+
+                    await _client.ConnectAsync();
+
+                    _userChannel = await _client.SubscribeAsync($"private-App.Models.User.{_currentUserId}");
+                    _userChannel.Bind("Illuminate\\Notifications\\Events\\BroadcastNotificationCreated", OnNotificationReceived);
+                    _userChannel.Bind("EcuIdentified", OnEcuIdentifiedEvent);
+                    _userChannel.Bind("TicketUpdated", OnTicketUpdatedEvent);
+                    _userChannel.Bind("OrderUpdated", OnOrderUpdatedEvent);
+                    _userChannel.Bind("OrderStatusUpdated", OnOrderUpdatedEvent);
+
+                    Logger.Info($"[WebSocket] Successfully connected and subscribed to user {_currentUserId} channel.");
+                    break; // Connected successfully
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"[WebSocket] Connection attempt failed: {ex.Message}. Retrying in {retryDelaySeconds}s...");
+                    await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), token);
+                    retryDelaySeconds = Math.Min(retryDelaySeconds * 2, maxRetryDelaySeconds);
+                }
+            }
         }
-
-
+        catch (OperationCanceledException)
+        {
+            // Expected on logout / intentional disconnect
+        }
         catch (Exception ex)
         {
-            Logger.Error($"[WebSocket] Exception during initialization: {ex.Message}", ex);
+            Logger.Error($"[WebSocket] Fatal error in connection loop: {ex.Message}", ex);
+        }
+        finally
+        {
+            _isConnecting = false;
         }
     }
 

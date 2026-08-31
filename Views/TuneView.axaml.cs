@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ADIapp.Services;
 using ADIapp.Models;
@@ -210,8 +211,13 @@ public partial class TuneView : UserControl
         UpdateSummaryAndSaveButton();
     }
 
+    private CancellationTokenSource? _identPollCts;
+
     private void OnEcuIdentified(string hash, EcuIdentifyData data)
     {
+        _identPollCts?.Cancel();
+        _identPollCts = null;
+
         // Refresh the processing tasks sidebar
         _ = LoadProcessingFilesAsync();
 
@@ -230,19 +236,66 @@ public partial class TuneView : UserControl
                     if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusUnsupported");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
                     RenderUnsupportedEcuUi(data ?? new EcuIdentifyData { FileHash = hash });
+                    if (ServicesContainer != null) ServicesContainer.IsVisible = false;
                 }
                 else
                 {
                     RenderDynamicServices(effectiveServices);
                     if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+                    if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                 }
 
-                if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                 _renderedFileHash = hash;
                 UpdateSummaryAndSaveButton();
             });
         }
+    }
+
+    private void StartFallbackIdentificationPolling(string fileHash)
+    {
+        _identPollCts?.Cancel();
+        _identPollCts = new CancellationTokenSource();
+        var token = _identPollCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested && _isIdentifying && _pendingFileHash == fileHash)
+            {
+                try
+                {
+                    await Task.Delay(2500, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
+                if (token.IsCancellationRequested || !_isIdentifying || _pendingFileHash != fileHash)
+                    return;
+
+                // Only poll via HTTP if WebSocket is NOT connected
+                if (!WebSocketManager.IsConnected)
+                {
+                    try
+                    {
+                        var response = await ApiService.CheckStatusAsync(fileHash);
+                        if (response.Success && response.Data != null)
+                        {
+                            if (response.Status == "completed" || response.Status == "failed" || response.Data.Status == "failed" || !response.Data.IsSupported)
+                            {
+                                OnEcuIdentified(fileHash, response.Data);
+                                return;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Helpers.Logger.Warn($"[TuneView] Fallback identification polling error: {ex.Message}");
+                    }
+                }
+            }
+        }, token);
     }
 
     private void PopulateEcuInfo(EcuIdentifyData data)
@@ -389,15 +442,16 @@ public partial class TuneView : UserControl
                                 if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusUnsupported");
                                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
                                 RenderUnsupportedEcuUi(response.Data);
+                                if (ServicesContainer != null) ServicesContainer.IsVisible = false;
                             }
                             else
                             {
                                 RenderDynamicServices(effectiveServices);
                                 if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
                                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+                                if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                             }
 
-                            if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                             _renderedFileHash = _pendingFileHash;
 
                             NotificationService.AddNotification($"ecu_done_{_pendingFileHash}", LanguageService.Get("Tune_EcuIdentDone"), "info");
@@ -714,15 +768,15 @@ public partial class TuneView : UserControl
                     if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusUnsupported");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
                     RenderUnsupportedEcuUi(response.Data);
+                    if (ServicesContainer != null) ServicesContainer.IsVisible = false;
                 }
                 else
                 {
                     if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
                     if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
                     RenderDynamicServices(effectiveServices);
+                    if (ServicesContainer != null) ServicesContainer.IsVisible = true;
                 }
-
-                if (ServicesContainer != null) ServicesContainer.IsVisible = true;
             }
             else
             {
@@ -732,6 +786,8 @@ public partial class TuneView : UserControl
                 if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusProcessing");
                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
                 if (ServicesContainer != null) ServicesContainer.IsVisible = false;
+
+                StartFallbackIdentificationPolling(hash);
             }
         }
         else
@@ -749,7 +805,7 @@ public partial class TuneView : UserControl
             {
                 SetCardsPendingState(LanguageService.Get("Tune_StatusFailed"));
             }
-            if (ServicesContainer != null) ServicesContainer.IsVisible = true;
+            if (ServicesContainer != null) ServicesContainer.IsVisible = false;
         }
 
         UpdateSummaryAndSaveButton();
@@ -757,6 +813,9 @@ public partial class TuneView : UserControl
 
     private void RenderUnsupportedEcuUi(EcuIdentifyData data)
     {
+        _currentServices = null;
+        _serviceSelectionStates.Clear();
+
         var panel = this.FindControl<WrapPanel>("DynamicServicesPanel");
         if (panel == null) return;
 
@@ -1194,24 +1253,12 @@ public partial class TuneView : UserControl
                 SaveButton.Foreground = Avalonia.Media.Brush.Parse("#888888");
                 SaveButton.IsEnabled = false;
             }
-            else if (string.IsNullOrEmpty(_pendingFileHash))
+            else if (string.IsNullOrEmpty(_pendingFileHash) || _currentServices == null || _currentServices.Count == 0)
             {
-                /*
-                if (hasReachedDailyLimit)
-                {
-                    SaveButton.Content = LanguageService.Get("Tune_DailyLimitReachedShort");
-                    SaveButton.Background = Avalonia.Media.Brush.Parse("#252525");
-                    SaveButton.Foreground = Avalonia.Media.Brush.Parse("#888888");
-                    SaveButton.IsEnabled = false;
-                }
-                else
-                */
-                {
-                    SaveButton.Content = LanguageService.Get("Tune_SelectEcuFile");
-                    SaveButton.Background = Avalonia.Media.Brushes.White;
-                    SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
-                    SaveButton.IsEnabled = true;
-                }
+                SaveButton.Content = LanguageService.Get("Tune_SelectEcuFile");
+                SaveButton.Background = Avalonia.Media.Brushes.White;
+                SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
+                SaveButton.IsEnabled = true;
             }
             else
             {
@@ -1350,10 +1397,23 @@ public partial class TuneView : UserControl
             {
                 _isIdentifying = false;
                 PopulateEcuInfo(response.Data);
-                RenderDynamicServices(response.Data.GetEffectiveServices());
-                if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
-                if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
-                if (ServicesContainer != null) ServicesContainer.IsVisible = true;
+                var effectiveServices = response.Data.GetEffectiveServices();
+                bool isFailed = string.Equals(response.Data.Status, "failed", StringComparison.OrdinalIgnoreCase) || !response.Data.IsSupported;
+
+                if (isFailed || effectiveServices == null || effectiveServices.Count == 0)
+                {
+                    if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusUnsupported");
+                    if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF9800");
+                    RenderUnsupportedEcuUi(response.Data);
+                    if (ServicesContainer != null) ServicesContainer.IsVisible = false;
+                }
+                else
+                {
+                    RenderDynamicServices(effectiveServices);
+                    if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusIdentified");
+                    if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#4DFF8A");
+                    if (ServicesContainer != null) ServicesContainer.IsVisible = true;
+                }
             }
             else
             {
@@ -1363,6 +1423,8 @@ public partial class TuneView : UserControl
                 if (StatusText != null) StatusText.Text = LanguageService.Get("Tune_StatusProcessing");
                 if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FFA500");
                 if (ServicesContainer != null) ServicesContainer.IsVisible = false;
+
+                StartFallbackIdentificationPolling(response.Data.FileHash);
             }
         }
         else
@@ -1393,7 +1455,7 @@ public partial class TuneView : UserControl
         }
         */
 
-        if (string.IsNullOrEmpty(_pendingFileHash))
+        if (string.IsNullOrEmpty(_pendingFileHash) || _currentServices == null || _currentServices.Count == 0)
         {
             await OpenFilePickerAndUploadAsync();
             return;
@@ -1555,6 +1617,8 @@ public partial class TuneView : UserControl
 
     private void ResetWorkspace()
     {
+        _identPollCts?.Cancel();
+        _identPollCts = null;
         _isIdentifying = false;
         _pendingFileHash = null;
         _renderedFileHash = null;
@@ -1582,26 +1646,6 @@ public partial class TuneView : UserControl
 
     private async Task MessageBox(Window window, string message)
     {
-        var dialog = new Window
-        {
-            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://ADIapp/Assets/sidebar_logo.png"))),
-            Width = 280,
-            Height = 120,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Content = new Border
-            {
-                Padding = new Thickness(20),
-                Background = Avalonia.Media.Brushes.Black,
-                Child = new TextBlock
-                {
-                    Text = message,
-                    Foreground = Avalonia.Media.Brushes.White,
-                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
-                }
-            }
-        };
-
-        await dialog.ShowDialog(window);
+        await MessageDialog.ShowAsync(window, message, "Notice");
     }
 }
