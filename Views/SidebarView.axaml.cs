@@ -18,7 +18,35 @@ public partial class SidebarView : UserControl
     protected override void OnInitialized()
     {
         base.OnInitialized();
+        if (AppVersionText != null)
+        {
+            AppVersionText.Text = $"v{Config.AppConfig.AppVersion}";
+        }
         UpdateExpirationDate();
+        UpdateLocalizedText();
+        LanguageService.LanguageChanged += OnLanguageChanged;
+    }
+
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        UpdateLocalizedText();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        if (NavHomeText != null) NavHomeText.Text = LanguageService.Get("Sidebar_Home");
+        if (NavSettingsText != null) NavSettingsText.Text = LanguageService.Get("Sidebar_Settings");
+        if (NavTicketsText != null) NavTicketsText.Text = LanguageService.Get("Sidebar_Tickets");
+        if (NavOrdersText != null) NavOrdersText.Text = LanguageService.Get("Orders_Title");
+        if (NavInfoText != null) NavInfoText.Text = LanguageService.Get("Sidebar_Info");
+        if (NavLogoutText != null) NavLogoutText.Text = LanguageService.Get("Sidebar_Logout");
+        if (LicenseExpTitleText != null) LicenseExpTitleText.Text = LanguageService.Get("Sidebar_LicenseExp");
     }
 
     private void UpdateExpirationDate()
@@ -43,11 +71,26 @@ public partial class SidebarView : UserControl
     private MainWindow? Window =>
         this.FindAncestorOfType<MainWindow>();
 
-    private void Select(Button button)
+    public void HighlightForPage(Control page)
+    {
+        Button? target = page switch
+        {
+            HomeView => HomeBtn,
+            TicketView => TicketsBtn,
+            OrderHistoryView => OrdersBtn,
+            SettingsView => SettingsBtn,
+            InfoView => InfoBtn,
+            _ => null
+        };
+
+        Select(target);
+    }
+
+    private void Select(Button? button)
     {
         _selectedButton?.Classes.Remove("selected");
         _selectedButton = button;
-        _selectedButton.Classes.Add("selected");
+        _selectedButton?.Classes.Add("selected");
     }
 
     private void Home_Click(object? s, RoutedEventArgs e)
@@ -80,9 +123,18 @@ public partial class SidebarView : UserControl
         Window?.Navigate(new InfoView());
     }
 
-    private void Logout_Click(object? s, RoutedEventArgs e)
+    private async void Logout_Click(object? s, RoutedEventArgs e)
     {
-        Select((Button)s!);
-        Window?.Navigate(new LoginView());
+        var window = Window;
+        if (window == null) return;
+
+        var dialog = new ConfirmLogoutDialog();
+        var confirm = await dialog.ShowDialog<bool>(window);
+        if (confirm)
+        {
+            Select((Button)s!);
+            await ApiService.LogoutAsync();
+            window.Navigate(new LoginView());
+        }
     }
 }

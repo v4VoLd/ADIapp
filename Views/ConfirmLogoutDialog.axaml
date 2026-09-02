@@ -1,0 +1,97 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="440"
+        d:DesignHeight="220"
+        x:Class="ADIapp.Views.ConfirmLogoutDialog"
+        Title="Confirm Logout"
+        Icon="/Assets/sidebar_logo.png"
+        Width="440"
+        Height="220"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+
+	<Border Background="#141414"
+			BorderBrush="#2D2D2D"
+			BorderThickness="1"
+			CornerRadius="16"
+			Padding="24"
+			BoxShadow="0 8 32 0 #80000000">
+
+		<Grid RowDefinitions="*,Auto">
+			<!-- Header & Message -->
+			<Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+				<!-- Text Content -->
+				<StackPanel Grid.Column="1" VerticalAlignment="Top" Spacing="6">
+					<TextBlock x:Name="DialogTitleText"
+							   Text="Log Out"
+							   FontSize="18"
+							   FontWeight="Bold"
+							   Foreground="White"/>
+					<TextBlock x:Name="DialogMessageText"
+							   Text="Are you sure you want to log out? You will need to sign back in to access your account."
+							   FontSize="13"
+							   Foreground="#A0A0B0"
+							   TextWrapping="Wrap"
+							   LineHeight="18"/>
+				</StackPanel>
+			</Grid>
+
+			<!-- Buttons -->
+			<StackPanel Grid.Row="1"
+						Orientation="Horizontal"
+						HorizontalAlignment="Right"
+						Spacing="12"
+						Margin="0,20,0,0">
+
+				<Button x:Name="CancelButton"
+						Content="Cancel"
+						IsCancel="True"
+						Click="Cancel_Click"
+						Classes="dialog-cancel"/>
+
+				<Button x:Name="LogoutButton"
+						Content="Log Out"
+						IsDefault="True"
+						Click="Logout_Click"
+						Classes="dialog-logout"/>
+			</StackPanel>
+		</Grid>
+
+		<!-- Styles for Dialog Buttons -->
+		<Border.Styles>
+			<Style Selector="Button.dialog-cancel">
+				<Setter Property="Background" Value="#242424"/>
+				<Setter Property="Foreground" Value="#D0D0E0"/>
+				<Setter Property="FontWeight" Value="SemiBold"/>
+				<Setter Property="FontSize" Value="14"/>
+				<Setter Property="Padding" Value="20,10"/>
+				<Setter Property="CornerRadius" Value="8"/>
+				<Setter Property="Cursor" Value="Hand"/>
+			</Style>
+			<Style Selector="Button.dialog-cancel:pointerover /template/ ContentPresenter">
+				<Setter Property="Background" Value="#383846"/>
+				<Setter Property="Foreground" Value="White"/>
+			</Style>
+
+			<Style Selector="Button.dialog-logout">
+				<Setter Property="Background" Value="White"/>
+				<Setter Property="Foreground" Value="#141414"/>
+				<Setter Property="FontWeight" Value="Bold"/>
+				<Setter Property="FontSize" Value="14"/>
+				<Setter Property="Padding" Value="22,10"/>
+				<Setter Property="CornerRadius" Value="8"/>
+				<Setter Property="Cursor" Value="Hand"/>
+			</Style>
+			<Style Selector="Button.dialog-logout:pointerover /template/ ContentPresenter">
+				<Setter Property="Background" Value="white"/>
+				<Setter Property="Foreground" Value="#141414"/>
+			</Style>
+		</Border.Styles>
+	</Border>
+</Window>

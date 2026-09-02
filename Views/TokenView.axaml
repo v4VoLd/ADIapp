@@ -1,32 +1,126 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800"
              x:Class="ADIapp.Views.TokenView">
 
-    <StackPanel HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Width="500"
-                Spacing="28">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid MinHeight="600" Margin="32,40">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="560"
+                        Spacing="28">
 
-        <!-- TITLE -->
-        <TextBlock Text="Token"
-                   FontSize="36"
-                   FontWeight="Bold"
-                   Foreground="White"
-                   HorizontalAlignment="Center"/>
+                <!-- TITLE HEADER -->
+                <StackPanel Spacing="6" HorizontalAlignment="Center">
+                    <TextBlock x:Name="TokenTitleBlock"
+                               Text="Token Credits"
+                               FontSize="32"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="TokenSubtitleBlock"
+                               Text="Your current available service tokens balance"
+                               FontSize="13"
+                               Foreground="#A0A0B0"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
 
-        <!-- TOKEN DISPLAY -->
-        <StackPanel Spacing="10">
-            <Border Background="#1F1F1F"
-                    CornerRadius="10"
-                    Padding="14">
-                <TextBlock x:Name="TokenText"
-                           Text="8 Token"
-                           FontSize="16"
-                           FontWeight="Bold"
-                           Foreground="White"/>
-            </Border>
-        </StackPanel>
+                <!-- CARD CONTAINER -->
+                <Border Background="#181818"
+                        BorderBrush="#2D2D2D"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="36,32">
+                    <StackPanel Spacing="16" HorizontalAlignment="Center" Width="480">
 
-    </StackPanel>
+                        <!-- AVAILABLE TOKEN DISPLAY BOX -->
+                        <Border Background="#252525"
+                                BorderBrush="#3D3D3D"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="24,18"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Background="#1F1F1F"
+                                        CornerRadius="10"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="0,0,16,0">
+                                    <TextBlock Text="🪙"
+                                               FontSize="22"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock x:Name="AvailableBalanceLabelBlock"
+                                               Text="Available Balance"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#A0A0B0"/>
+                                    <TextBlock x:Name="AvailableDescBlock"
+                                               Text="Ready for new file requests"
+                                               FontSize="11"
+                                               Foreground="#707080"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2" x:Name="TokenText"
+                                           Text="0 Tokens"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="#4DFF8A"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- RESERVED TOKEN DISPLAY BOX -->
+                        <Border Background="#252525"
+                                BorderBrush="#3D3D3D"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="24,18"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Background="#1F1F1F"
+                                        CornerRadius="10"
+                                        Width="44"
+                                        Height="44"
+                                        Margin="0,0,16,0">
+                                    <TextBlock Text="⏳"
+                                               FontSize="22"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock x:Name="ReservedBalanceLabelBlock"
+                                               Text="Reserved Balance"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#A0A0B0"/>
+                                    <TextBlock x:Name="ReservedDescBlock"
+                                               Text="Held by processing / pending orders"
+                                               FontSize="11"
+                                               Foreground="#707080"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2" x:Name="ReservedTokenText"
+                                           Text="0 Tokens"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="#FFA500"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 
 </UserControl>

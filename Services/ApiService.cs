@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using ADIapp.Helpers;
 using ADIapp.Models;
@@ -21,16 +22,18 @@ public class ApiService
     static ApiService()
     {
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        _httpClient.Timeout = TimeSpan.FromSeconds(15);
     }
 
     public static string? AccessToken { get; private set; }
     public static UserDto? CurrentUser { get; private set; }
+    public static event Action<UserDto?>? CurrentUserChanged;
 
     // ─────────────────────────────────────────────────────────────
     // Auth
     // ─────────────────────────────────────────────────────────────
 
-    public static async Task<(bool Success, string Message, UserDto? currentUser)> LoginAsync(string email, string password)
+    public static async Task<(bool Success, string Message, UserDto? currentUser)> LoginAsync(string email, string password, bool remember = true)
     {
         try
         {
@@ -38,6 +41,7 @@ public class ApiService
             {
                 Email = email,
                 Password = password,
+                Remember = remember,
                 Hardware = new HardwarePayload
                 {
                     DeviceId  = HardwareHelper.GetDeviceId(),
@@ -73,26 +77,125 @@ public class ApiService
             {
                 AccessToken  = apiResponse.Data.AccessToken;
                 CurrentUser  = apiResponse.Data.User;
+                CurrentUserChanged?.Invoke(CurrentUser);
 
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", AccessToken);
 
-                return (true, "Login successful", CurrentUser);
+                if (remember)
+                {
+                    // Persist session token securely on local machine (30 days auto-login)
+                    SecureStorageHelper.SaveToken(AccessToken);
+                }
+                else
+                {
+                    SecureStorageHelper.ClearToken();
+                }
+
+                return (true, LanguageService.Get("Login_Success"), CurrentUser);
             }
 
-            return (false, apiResponse?.Message ?? "Login failed. Please check your credentials.", null);
+            string errorMsg = ExtractErrorMessage(apiResponse, LanguageService.Get("Login_Failed"));
+            return (false, errorMsg, null);
         }
         catch (Exception ex)
         {
-            return (false, $"Connection error: {ex.Message}", null);
+            return (false, string.Format(LanguageService.Get("Common_ConnectionError"), ex.Message), null);
         }
+    }
+
+    public static async Task<(bool Success, UserDto? User)> TryAutoLoginAsync()
+    {
+        try
+        {
+            string? savedToken = SecureStorageHelper.LoadToken();
+            if (string.IsNullOrWhiteSpace(savedToken))
+            {
+                return (false, null);
+            }
+
+            AccessToken = savedToken;
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var (success, _) = await FetchProfileAsync();
+            if (success && CurrentUser != null)
+            {
+                return (true, CurrentUser);
+            }
+
+            // Session expired on server (e.g. 30 days elapsed or revoked)
+            Logout();
+            return (false, null);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[ApiService] Auto-login failed: {ex.Message}", ex);
+            Logout();
+            return (false, null);
+        }
+    }
+
+    public static async Task LogoutAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(AccessToken))
+            {
+                var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "logout");
+                var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+                await _httpClient.PostAsync(requestUri, content);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[ApiService] Error during backend logout: {ex.Message}", ex);
+        }
+
+        try
+        {
+            await WebSocketManager.DisconnectAsync();
+        }
+        catch { }
+
+        Logout();
     }
 
     public static void Logout()
     {
         AccessToken = null;
         CurrentUser = null;
+        CurrentUserChanged?.Invoke(null);
         _httpClient.DefaultRequestHeaders.Authorization = null;
+        SecureStorageHelper.ClearToken();
+    }
+
+    public static string ExtractErrorMessage(ApiResponseWrapper? res, string defaultMsg = "Operation failed.")
+    {
+        if (res == null) return defaultMsg;
+
+        if (res.Errors != null && res.Errors.Count > 0)
+        {
+            var list = new List<string>();
+            foreach (var kvp in res.Errors)
+            {
+                if (kvp.Value != null)
+                {
+                    list.AddRange(kvp.Value);
+                }
+            }
+            if (list.Count > 0)
+            {
+                return string.Join("\n", list);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(res.ErrorCode))
+        {
+            return LanguageService.Get(res.ErrorCode);
+        }
+
+        return !string.IsNullOrWhiteSpace(res.Message) ? res.Message : defaultMsg;
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -118,6 +221,7 @@ public class ApiService
             if (apiResponse != null && apiResponse.Success && apiResponse.Data?.User != null)
             {
                 CurrentUser = apiResponse.Data.User;
+                CurrentUserChanged?.Invoke(CurrentUser);
                 return (true, "Profile loaded");
             }
 
@@ -288,6 +392,24 @@ public class ApiService
         }
     }
 
+    public static async Task<bool> DeleteNotificationAsync(string id)
+    {
+        if (string.IsNullOrEmpty(AccessToken) || string.IsNullOrEmpty(id))
+            return false;
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"notifications/{id}");
+            var response = await _httpClient.DeleteAsync(requestUri);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error deleting notification {id}: {ex.Message}", ex);
+            return false;
+        }
+    }
+
     public static async Task<List<ProcessingFileDto>> GetProcessingFilesAsync()
     {
         if (string.IsNullOrEmpty(AccessToken))
@@ -356,10 +478,10 @@ public class ApiService
         }
     }
 
-    public static async Task<(bool Success, string Message)> CreateOrderAsync(string fileHash, List<int> serviceIds, List<string>? serviceNames = null, string comment = "Created from Desktop App")
+    public static async Task<(bool Success, string Message, int? OrderId)> CreateOrderAsync(string fileHash, List<int> serviceIds, List<string>? serviceNames = null, string comment = "Created from Desktop App")
     {
         if (string.IsNullOrEmpty(AccessToken))
-            return (false, "Not authenticated.");
+            return (false, "Not authenticated.", null);
 
         try
         {
@@ -393,18 +515,42 @@ public class ApiService
                 message = msgProp.GetString() ?? "";
             }
 
+            int? orderId = null;
+            if (root.TryGetProperty("data", out var dataProp))
+            {
+                if (dataProp.ValueKind == JsonValueKind.Object)
+                {
+                    if (dataProp.TryGetProperty("id", out var idProp) && idProp.TryGetInt32(out int idVal))
+                    {
+                        orderId = idVal;
+                    }
+                    else if (dataProp.TryGetProperty("order_id", out var oidProp) && oidProp.TryGetInt32(out int oidVal))
+                    {
+                        orderId = oidVal;
+                    }
+                }
+                else if (dataProp.ValueKind == JsonValueKind.Number && dataProp.TryGetInt32(out int numId))
+                {
+                    orderId = numId;
+                }
+            }
+            else if (root.TryGetProperty("order_id", out var rootOid) && rootOid.TryGetInt32(out int rootOidVal))
+            {
+                orderId = rootOidVal;
+            }
+
             if (success)
             {
                 _ = FetchProfileAsync();
-                return (true, "Order created successfully.");
+                return (true, "Order created successfully.", orderId);
             }
 
-            return (false, string.IsNullOrEmpty(message) ? "Failed to create order." : message);
+            return (false, string.IsNullOrEmpty(message) ? "Failed to create order." : message, null);
         }
         catch (Exception ex)
         {
             Logger.Error($"Error creating order: {ex.Message}", ex);
-            return (false, $"Connection error: {ex.Message}");
+            return (false, $"Connection error: {ex.Message}", null);
         }
     }
 
@@ -737,6 +883,36 @@ public class ApiService
         {
             Logger.Error($"Download error: {ex.Message}", ex);
             return (false, ex.Message);
+        }
+    }
+
+    public static async Task<UpdateCheckResponse?> CheckForUpdatesAsync(string currentVersion, string platform)
+    {
+        if (!NetworkHelper.IsNetworkAvailable())
+            return null;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), $"check-update?version={Uri.EscapeDataString(currentVersion)}&platform={Uri.EscapeDataString(platform)}");
+            var response = await _httpClient.GetAsync(requestUri, cts.Token);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var responseString = await response.Content.ReadAsStringAsync(cts.Token);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<UpdateCheckResponse>(responseString, options);
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Warning("Update check timed out (server unreachable or offline).");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning($"Error checking for updates: {ex.Message}");
+            return null;
         }
     }
 }

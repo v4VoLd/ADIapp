@@ -6,11 +6,13 @@
 
         <!-- HEADER SECTION -->
         <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,20">
-            <TextBlock Text="Order &amp; Request History"
+            <TextBlock x:Name="TitleBlock"
+                       Text="Orders"
                        FontSize="28"
                        FontWeight="Bold"
                        Foreground="White"/>
-            <TextBlock Text="Track past tuning orders, completed/canceled files, and pending ECU support requests."
+            <TextBlock x:Name="SubtitleBlock"
+                       Text="Track past tuning orders, completed/canceled files, and pending ECU support requests."
                        FontSize="13"
                        Foreground="#888888"/>
         </StackPanel>

@@ -6,26 +6,35 @@
     <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.2</Version>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <FileVersion>1.0.2.0</FileVersion>
     <Product>ADI Application</Product>
     <Company>ADI Performance</Company>
     <Copyright>Copyright © ADI Performance 2026</Copyright>
+    <UseSharedCompilation>false</UseSharedCompilation>
   </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Assets\app_dock_logo.png" />
+    <None Remove="Assets\app_icon.ico" />
     <None Remove="Assets\avatar.png" />
     <None Remove="Assets\carLogo_icon.png" />
-    <None Remove="Assets\login_background.png" />
+    <None Remove="Assets\login_background1.png" />
+    <None Remove="Assets\login_background2.png" />
     <None Remove="Assets\login_icon.png" />
     <None Remove="Assets\login_logo.png" />
     <None Remove="Assets\main_background.png" />
-    <None Remove="Assets\Sidebar_background.png" />
+    <None Remove="Assets\sidebar_background.png" />
+    <None Remove="Assets\sidebar_logo.ico" />
     <None Remove="Assets\sidebar_logo.png" />
   </ItemGroup>
+
   <ItemGroup>
     <AvaloniaResource Include="Assets\app_dock_logo.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\app_icon.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\avatar.png">
@@ -34,7 +43,13 @@
     <AvaloniaResource Include="Assets\carLogo_icon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
-    <AvaloniaResource Include="Assets\login_background.png">
+    <AvaloniaResource Include="Assets\login_background1.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\login_background2.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\login_icon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\login_logo.png">
@@ -43,7 +58,10 @@
     <AvaloniaResource Include="Assets\main_background.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
-    <AvaloniaResource Include="Assets\Sidebar_background.png">
+    <AvaloniaResource Include="Assets\sidebar_background.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\sidebar_logo.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
     <AvaloniaResource Include="Assets\sidebar_logo.png">
@@ -62,9 +80,5 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PusherClient" Version="2.2.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Include="Assets\login_icon.png" />
   </ItemGroup>
 </Project>

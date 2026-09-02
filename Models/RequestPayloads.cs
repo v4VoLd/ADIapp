@@ -10,6 +10,9 @@ public class LoginRequestPayload
     [JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
 
+    [JsonPropertyName("remember")]
+    public bool Remember { get; set; } = true;
+
     [JsonPropertyName("hardware")]
     public HardwarePayload Hardware { get; set; } = new HardwarePayload();
 }

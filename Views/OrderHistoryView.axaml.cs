@@ -21,8 +21,6 @@ public partial class OrderHistoryView : UserControl
     private List<OrderHistoryItemDto> _tickets = new();
     private string _activeFilter = "All";
 
-    private Avalonia.Threading.DispatcherTimer? _pollTimer;
-
     public OrderHistoryView()
     {
         InitializeComponent();
@@ -30,13 +28,8 @@ public partial class OrderHistoryView : UserControl
         this.AttachedToVisualTree += (s, e) =>
         {
             WebSocketManager.OrderUpdated += OnOrderUpdated;
-
-            _pollTimer = new Avalonia.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(5)
-            };
-            _pollTimer.Tick += (sender, args) => _ = LoadHistoryAsync();
-            _pollTimer.Start();
+            LanguageService.LanguageChanged += OnLanguageChanged;
+            UpdateLocalizedText();
 
             _ = LoadHistoryAsync();
         };
@@ -44,8 +37,29 @@ public partial class OrderHistoryView : UserControl
         this.DetachedFromVisualTree += (s, e) =>
         {
             WebSocketManager.OrderUpdated -= OnOrderUpdated;
-            _pollTimer?.Stop();
+            LanguageService.LanguageChanged -= OnLanguageChanged;
         };
+    }
+
+    private void OnLanguageChanged()
+    {
+        Dispatcher.UIThread.Post(() => UpdateLocalizedText());
+    }
+
+    private void UpdateLocalizedText()
+    {
+        var TabAll = this.FindControl<Button>("TabAll");
+        var TabCompleted = this.FindControl<Button>("TabCompleted");
+        var TabCanceled = this.FindControl<Button>("TabCanceled");
+        var TabEcuTickets = this.FindControl<Button>("TabEcuTickets");
+        var TitleBlock = this.FindControl<TextBlock>("TitleBlock");
+        var SubtitleBlock = this.FindControl<TextBlock>("SubtitleBlock");
+        if (TitleBlock != null) TitleBlock.Text = LanguageService.Get("Orders_Title");
+        if (SubtitleBlock != null) SubtitleBlock.Text = LanguageService.Get("Orders_Subtitle");
+        if (TabAll != null) TabAll.Content = LanguageService.Get("Orders_All");
+        if (TabCompleted != null) TabCompleted.Content = LanguageService.Get("Orders_Completed");
+        if (TabCanceled != null) TabCanceled.Content = LanguageService.Get("Orders_Canceled");
+        if (TabEcuTickets != null) TabEcuTickets.Content = LanguageService.Get("Orders_EcuTickets");
     }
 
     private void OnOrderUpdated()
@@ -58,6 +72,7 @@ public partial class OrderHistoryView : UserControl
 
     private async Task LoadHistoryAsync()
     {
+        _ = ApiService.FetchProfileAsync();
         var response = await ApiService.GetOrderHistoryAsync();
         if (response != null)
         {
@@ -153,10 +168,10 @@ public partial class OrderHistoryView : UserControl
     {
         return filter switch
         {
-            "Completed" => "No completed orders found.",
-            "Canceled" => "No canceled orders found.",
-            "EcuTickets" => "No pending ECU support tickets found.",
-            _ => "No order or request history found."
+            "Completed" => LanguageService.Get("Orders_NoCompletedOrders"),
+            "Canceled" => LanguageService.Get("Orders_NoCanceledOrders"),
+            "EcuTickets" => LanguageService.Get("Orders_NoEcuTickets"),
+            _ => LanguageService.Get("Orders_NoOrderHistory")
         };
     }
 
@@ -179,7 +194,7 @@ public partial class OrderHistoryView : UserControl
         var titleStack = new StackPanel { Spacing = 2 };
         titleStack.Children.Add(new TextBlock
         {
-            Text = $"⚡ Order #{order.Id}",
+            Text = $" {LanguageService.Get("Orders_Title")} #{order.Id}",
             FontSize = 15,
             FontWeight = FontWeight.Bold,
             Foreground = Brushes.White
@@ -197,7 +212,8 @@ public partial class OrderHistoryView : UserControl
         Grid.SetColumn(titleStack, 0);
 
         // Status Badge
-        string statusText = order.Status.Replace("_", " ").ToUpper();
+        string statusKey = order.Status.Replace("_", " ").ToUpper();
+        string statusText = LanguageService.Get(statusKey);
         string statusColor = order.Status.ToLower() switch
         {
             "completed" or "finished" => "#4DFF8A",
@@ -240,7 +256,7 @@ public partial class OrderHistoryView : UserControl
                     Margin = new Thickness(0, 0, 6, 4),
                     Child = new TextBlock
                     {
-                        Text = $"{svc.Name} ({svc.Price} Token)",
+                        Text = $"{svc.Name} ({svc.Price} {LanguageService.Get("Token_Unit")})",
                         FontSize = 11,
                         Foreground = Brush.Parse("#E0E0E0")
                     }
@@ -254,7 +270,7 @@ public partial class OrderHistoryView : UserControl
 
         var priceText = new TextBlock
         {
-            Text = $"Total: {order.TotalPrice} Token(s)",
+            Text = $"{LanguageService.Get("Orders_Total")}: {order.TotalPrice} {LanguageService.Get("Total_Cost_Tokens")}",
             FontSize = 13,
             FontWeight = FontWeight.SemiBold,
             Foreground = Brush.Parse("#FFB74D"),
@@ -269,7 +285,7 @@ public partial class OrderHistoryView : UserControl
             {
                 var expiredBtn = new Button
                 {
-                    Content = "⏰ Download Expired",
+                    Content = LanguageService.Get("Tune_DownloadExpired"),
                     Background = Brush.Parse("#333333"),
                     Foreground = Brush.Parse("#888888"),
                     FontWeight = FontWeight.SemiBold,
@@ -284,11 +300,11 @@ public partial class OrderHistoryView : UserControl
             else if (!string.IsNullOrEmpty(order.DownloadUrl) || order.Id > 0)
             {
                 string downloadUrl = order.DownloadUrl ?? $"{AppConfig.BaseUrl}/order/download/{order.Id}";
-                string fileName = order.FileSent ?? $"order_{order.Id}_mod.bin";
+                string fileName = OrderProcessingManager.GenerateSuggestedFileName(order);
 
                 var downloadBtn = new Button
                 {
-                    Content = "⬇ Download Mod File",
+                    Content = LanguageService.Get("Download_ModFile"),
                     Background = Brush.Parse("#4DFF8A"),
                     Foreground = Brushes.Black,
                     FontWeight = FontWeight.Bold,
@@ -300,15 +316,27 @@ public partial class OrderHistoryView : UserControl
                 downloadBtn.Click += async (s, e) =>
                 {
                     downloadBtn.IsEnabled = false;
-                    downloadBtn.Content = "Downloading...";
+                    downloadBtn.Content = LanguageService.Get("Tune_Downloading");
 
                     var topLevel = TopLevel.GetTopLevel(this);
                     if (topLevel is Window window)
                     {
                         var saveFile = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
                         {
-                            Title = "Save Modified Tuning File",
-                            SuggestedFileName = fileName
+                            Title = LanguageService.Get("Tune_SavePickerTitle"),
+                            SuggestedFileName = fileName,
+                            DefaultExtension = "bin",
+                            FileTypeChoices = new[]
+                            {
+                                new Avalonia.Platform.Storage.FilePickerFileType("Binary File (*.bin)")
+                                {
+                                    Patterns = new[] { "*.bin" }
+                                },
+                                new Avalonia.Platform.Storage.FilePickerFileType("All Files (*.*)")
+                                {
+                                    Patterns = new[] { "*.*" }
+                                }
+                            }
                         });
 
                         if (saveFile != null)
@@ -316,25 +344,29 @@ public partial class OrderHistoryView : UserControl
                             using var stream = await saveFile.OpenWriteAsync();
                             var progress = new System.Progress<double>(p =>
                             {
-                                downloadBtn.Content = $"Downloading {p:F0}%...";
+                                downloadBtn.Content = $"{LanguageService.Get("Tune_Downloading")} {p:F0}%...";
                             });
 
                             var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
                             if (success)
                             {
-                                downloadBtn.Content = "✓ Downloaded";
-                                NotificationService.AddNotification($"download_done_{order.Id}", $"File download completed: {fileName}", "info");
+                                downloadBtn.Content = LanguageService.Get("Tune_Downloaded");
+                                NotificationService.AddNotification(
+                                    $"download_done_{order.Id}",
+                                    string.Format(LanguageService.Get("Tune_FileDownloadCompleted"), fileName),
+                                    "info"
+                                );
                             }
                             else
                             {
                                 downloadBtn.IsEnabled = true;
-                                downloadBtn.Content = "Retry Download";
+                                downloadBtn.Content = LanguageService.Get("Tune_RetryDownload");
                             }
                         }
                         else
                         {
                             downloadBtn.IsEnabled = true;
-                            downloadBtn.Content = "⬇ Download Mod File";
+                            downloadBtn.Content = LanguageService.Get("Download_ModFile");
                         }
                     }
                 };
@@ -365,7 +397,7 @@ public partial class OrderHistoryView : UserControl
         var headerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
 
         var titleStack = new StackPanel { Spacing = 2 };
-        string titleText = !string.IsNullOrEmpty(ticket.Title) ? ticket.Title : $"Unfound ECU Request #{ticket.TicketNumber}";
+        string titleText = !string.IsNullOrEmpty(ticket.Title) ? ticket.Title : string.Format(LanguageService.Get("Tune_UnfoundEcuRequest"), ticket.TicketNumber);
         titleStack.Children.Add(new TextBlock
         {
             Text = $"📩 {titleText}",
@@ -385,7 +417,8 @@ public partial class OrderHistoryView : UserControl
         }
         Grid.SetColumn(titleStack, 0);
 
-        string statusText = $"TICKET • {ticket.Status.Replace("_", " ").ToUpper()}";
+        string rawStatus = ticket.Status.Replace("_", " ").ToUpper();
+        string statusText = string.Format(LanguageService.Get("Tune_StatusTicket"), rawStatus);
         var statusBadge = new Border
         {
             Background = Brush.Parse("#FF9800"),
@@ -432,7 +465,7 @@ public partial class OrderHistoryView : UserControl
         int ticketId = ticket.Id;
         var viewBtn = new Button
         {
-            Content = "💬 Open Support Discussion",
+            Content = LanguageService.Get("Tune_OpenDiscussion"),
             Background = Brush.Parse("#FF9800"),
             Foreground = Brushes.Black,
             FontWeight = FontWeight.Bold,

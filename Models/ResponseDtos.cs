@@ -12,6 +12,12 @@ public class ApiResponseWrapper
     [JsonPropertyName("message")]
     public string? Message { get; set; }
 
+    [JsonPropertyName("error_code")]
+    public string? ErrorCode { get; set; }
+
+    [JsonPropertyName("errors")]
+    public Dictionary<string, List<string>>? Errors { get; set; }
+
     [JsonPropertyName("data")]
     public LoginResponseData? Data { get; set; }
 }
@@ -48,11 +54,30 @@ public class UserDto
     [JsonPropertyName("availableCredit")]
     public double AvailableCredit { get; set; }
 
+    [JsonPropertyName("reservedCredit")]
+    public double ReservedCredit { get; set; }
+
+    [JsonPropertyName("effectiveAvailableCredit")]
+    public double EffectiveAvailableCredit { get; set; }
+
     [JsonPropertyName("availableUnit")]
     public double AvailableUnit { get; set; }
 
     [JsonPropertyName("subscriptionEndDate")]
     public string? SubscriptionEndDate { get; set; }
+
+    [JsonPropertyName("order_limit")]
+    public int? OrderLimit { get; set; }
+
+    [JsonPropertyName("today_orders_count")]
+    public int? TodayOrdersCount { get; set; }
+
+    [JsonPropertyName("remaining_daily_limit")]
+    public int? RemainingDailyLimit { get; set; }
+
+    public bool HasDailyLimit => OrderLimit.HasValue && OrderLimit.Value > 0;
+    public int RemainingDailyTunes => RemainingDailyLimit ?? (HasDailyLimit ? Math.Max(0, OrderLimit!.Value - (TodayOrdersCount ?? 0)) : int.MaxValue);
+    public bool HasReachedDailyLimit => HasDailyLimit && RemainingDailyTunes <= 0;
 }
 
 public class EcuIdentifyResponse

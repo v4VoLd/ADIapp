@@ -14,6 +14,9 @@ public partial class AccountView : UserControl
     {
         base.OnInitialized();
         
+        UpdateLocalizedText();
+        LanguageService.LanguageChanged += OnLanguageChanged;
+
         // Populate with currently cached profile data immediately
         PopulateFields();
 
@@ -26,6 +29,50 @@ public partial class AccountView : UserControl
         }
     }
 
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        UpdateLocalizedText();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        var title = this.FindControl<TextBlock>("AccountTitleBlock");
+        if (title != null) title.Text = LanguageService.Get("Account_Title");
+
+        var subtitle = this.FindControl<TextBlock>("AccountSubtitleBlock");
+        if (subtitle != null) subtitle.Text = LanguageService.Get("Account_Subtitle");
+
+        var fnLabel = this.FindControl<TextBlock>("FirstNameLabelBlock");
+        if (fnLabel != null) fnLabel.Text = LanguageService.Get("Account_FirstName");
+
+        var lnLabel = this.FindControl<TextBlock>("LastNameLabelBlock");
+        if (lnLabel != null) lnLabel.Text = LanguageService.Get("Account_LastName");
+
+        var emailLabel = this.FindControl<TextBlock>("EmailLabelBlock");
+        if (emailLabel != null) emailLabel.Text = LanguageService.Get("Account_Email");
+
+        var phoneLabel = this.FindControl<TextBlock>("PhoneLabelBlock");
+        if (phoneLabel != null) phoneLabel.Text = LanguageService.Get("Account_Phone");
+
+        var saveBtn = this.FindControl<TextBlock>("SaveBtnTextBlock");
+        if (saveBtn != null) saveBtn.Text = LanguageService.Get("Account_Save");
+
+        if (ApiService.CurrentUser != null)
+        {
+            var helloUserBlock = this.FindControl<TextBlock>("HelloUserBlock");
+            if (helloUserBlock != null)
+            {
+                helloUserBlock.Text = $"{LanguageService.Get("TopPanel_Hello")} {ApiService.CurrentUser.FirstName} {ApiService.CurrentUser.LastName}.".Trim();
+            }
+        }
+    }
+
     private void PopulateFields()
     {
         if (ApiService.CurrentUser != null)
@@ -33,7 +80,7 @@ public partial class AccountView : UserControl
             var helloUserBlock = this.FindControl<TextBlock>("HelloUserBlock");
             if (helloUserBlock != null)
             {
-                helloUserBlock.Text = $"Hello, {ApiService.CurrentUser.FirstName} {ApiService.CurrentUser.LastName}.".Trim();
+                helloUserBlock.Text = $"{LanguageService.Get("TopPanel_Hello")} {ApiService.CurrentUser.FirstName} {ApiService.CurrentUser.LastName}.".Trim();
             }
 
             var firstNameBox = this.FindControl<TextBox>("FirstNameBox");
@@ -79,7 +126,7 @@ public partial class AccountView : UserControl
         {
             if (statusText != null)
             {
-                statusText.Text = "First name and Last name are required.";
+                statusText.Text = LanguageService.Get("Account_FirstNameAndLastNameRequired");
                 statusText.Foreground = Avalonia.Media.Brush.Parse("#FF5252");
                 statusText.IsVisible = true;
             }
@@ -94,7 +141,7 @@ public partial class AccountView : UserControl
 
         if (statusText != null)
         {
-            statusText.Text = success ? "Account profile updated successfully!" : $"Failed to update account: {msg}";
+            statusText.Text = success ? LanguageService.Get("Account_ProfileUpdatedSuccessfully") : LanguageService.Get("Account_FailedToUpdateAccount");
             statusText.Foreground = Avalonia.Media.Brush.Parse(success ? "#4DFF8A" : "#FF5252");
             statusText.IsVisible = true;
         }

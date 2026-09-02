@@ -39,6 +39,59 @@ public partial class TicketView : UserControl
         _initialTicketId = initialTicketId;
     }
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        UpdateLocalizedText();
+        LanguageService.LanguageChanged += OnLanguageChanged;
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        LanguageService.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        UpdateLocalizedText();
+    }
+
+    private void UpdateLocalizedText()
+    {
+        var headerTitle = this.FindControl<TextBlock>("SupportTicketsHeaderBlock");
+        if (headerTitle != null) headerTitle.Text = LanguageService.Get("Ticket_HeaderTitle");
+
+        if (NewTicketButton != null) NewTicketButton.Content = LanguageService.Get("Ticket_NewTicket");
+
+        if (_selectedTicket == null && TicketSubjectText != null)
+        {
+            TicketSubjectText.Text = LanguageService.Get("Ticket_SelectPrompt");
+        }
+
+        if (ReplyInput != null) ReplyInput.Watermark = LanguageService.Get("Ticket_ReplyWatermark");
+        if (SendReplyButton != null) SendReplyButton.Content = LanguageService.Get("Ticket_SendReply");
+
+        var modalTitle = this.FindControl<TextBlock>("NewTicketModalTitleBlock");
+        if (modalTitle != null) modalTitle.Text = LanguageService.Get("Ticket_CreateTitle");
+
+        var subjectLabel = this.FindControl<TextBlock>("SubjectLabelBlock");
+        if (subjectLabel != null) subjectLabel.Text = LanguageService.Get("Ticket_SubjectLabel");
+
+        if (NewSubjectInput != null) NewSubjectInput.Watermark = LanguageService.Get("Ticket_SubjectPlaceholder");
+
+        var contentLabel = this.FindControl<TextBlock>("ContentLabelBlock");
+        if (contentLabel != null) contentLabel.Text = LanguageService.Get("Ticket_ContentLabel");
+
+        if (NewContentInput != null) NewContentInput.Watermark = LanguageService.Get("Ticket_ContentPlaceholder");
+
+        var cancelBtn = this.FindControl<Button>("CancelNewTicketButton");
+        if (cancelBtn != null) cancelBtn.Content = LanguageService.Get("Ticket_Cancel");
+
+        var submitBtn = this.FindControl<Button>("SubmitNewTicketButton");
+        if (submitBtn != null) submitBtn.Content = LanguageService.Get("Ticket_SubmitTicket");
+    }
+
     private void OnTicketUpdated()
     {
         Dispatcher.UIThread.InvokeAsync(async () =>
@@ -91,7 +144,7 @@ public partial class TicketView : UserControl
         {
             TicketListPanel.Children.Add(new TextBlock
             {
-                Text = "No tickets yet. Click '+ New Ticket' to create one.",
+                Text = LanguageService.Get("Ticket_NoTicketsPrompt"),
                 Foreground = Brush.Parse("#888888"),
                 FontSize = 13,
                 TextWrapping = TextWrapping.Wrap,
@@ -142,7 +195,7 @@ public partial class TicketView : UserControl
                 Padding = new Thickness(6, 2),
                 Child = new TextBlock
                 {
-                    Text = ticket.DisplayStatus,
+                    Text = GetLocalizedStatus(ticket.Status, ticket.DisplayStatus),
                     FontSize = 9,
                     FontWeight = FontWeight.Bold,
                     Foreground = Brushes.White
@@ -188,7 +241,7 @@ public partial class TicketView : UserControl
 
         if (TicketNumberText != null) TicketNumberText.Text = ticket.TicketNumber;
         if (TicketSubjectText != null) TicketSubjectText.Text = ticket.Subject;
-        if (TicketStatusText != null) TicketStatusText.Text = ticket.DisplayStatus;
+        if (TicketStatusText != null) TicketStatusText.Text = GetLocalizedStatus(ticket.Status, ticket.DisplayStatus);
 
         if (TicketStatusBadge != null)
         {
@@ -216,11 +269,19 @@ public partial class TicketView : UserControl
         RenderMessages(ticket.Messages);
     }
 
+    private string GetLocalizedStatus(string? status, string? fallbackDisplay)
+    {
+        if (string.IsNullOrEmpty(status)) return fallbackDisplay ?? "";
+        string key = status.ToUpper();
+        string translated = LanguageService.Get(key);
+        return translated != key ? translated : (fallbackDisplay ?? status.ToUpper());
+    }
+
     private void ClearDetailView()
     {
         _selectedTicket = null;
         if (TicketNumberText != null) TicketNumberText.Text = "#TK-0000";
-        if (TicketSubjectText != null) TicketSubjectText.Text = "No tickets available";
+        if (TicketSubjectText != null) TicketSubjectText.Text = LanguageService.Get("Ticket_NoTickets");
         if (TicketStatusText != null) TicketStatusText.Text = "NONE";
         if (MessagesPanel != null) MessagesPanel.Children.Clear();
     }
@@ -232,14 +293,39 @@ public partial class TicketView : UserControl
 
         if (messages == null || messages.Count == 0)
         {
-            MessagesPanel.Children.Add(new TextBlock
+            var emptyStack = new StackPanel
             {
-                Text = "No messages in this ticket thread yet.",
-                Foreground = Brush.Parse("#888888"),
-                FontSize = 13,
+                Spacing = 10,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 40)
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 60)
+            };
+
+            emptyStack.Children.Add(new TextBlock
+            {
+                Text = "💬",
+                FontSize = 36,
+                HorizontalAlignment = HorizontalAlignment.Center
             });
+
+            emptyStack.Children.Add(new TextBlock
+            {
+                Text = "No Messages Yet",
+                FontSize = 16,
+                FontWeight = FontWeight.Bold,
+                Foreground = Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            emptyStack.Children.Add(new TextBlock
+            {
+                Text = "Type a message below to start communicating with technical support.",
+                FontSize = 13,
+                Foreground = Brush.Parse("#A0A0B0"),
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
+
+            MessagesPanel.Children.Add(emptyStack);
             return;
         }
 
@@ -249,15 +335,17 @@ public partial class TicketView : UserControl
 
             var bubble = new Border
             {
-                Background = Brush.Parse(isAdmin ? "#2B2B2B" : "#1A3A5C"),
-                CornerRadius = new CornerRadius(10),
-                Padding = new Thickness(14, 10),
+                Background = Brush.Parse(isAdmin ? "#252525" : "#1E3A5F"),
+                BorderBrush = Brush.Parse(isAdmin ? "#3D3D3D" : "#2A5A8F"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = isAdmin ? new CornerRadius(14, 14, 14, 3) : new CornerRadius(14, 14, 3, 14),
+                Padding = new Thickness(16, 12),
                 Margin = new Thickness(0, 4),
                 HorizontalAlignment = isAdmin ? HorizontalAlignment.Left : HorizontalAlignment.Right,
-                MaxWidth = 550
+                MaxWidth = 580
             };
 
-            var stack = new StackPanel { Spacing = 4 };
+            var stack = new StackPanel { Spacing = 6 };
 
             stack.Children.Add(new TextBlock
             {
@@ -310,22 +398,37 @@ public partial class TicketView : UserControl
             return;
 
         string content = ReplyInput.Text.Trim();
-        if (SendReplyButton != null) SendReplyButton.IsEnabled = false;
-
-        var res = await ApiService.SendTicketReplyAsync(_selectedTicket.Id, content);
-        if (SendReplyButton != null) SendReplyButton.IsEnabled = true;
-
-        if (res.Success)
+        if (SendReplyButton != null)
         {
-            ReplyInput.Text = string.Empty;
-            await LoadTicketsAsync();
+            SendReplyButton.IsEnabled = false;
+            SendReplyButton.Content = LanguageService.Get("Ticket_Sending");
         }
-        else
+
+        try
         {
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is Window window)
+            var res = await ApiService.SendTicketReplyAsync(_selectedTicket.Id, content);
+
+            if (res.Success)
             {
-                await MessageBox(window, $"Failed to send reply: {res.Message}");
+                ReplyInput.Text = string.Empty;
+                await LoadTicketsAsync();
+            }
+            else
+            {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel is Window window)
+                {
+                    string errFmt = LanguageService.Get("Ticket_SendFailed");
+                    await MessageBox(window, string.Format(errFmt, res.Message));
+                }
+            }
+        }
+        finally
+        {
+            if (SendReplyButton != null)
+            {
+                SendReplyButton.IsEnabled = true;
+                SendReplyButton.Content = LanguageService.Get("Ticket_Send");
             }
         }
     }
@@ -356,7 +459,7 @@ public partial class TicketView : UserControl
         {
             if (TicketModalErrorText != null)
             {
-                TicketModalErrorText.Text = "Please enter both subject and message content.";
+                TicketModalErrorText.Text = LanguageService.Get("Ticket_SubjectAndMessageRequired");
                 TicketModalErrorText.IsVisible = true;
             }
             return;
@@ -377,7 +480,7 @@ public partial class TicketView : UserControl
         {
             if (TicketModalErrorText != null)
             {
-                TicketModalErrorText.Text = string.IsNullOrEmpty(res.Message) ? "Failed to create ticket. Please try again." : res.Message;
+                TicketModalErrorText.Text = string.IsNullOrEmpty(res.Message) ? LanguageService.Get("Ticket_FailedToCreate") : res.Message;
                 TicketModalErrorText.IsVisible = true;
             }
         }
@@ -385,27 +488,6 @@ public partial class TicketView : UserControl
 
     private async Task MessageBox(Window window, string message)
     {
-        var dialog = new Window
-        {
-            Width = 320,
-            Height = 140,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Content = new Border
-            {
-                Padding = new Thickness(20),
-                Background = Brush.Parse("#1F1F1F"),
-                CornerRadius = new CornerRadius(8),
-                Child = new TextBlock
-                {
-                    Text = message,
-                    Foreground = Brushes.White,
-                    TextWrapping = TextWrapping.Wrap,
-                    VerticalAlignment = VerticalAlignment.Center
-                }
-            }
-        };
-
-        await dialog.ShowDialog(window);
+        await MessageDialog.ShowAsync(window, message, "Notice");
     }
 }
