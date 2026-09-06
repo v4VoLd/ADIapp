@@ -29,6 +29,19 @@ public partial class TuneView : UserControl
     private EcuIdentifyData? _currentEcuData;
     private string _activeFilter = "ALL";
     private readonly Dictionary<int, bool> _serviceSelectionStates = new();
+    private bool _isUpdatingCards;
+
+    private class ServiceCardHolder
+    {
+        public ServiceDto Service { get; set; } = null!;
+        public Border CardBorder { get; set; } = null!;
+        public Border SelectedBadge { get; set; } = null!;
+        public Border LockedBadge { get; set; } = null!;
+        public TextBlock PriceText { get; set; } = null!;
+        public ToggleSwitch Toggle { get; set; } = null!;
+        public double Cost { get; set; }
+        public bool IsCoveredBySub { get; set; }
+    }
 
     private enum ServiceCategory
     {
@@ -59,11 +72,19 @@ public partial class TuneView : UserControl
         UpdateDailyQuotaUi();
         UpdateOrderProgressModal();
         await LoadProcessingFilesAsync();
+        StartPeriodicTuneViewPolling();
+    }
+
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        StartPeriodicTuneViewPolling();
     }
 
     protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
+        StopPeriodicTuneViewPolling();
         WebSocketManager.EcuIdentified -= OnEcuIdentified;
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
         ApiService.CurrentUserChanged -= OnCurrentUserChanged;
@@ -71,11 +92,61 @@ public partial class TuneView : UserControl
         LanguageService.LanguageChanged -= OnLanguageChanged;
     }
 
+    private CancellationTokenSource? _tuneViewPollCts;
+
+    private void StartPeriodicTuneViewPolling()
+    {
+        _tuneViewPollCts?.Cancel();
+        _tuneViewPollCts = new CancellationTokenSource();
+        var token = _tuneViewPollCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(3500, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
+                if (token.IsCancellationRequested) return;
+
+                // When WebSocket is NOT connected, periodically pull all dynamic data on TuneView
+                if (!WebSocketManager.IsConnected)
+                {
+                    try
+                    {
+                        await LoadProcessingFilesAsync();
+                        _ = ApiService.FetchProfileAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Helpers.Logger.Warn($"[TuneView] Periodic HTTP fallback polling error: {ex.Message}");
+                    }
+                }
+            }
+        }, token);
+    }
+
+    private void StopPeriodicTuneViewPolling()
+    {
+        _tuneViewPollCts?.Cancel();
+        _tuneViewPollCts = null;
+    }
+
     private void OnCurrentUserChanged(Models.UserDto? user)
     {
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
             UpdateDailyQuotaUi();
+            if (_currentServices != null && _currentServices.Count > 0)
+            {
+                UpdateAllServiceCardsState();
+            }
         });
     }
 
@@ -111,6 +182,10 @@ public partial class TuneView : UserControl
         {
             UpdateLocalizedText();
             UpdateDailyQuotaUi();
+            if (_currentServices != null && _currentServices.Count > 0)
+            {
+                RenderServicesList();
+            }
         });
     }
 
@@ -1069,21 +1144,6 @@ public partial class TuneView : UserControl
         var panel = this.FindControl<WrapPanel>("DynamicServicesPanel");
         if (panel == null) return;
 
-        var selectedIds = new System.Collections.Generic.HashSet<int>();
-        foreach (var child in panel.Children)
-        {
-            if (child is Border b && b.Child is StackPanel sp)
-            {
-                foreach (var innerChild in sp.Children)
-                {
-                    if (innerChild is ToggleSwitch t && t.IsChecked == true && t.Tag is int sId)
-                    {
-                        selectedIds.Add(sId);
-                    }
-                }
-            }
-        }
-
         panel.Children.Clear();
 
         if (_currentServices == null || _currentServices.Count == 0)
@@ -1184,6 +1244,28 @@ public partial class TuneView : UserControl
             Grid.SetColumn(selectedBadge, 1);
             headerGrid.Children.Add(selectedBadge);
 
+            var lockedBadge = new Border
+            {
+                Name = "LockedBadge",
+                Background = Avalonia.Media.Brush.Parse("#2C1818"),
+                BorderBrush = Avalonia.Media.Brush.Parse("#7F1D1D"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(6, 2),
+                IsVisible = false,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                Child = new TextBlock
+                {
+                    Text = LanguageService.Get("Tune_InsufficientTokens"),
+                    FontSize = 9,
+                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    Foreground = Avalonia.Media.Brush.Parse("#F87171")
+                }
+            };
+
+            Grid.SetColumn(lockedBadge, 1);
+            headerGrid.Children.Add(lockedBadge);
+
             stack.Children.Add(headerGrid);
 
             // TITLE
@@ -1201,8 +1283,16 @@ public partial class TuneView : UserControl
             // FOOTER ROW WITH PRICE CHIP & TOGGLE SWITCH
             var footerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
 
+            bool isCoveredBySub = service.IsIncludedInSubscription && (!service.RemainingQuota.HasValue || service.RemainingQuota.Value > 0);
+            double cost = 0;
+            if (!string.IsNullOrWhiteSpace(service.Price) &&
+                double.TryParse(service.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double parsedVal))
+            {
+                cost = parsedVal;
+            }
+
             string priceDisplay;
-            if (service.IsIncludedInSubscription)
+            if (isCoveredBySub)
             {
                 priceDisplay = service.RemainingQuota.HasValue
                     ? string.Format(LanguageService.Get("Tune_IncludedLeft"), service.RemainingQuota.Value)
@@ -1210,7 +1300,7 @@ public partial class TuneView : UserControl
             }
             else
             {
-                priceDisplay = !string.IsNullOrWhiteSpace(service.Price) && service.Price != "Included" && service.Price != "Free"
+                priceDisplay = cost > 0
                     ? $"🪙 {service.Price} CBT"
                     : LanguageService.Get("Tune_Included");
             }
@@ -1218,9 +1308,9 @@ public partial class TuneView : UserControl
             var priceText = new TextBlock
             {
                 Text = priceDisplay,
-                Foreground = Avalonia.Media.Brush.Parse(service.IsIncludedInSubscription ? "#4CAF50" : "#94A3B8"),
+                Foreground = Avalonia.Media.Brush.Parse(isCoveredBySub ? "#4CAF50" : "#94A3B8"),
                 FontSize = 11,
-                FontWeight = service.IsIncludedInSubscription ? Avalonia.Media.FontWeight.Bold : Avalonia.Media.FontWeight.Medium,
+                FontWeight = isCoveredBySub ? Avalonia.Media.FontWeight.Bold : Avalonia.Media.FontWeight.Medium,
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             };
             Grid.SetColumn(priceText, 0);
@@ -1240,26 +1330,36 @@ public partial class TuneView : UserControl
 
             cardBorder.Child = stack;
 
-            // Apply card visual selection state
-            ApplyCardStyle(cardBorder, selectedBadge, isSelected);
+            var holder = new ServiceCardHolder
+            {
+                Service = service,
+                CardBorder = cardBorder,
+                SelectedBadge = selectedBadge,
+                LockedBadge = lockedBadge,
+                PriceText = priceText,
+                Toggle = toggle,
+                Cost = cost,
+                IsCoveredBySub = isCoveredBySub
+            };
+            cardBorder.Tag = holder;
 
             // Handlers
             toggle.IsCheckedChanged += (s, e) =>
             {
-                bool checkedState = toggle.IsChecked == true;
-                _serviceSelectionStates[service.Id] = checkedState;
-                ApplyCardStyle(cardBorder, selectedBadge, checkedState);
-                UpdateSummaryAndSaveButton();
+                if (_isUpdatingCards || !toggle.IsEnabled) return;
+                _serviceSelectionStates[service.Id] = toggle.IsChecked == true;
+                UpdateAllServiceCardsState();
             };
 
             cardBorder.PointerPressed += (s, e) =>
             {
+                if (!toggle.IsEnabled) return;
                 toggle.IsChecked = !toggle.IsChecked;
             };
 
             cardBorder.PointerEntered += (s, e) =>
             {
-                if (toggle.IsChecked != true)
+                if (toggle.IsEnabled && toggle.IsChecked != true)
                 {
                     cardBorder.BorderBrush = Avalonia.Media.Brush.Parse("#4A5164");
                 }
@@ -1267,7 +1367,7 @@ public partial class TuneView : UserControl
 
             cardBorder.PointerExited += (s, e) =>
             {
-                if (toggle.IsChecked != true)
+                if (toggle.IsEnabled && toggle.IsChecked != true)
                 {
                     cardBorder.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
                 }
@@ -1276,7 +1376,102 @@ public partial class TuneView : UserControl
             panel.Children.Add(cardBorder);
         }
 
-        UpdateSummaryAndSaveButton();
+        UpdateAllServiceCardsState();
+    }
+
+    private void UpdateAllServiceCardsState()
+    {
+        if (_isUpdatingCards) return;
+
+        try
+        {
+            _isUpdatingCards = true;
+
+            var panel = this.FindControl<WrapPanel>("DynamicServicesPanel");
+            if (panel == null) return;
+
+            double userCredit = ApiService.CurrentUser?.AvailableCredit ?? 0;
+
+            // Calculate total paid tokens already committed by currently selected services
+            double totalSelectedPaidCost = 0;
+            if (_currentServices != null)
+            {
+                foreach (var s in _currentServices)
+                {
+                    if (_serviceSelectionStates.TryGetValue(s.Id, out bool isSel) && isSel)
+                    {
+                        bool isCovered = s.IsIncludedInSubscription && (!s.RemainingQuota.HasValue || s.RemainingQuota.Value > 0);
+                        if (!isCovered && !string.IsNullOrWhiteSpace(s.Price) &&
+                            double.TryParse(s.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double sCost) && sCost > 0)
+                        {
+                            totalSelectedPaidCost += sCost;
+                        }
+                    }
+                }
+            }
+
+            foreach (var child in panel.Children)
+            {
+                if (child is Border cardBorder && cardBorder.Tag is ServiceCardHolder holder)
+                {
+                    bool isSelected = _serviceSelectionStates.TryGetValue(holder.Service.Id, out bool sel) && sel;
+
+                    // If this service is already selected, its cost is part of totalSelectedPaidCost,
+                    // so available credit for keeping it is userCredit - (totalSelectedPaidCost - holder.Cost).
+                    // If not selected, available credit for adding it is userCredit - totalSelectedPaidCost.
+                    double availableTokensForThis = isSelected
+                        ? Math.Max(0, userCredit - (totalSelectedPaidCost - holder.Cost))
+                        : Math.Max(0, userCredit - totalSelectedPaidCost);
+
+                    bool isAffordable = holder.IsCoveredBySub || holder.Cost <= 0 || (availableTokensForThis >= holder.Cost);
+
+                    if (!isAffordable)
+                    {
+                        if (isSelected)
+                        {
+                            _serviceSelectionStates[holder.Service.Id] = false;
+                            isSelected = false;
+                        }
+
+                        holder.Toggle.IsEnabled = false;
+                        holder.Toggle.IsChecked = false;
+                        holder.CardBorder.Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.No);
+
+                        // Greyed out styling
+                        holder.CardBorder.Opacity = 0.38;
+                        holder.CardBorder.Background = Avalonia.Media.Brush.Parse("#14151C");
+                        holder.CardBorder.BorderBrush = Avalonia.Media.Brush.Parse("#20222B");
+                        holder.CardBorder.BorderThickness = new Thickness(1);
+
+                        holder.SelectedBadge.IsVisible = false;
+                        holder.LockedBadge.IsVisible = true;
+                        holder.PriceText.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
+
+                        Avalonia.Controls.ToolTip.SetTip(holder.CardBorder, LanguageService.Get("Tune_InsufficientTokensDesc"));
+                    }
+                    else
+                    {
+                        holder.Toggle.IsEnabled = true;
+                        holder.Toggle.IsChecked = isSelected;
+                        holder.CardBorder.Opacity = 1.0;
+                        holder.CardBorder.Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand);
+
+                        holder.LockedBadge.IsVisible = false;
+                        holder.PriceText.Foreground = Avalonia.Media.Brush.Parse(holder.IsCoveredBySub ? "#4CAF50" : "#94A3B8");
+
+                        Avalonia.Controls.ToolTip.SetTip(holder.CardBorder, null);
+
+                        ApplyCardStyle(holder.CardBorder, holder.SelectedBadge, isSelected);
+                    }
+                }
+            }
+
+            UpdateSummaryAndSaveButton();
+        }
+        finally
+        {
+            _isUpdatingCards = false;
+        }
     }
 
     private void ApplyCardStyle(Border cardBorder, Border selectedBadge, bool isSelected)
@@ -1309,7 +1504,9 @@ public partial class TuneView : UserControl
                 if (_serviceSelectionStates.TryGetValue(service.Id, out bool sel) && sel)
                 {
                     selectedCount++;
-                    if (double.TryParse(service.Price, out double priceVal))
+                    bool isCovered = service.IsIncludedInSubscription && (!service.RemainingQuota.HasValue || service.RemainingQuota.Value > 0);
+                    if (!isCovered && !string.IsNullOrWhiteSpace(service.Price) &&
+                        double.TryParse(service.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double priceVal) && priceVal > 0)
                     {
                         totalTokens += priceVal;
                     }
@@ -1589,6 +1786,35 @@ public partial class TuneView : UserControl
             if (window != null)
             {
                 await MessageBox(window, LanguageService.Get("Tune_SelectServiceRequired"));
+            }
+            return;
+        }
+
+        // Verify that the user has enough tokens for all selected paid services
+        double userCredit = ApiService.CurrentUser?.AvailableCredit ?? 0;
+        double requiredTokens = 0;
+        if (_currentServices != null)
+        {
+            foreach (var service in _currentServices)
+            {
+                if (_serviceSelectionStates.TryGetValue(service.Id, out bool sel) && sel)
+                {
+                    bool isCovered = service.IsIncludedInSubscription && (!service.RemainingQuota.HasValue || service.RemainingQuota.Value > 0);
+                    if (!isCovered && !string.IsNullOrWhiteSpace(service.Price) &&
+                        double.TryParse(service.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double cost) && cost > 0)
+                    {
+                        requiredTokens += cost;
+                    }
+                }
+            }
+        }
+
+        if (requiredTokens > userCredit)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window win)
+            {
+                await MessageBox(win, LanguageService.Get("Tune_InsufficientTokensAlert"));
             }
             return;
         }
