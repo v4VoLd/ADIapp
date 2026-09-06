@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 
 namespace ADIapp.Models;
@@ -220,6 +221,23 @@ public class EcuIdentifyData
     [JsonPropertyName("availableDatabaseTunes")]
     public List<DatabaseTuneDto>? AvailableDatabaseTunes { get; set; }
 
+    // Read Hardware & Original File Matches
+    [JsonPropertyName("read_hardware")]
+    public string? ReadHardware { get; set; }
+
+    [JsonPropertyName("readHardware")]
+    public string? ReadHardwareCamel { get; set; }
+
+    public string EffectiveReadHardware => !string.IsNullOrWhiteSpace(ReadHardware) ? ReadHardware : (!string.IsNullOrWhiteSpace(ReadHardwareCamel) ? ReadHardwareCamel : "Standard / OBD");
+
+    [JsonPropertyName("original_matches")]
+    public List<OriginalMatchDto>? OriginalMatches { get; set; }
+
+    [JsonPropertyName("originalMatches")]
+    public List<OriginalMatchDto>? OriginalMatchesCamel { get; set; }
+
+    public List<OriginalMatchDto> EffectiveOriginalMatches => OriginalMatches ?? OriginalMatchesCamel ?? new List<OriginalMatchDto>();
+
     // Computed / Helper Properties
     public string EcuBrand => !string.IsNullOrWhiteSpace(EcuProducer) ? EcuProducer : (EcuBrandRaw ?? "N/A");
     public string EcuModel => !string.IsNullOrWhiteSpace(EcuBuild) ? EcuBuild : (EcuModelRaw ?? "N/A");
@@ -283,6 +301,95 @@ public class ServiceDto
     public int? RemainingQuota { get; set; }
 }
 
+public class OriginalMatchDto
+{
+    [JsonPropertyName("projectFile")]
+    public string ProjectFile { get; set; } = string.Empty;
+
+    [JsonPropertyName("percent")]
+    public double Percent { get; set; }
+
+    [JsonPropertyName("readHardware")]
+    public string ReadHardware { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuSoftwareVersion")]
+    public string EcuSoftwareVersion { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuProdNr")]
+    public string EcuProdNr { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuStgNr")]
+    public string EcuStgNr { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuBuild")]
+    public string EcuBuild { get; set; } = string.Empty;
+
+    [JsonPropertyName("softwareSize")]
+    public string SoftwareSize { get; set; } = string.Empty;
+
+    public string FormattedMatch => $"{Percent:0.#}%";
+    public string FormattedSize
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(SoftwareSize))
+                return string.Empty;
+
+            var raw = SoftwareSize.Trim();
+            if (raw.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                raw = raw.Substring(2);
+                if (long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long hexVal))
+                {
+                    return FormatBytes(hexVal);
+                }
+            }
+
+            // WinOLS project property ePrjPropEcuSoftwaresize is exported in hex format (e.g. "200000" for 2MB, "400000" for 4MB)
+            bool hasHexChar = raw.Any(c => (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
+            if (hasHexChar && long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long hexWithAlpha))
+            {
+                return FormatBytes(hexWithAlpha);
+            }
+
+            // Check if parsing as hex yields a standard ECU block size (>= 64KB and divisible by 1024)
+            if (long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long hexNum) && hexNum >= 65536 && hexNum % 1024 == 0)
+            {
+                return FormatBytes(hexNum);
+            }
+
+            // Fallback: decimal bytes (e.g. 2097152)
+            if (long.TryParse(raw, out long decBytes))
+            {
+                return FormatBytes(decBytes);
+            }
+
+            if (long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long anyHex))
+            {
+                return FormatBytes(anyHex);
+            }
+
+            return SoftwareSize;
+        }
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes <= 0) return string.Empty;
+        if (bytes >= 1024 * 1024)
+        {
+            double mb = (double)bytes / (1024.0 * 1024.0);
+            return $"{mb:0.##} MB";
+        }
+        if (bytes >= 1024)
+        {
+            double kb = (double)bytes / 1024.0;
+            return $"{kb:0.##} KB";
+        }
+        return $"{bytes} B";
+    }
+}
+
 public class ProcessingFileDto
 {
     [JsonPropertyName("file_hash")]
@@ -331,6 +438,12 @@ public class OrderHistoryItemDto
 
     [JsonPropertyName("status_code")]
     public int StatusCode { get; set; }
+
+    [JsonPropertyName("is_original")]
+    public bool IsOriginal { get; set; }
+
+    [JsonPropertyName("read_hardware")]
+    public string? ReadHardware { get; set; }
 
     [JsonPropertyName("file_received")]
     public string? FileReceived { get; set; }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -84,7 +85,7 @@ public static class OrderProcessingManager
                     if (handled) return;
                 }
             }
-        }, token);
+        });
     }
 
     private static void OnWebSocketOrderUpdated()
@@ -213,34 +214,75 @@ public static class OrderProcessingManager
 
     public static string GenerateSuggestedFileName(OrderHistoryItemDto order)
     {
-        // 1. Determine order/file base name
-        string? baseCandidate = !string.IsNullOrWhiteSpace(order.FileReceived)
-            ? order.FileReceived
-            : (!string.IsNullOrWhiteSpace(order.Title) ? order.Title : (!string.IsNullOrWhiteSpace(order.FileSent) ? order.FileSent : $"Order_{order.Id}"));
-
         string extension = ".bin";
-        string baseName = "ADI-Preformance";
 
-            // 2. Extract services done
+        // Extract %NAME% candidate
+        string name = string.Empty;
+        if (!string.IsNullOrWhiteSpace(order.FileReceived))
+        {
+            name = System.IO.Path.GetFileNameWithoutExtension(order.FileReceived);
+        }
+        else if (!string.IsNullOrWhiteSpace(order.Title))
+        {
+            name = order.Title;
+        }
+        else if (!string.IsNullOrWhiteSpace(order.FileSent))
+        {
+            name = System.IO.Path.GetFileNameWithoutExtension(order.FileSent);
+        }
+
+        string cleanName = !string.IsNullOrWhiteSpace(name) ? SanitizeToken(name) : string.Empty;
+
+        // Extract services
+        string joinedServices = string.Empty;
         if (order.Services != null && order.Services.Count > 0)
         {
             var serviceNames = order.Services
                 .Where(s => !string.IsNullOrWhiteSpace(s.Name))
-                .Select(s =>
-                {
-                    var parts = s.Name.Split(new[] { ' ', '-', '/', '\\', '+', '•', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    return string.Join("_", parts);
-                })
+                .Select(s => string.Join("_", s.Name.Split(new[] { ' ', '-', '/', '\\', '+', '•', ',' }, StringSplitOptions.RemoveEmptyEntries)))
                 .Where(s => !string.IsNullOrWhiteSpace(s));
-
-            string joinedServices = string.Join("_", serviceNames);
-            if (!string.IsNullOrWhiteSpace(joinedServices))
-            {
-                return $"{baseName}_{joinedServices}{extension}";
-            }
+            joinedServices = string.Join("_", serviceNames);
         }
 
-        return $"{baseName}{extension}";
+        // Build name and services enclosed in parentheses: (Name_Services)
+        string nameWithServices;
+        if (!string.IsNullOrWhiteSpace(cleanName) && !string.IsNullOrWhiteSpace(joinedServices))
+        {
+            nameWithServices = $"({cleanName}_{joinedServices})";
+        }
+        else if (!string.IsNullOrWhiteSpace(cleanName))
+        {
+            nameWithServices = $"({cleanName})";
+        }
+        else if (!string.IsNullOrWhiteSpace(joinedServices))
+        {
+            nameWithServices = $"({joinedServices})";
+        }
+        else
+        {
+            nameWithServices = $"(Order_{order.Id})";
+        }
+
+        string ecuBuild = !string.IsNullOrWhiteSpace(order.EcuModel) ? SanitizeToken(order.EcuModel) : string.Empty;
+        string ecuProd = !string.IsNullOrWhiteSpace(order.EcuBrand) ? SanitizeToken(order.EcuBrand) : string.Empty;
+        string ecuStg = !string.IsNullOrWhiteSpace(order.HardwareId) ? SanitizeToken(order.HardwareId) : string.Empty;
+        string ecuSoftwareVersion = !string.IsNullOrWhiteSpace(order.SoftwareId) ? SanitizeToken(order.SoftwareId) : string.Empty;
+
+        var tokens = new List<string> { nameWithServices };
+        if (!string.IsNullOrWhiteSpace(ecuBuild)) tokens.Add(ecuBuild);
+        if (!string.IsNullOrWhiteSpace(ecuProd)) tokens.Add(ecuProd);
+        if (!string.IsNullOrWhiteSpace(ecuStg)) tokens.Add(ecuStg);
+        if (!string.IsNullOrWhiteSpace(ecuSoftwareVersion)) tokens.Add(ecuSoftwareVersion);
+
+        string joined = string.Join("_", tokens);
+        return $"ADI-Performance_{joined}{extension}";
+    }
+
+    private static string SanitizeToken(string input)
+    {
+        var invalidChars = System.IO.Path.GetInvalidFileNameChars();
+        var cleaned = new string(input.Where(c => !invalidChars.Contains(c) && c != '/' && c != '\\' && c != '(' && c != ')').ToArray());
+        return cleaned.Trim().Replace(" ", "_");
     }
 }
 

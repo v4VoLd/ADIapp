@@ -28,8 +28,23 @@ public partial class MessageDialog : Window
         if (okBtn != null) okBtn.Content = LanguageService.Get("Dialog_Ok");
     }
 
-    public static async Task ShowAsync(Window? owner, string message, string? title = null)
+    public static async Task ShowAsync(Window? owner, string message, string? title = null, string? type = null)
     {
+        if (MainWindow.Instance != null)
+        {
+            string resolvedType = type ?? "info";
+            if (string.IsNullOrEmpty(type))
+            {
+                string combined = $"{title} {message}".ToLowerInvariant();
+                if (combined.Contains("error") || combined.Contains("failed")) resolvedType = "error";
+                else if (combined.Contains("warning") || combined.Contains("limit")) resolvedType = "warning";
+                else if (combined.Contains("success")) resolvedType = "success";
+            }
+
+            await MainWindow.ShowGlobalAlertAsync(message, title, resolvedType);
+            return;
+        }
+
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
             var dialog = new MessageDialog(message, title);

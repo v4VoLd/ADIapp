@@ -72,7 +72,26 @@ public partial class TokenView : UserControl
         var reservedDesc = this.FindControl<TextBlock>("ReservedDescBlock");
         if (reservedDesc != null) reservedDesc.Text = LanguageService.Get("Token_ReservedDesc");
 
+        var purchaseBtnText = this.FindControl<TextBlock>("PurchaseCreditsBtnText");
+        if (purchaseBtnText != null) purchaseBtnText.Text = LanguageService.Get("Token_PurchaseCredits");
+
         PopulateToken();
+    }
+
+    private void PurchaseCredits_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = $"{ADIapp.Config.AppConfig.BaseHost}pricing",
+                UseShellExecute = true
+            });
+        }
+        catch (System.Exception ex)
+        {
+            Helpers.Logger.Error($"Failed to open pricing URL: {ex.Message}");
+        }
     }
 
     private void PopulateToken()

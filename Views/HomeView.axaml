@@ -26,7 +26,7 @@
 
 				<!-- Title & Description -->
 				<TextBlock x:Name="WelcomeTitleText"
-						   Text="Welcome to&#x0a;ADI Performance"
+						   Text="TUNE SMARTER.&#x0a;TUNE FASTER."
 						   FontSize="44"
 						   FontWeight="Heavy"
 						   Foreground="White"
@@ -34,7 +34,7 @@
 						   TextWrapping="Wrap"/>
 
 				<TextBlock x:Name="WelcomeDescText"
-						   Text="Next-generation ECU tuning,&#x0a;file service management and automotive performance diagnostics."
+						   Text="Precision remapping and file management, built for tuners."
 						   FontSize="16"
 						   Foreground="#A0A0B0"
 						   HorizontalAlignment="Left"
@@ -44,12 +44,12 @@
 				<!-- Action Buttons -->
 				<StackPanel Orientation="Horizontal" Spacing="16" Margin="0,12,0,0" HorizontalAlignment="Left">
 					<Button x:Name="GetStartedBtn"
-							Content="Get Started ➔"
+							Content="Get started →"
 							Click="GetStarted_Click"
 							Classes="hero-primary"/>
 
 					<Button x:Name="LearnMoreBtn"
-							Content="Learn More"
+							Content="📖 How it works"
 							Click="Info_Click"
 							Classes="hero-secondary"/>
 				</StackPanel>

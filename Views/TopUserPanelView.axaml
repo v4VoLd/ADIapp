@@ -16,7 +16,8 @@
 
 			<!-- 🔔 BELL BUTTON -->
 			<Panel VerticalAlignment="Top">
-				<Border Classes="bell-btn"
+				<Border x:Name="BellButtonBorder"
+						Classes="bell-btn"
 						Width="44"
 						Height="44"
 						CornerRadius="12"
@@ -46,7 +47,8 @@
 			</Panel>
 
 			<!-- 👤 USER COMPONENT CARD (TALL FULL HEIGHT) -->
-			<Border Classes="user-card"
+			<Border x:Name="UserCardBorder"
+					Classes="user-card"
 					CornerRadius="14"
 					Background="#2A2A2A"
 					BorderBrush="#3D3D3D"
