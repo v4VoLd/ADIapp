@@ -85,7 +85,7 @@ public static class OrderProcessingManager
                     if (handled) return;
                 }
             }
-        }, token);
+        });
     }
 
     private static void OnWebSocketOrderUpdated()

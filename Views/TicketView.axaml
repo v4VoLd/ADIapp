@@ -107,9 +107,10 @@
         </Grid>
 
         <!-- Overlay Modal for Creating New Ticket -->
-        <Grid x:Name="NewTicketOverlay" Background="#B0000000" IsVisible="False">
+        <Grid x:Name="NewTicketOverlay" Background="#B0000000" IsVisible="False" PointerPressed="NewTicketOverlay_PointerPressed">
             <Border Width="500" HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Background="#1E1E1E" BorderBrush="#3D3D3D" BorderThickness="1" CornerRadius="12" Padding="24">
+                    Background="#1E1E1E" BorderBrush="#3D3D3D" BorderThickness="1" CornerRadius="12" Padding="24"
+                    PointerPressed="NewTicketCard_PointerPressed">
                 <StackPanel Spacing="16">
                     <TextBlock x:Name="NewTicketModalTitleBlock" Text="Create New Support Ticket" FontSize="20" FontWeight="Bold" Foreground="White"/>
 

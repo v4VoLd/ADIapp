@@ -486,6 +486,20 @@ public partial class TicketView : UserControl
         }
     }
 
+    private void NewTicketOverlay_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        var overlay = this.FindControl<Grid>("NewTicketOverlay");
+        if (overlay != null)
+        {
+            overlay.IsVisible = false;
+        }
+    }
+
+    private void NewTicketCard_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        e.Handled = true;
+    }
+
     private async Task MessageBox(Window window, string message)
     {
         await MessageDialog.ShowAsync(window, message, "Notice");

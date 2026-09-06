@@ -495,7 +495,8 @@
                 Background="#D0000000"
                 IsVisible="False"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch">
+                VerticalAlignment="Stretch"
+                PointerPressed="OriginalFilesOverlay_PointerPressed">
             <Border Background="#1A1D24"
                     BorderBrush="#2A3040"
                     BorderThickness="1"
@@ -504,7 +505,8 @@
                     MaxWidth="780"
                     MaxHeight="580"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center"
+                    PointerPressed="OriginalFilesCard_PointerPressed">
                 <Grid RowDefinitions="Auto,*,Auto">
                     <!-- HEADER -->
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto" VerticalAlignment="Center" Margin="0,0,0,16">

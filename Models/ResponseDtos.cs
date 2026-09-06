@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 
 namespace ADIapp.Models;
@@ -331,12 +332,61 @@ public class OriginalMatchDto
     {
         get
         {
-            if (long.TryParse(SoftwareSize, out long bytes))
+            if (string.IsNullOrWhiteSpace(SoftwareSize))
+                return string.Empty;
+
+            var raw = SoftwareSize.Trim();
+            if (raw.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
             {
-                return $"{bytes / 1024.0 / 1024.0:0.##} MB";
+                raw = raw.Substring(2);
+                if (long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long hexVal))
+                {
+                    return FormatBytes(hexVal);
+                }
             }
+
+            // WinOLS project property ePrjPropEcuSoftwaresize is exported in hex format (e.g. "200000" for 2MB, "400000" for 4MB)
+            bool hasHexChar = raw.Any(c => (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
+            if (hasHexChar && long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long hexWithAlpha))
+            {
+                return FormatBytes(hexWithAlpha);
+            }
+
+            // Check if parsing as hex yields a standard ECU block size (>= 64KB and divisible by 1024)
+            if (long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long hexNum) && hexNum >= 65536 && hexNum % 1024 == 0)
+            {
+                return FormatBytes(hexNum);
+            }
+
+            // Fallback: decimal bytes (e.g. 2097152)
+            if (long.TryParse(raw, out long decBytes))
+            {
+                return FormatBytes(decBytes);
+            }
+
+            if (long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out long anyHex))
+            {
+                return FormatBytes(anyHex);
+            }
+
             return SoftwareSize;
         }
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes <= 0) return string.Empty;
+        if (bytes >= 1024 * 1024)
+        {
+            double mb = (double)bytes / (1024.0 * 1024.0);
+            return $"{mb:0.##} MB";
+        }
+        if (bytes >= 1024)
+        {
+            double kb = (double)bytes / 1024.0;
+            return $"{kb:0.##} KB";
+        }
+        return $"{bytes} B";
     }
 }
 

@@ -14,9 +14,92 @@
         d:DesignWidth="1500"
         d:DesignHeight="900">
 
-    <ContentControl
-        x:Name="MainContent"
-        HorizontalContentAlignment="Stretch"
-        VerticalContentAlignment="Stretch"/>
+    <Grid>
+        <ContentControl
+            x:Name="MainContent"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"/>
+
+        <!-- GLOBAL CENTERED ALERT / WARNING / NOTIFICATION OVERLAY (COVERING THE WHOLE VIEW) -->
+        <Border x:Name="GlobalAlertOverlay"
+                Background="#85000000"
+                IsVisible="False"
+                ZIndex="99999"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                PointerPressed="GlobalAlertOverlay_PointerPressed">
+
+            <!-- CENTERED CARD (DISMISSES WHEN CLICKING OUTSIDE) -->
+            <Border x:Name="GlobalAlertCard"
+                    Width="480"
+                    MaxWidth="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#181A22"
+                    BorderBrush="#2E3446"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="26"
+                    BoxShadow="0 24 64 0 #A0000000"
+                    PointerPressed="GlobalAlertCard_PointerPressed">
+
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- HEADER: Icon + Title + Close Button -->
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center" Margin="0,0,0,16">
+                        <TextBlock x:Name="GlobalAlertIcon"
+                                   Text="ℹ️"
+                                   FontSize="22"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"/>
+                        <TextBlock x:Name="GlobalAlertTitle"
+                                   Grid.Column="1"
+                                   Text="Notice"
+                                   FontSize="17"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="2"
+                                x:Name="GlobalAlertCloseBtn"
+                                Content="✕"
+                                Background="Transparent"
+                                Foreground="#888888"
+                                FontSize="15"
+                                FontWeight="Bold"
+                                Padding="8,4"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Click="GlobalAlertDismiss_Click"/>
+                    </Grid>
+
+                    <!-- MESSAGE BODY -->
+                    <TextBlock Grid.Row="1"
+                               x:Name="GlobalAlertMessage"
+                               Text="Operation message details"
+                               FontSize="13"
+                               Foreground="#D1D5DB"
+                               TextWrapping="Wrap"
+                               LineHeight="21"
+                               Margin="0,0,0,22"/>
+
+                    <!-- ACTIONS -->
+                    <StackPanel Grid.Row="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Spacing="10">
+                        <Button x:Name="GlobalAlertOkBtn"
+                                Content="OK"
+                                Background="#0284C7"
+                                Foreground="White"
+                                FontWeight="Bold"
+                                FontSize="13"
+                                Padding="28,9"
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                Click="GlobalAlertDismiss_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
 
 </Window>

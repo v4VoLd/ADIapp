@@ -6,14 +6,28 @@ namespace ADIapp;
 
 public partial class MainWindow : Window
 {
+    public static MainWindow? Instance { get; private set; }
+
+    private static System.Threading.Tasks.TaskCompletionSource<bool>? _alertTcs;
+
     private AppShellView? _appShell;
 
     public MainWindow()
     {
+        Instance = this;
         InitializeComponent();
 #if DEBUG
         this.AttachDevTools();
 #endif
+        this.KeyDown += (s, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.Escape && GlobalAlertOverlay.IsVisible)
+            {
+                DismissGlobalAlert();
+                e.Handled = true;
+            }
+        };
+
         try
         {
             Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/app_icon.ico")));
@@ -146,5 +160,83 @@ public partial class MainWindow : Window
 
             _appShell.NavigatePage(view);
         }
+    }
+
+    private void GlobalAlertOverlay_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        DismissGlobalAlert();
+    }
+
+    private void GlobalAlertCard_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    private void GlobalAlertDismiss_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        DismissGlobalAlert();
+    }
+
+    public void DismissGlobalAlert()
+    {
+        var overlay = this.FindControl<Border>("GlobalAlertOverlay");
+        if (overlay != null)
+        {
+            overlay.IsVisible = false;
+        }
+
+        _alertTcs?.TrySetResult(true);
+        _alertTcs = null;
+    }
+
+    public static async System.Threading.Tasks.Task ShowGlobalAlertAsync(string message, string? title = null, string type = "info")
+    {
+        if (Instance == null) return;
+
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            _alertTcs?.TrySetResult(false);
+            _alertTcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+
+            string icon = "ℹ️";
+            string color = "#38BDF8";
+            string defaultTitle = Services.LanguageService.Get("Dialog_Notice");
+
+            switch (type?.ToLowerInvariant())
+            {
+                case "warning":
+                    icon = "⚠️";
+                    color = "#F59E0B";
+                    defaultTitle = "Warning";
+                    break;
+                case "error":
+                case "failed":
+                    icon = "❌";
+                    color = "#EF4444";
+                    defaultTitle = "Error";
+                    break;
+                case "success":
+                    icon = "✅";
+                    color = "#22C55E";
+                    defaultTitle = "Success";
+                    break;
+            }
+
+            var iconBlock = Instance.FindControl<TextBlock>("GlobalAlertIcon");
+            var titleBlock = Instance.FindControl<TextBlock>("GlobalAlertTitle");
+            var msgBlock = Instance.FindControl<TextBlock>("GlobalAlertMessage");
+            var overlay = Instance.FindControl<Border>("GlobalAlertOverlay");
+
+            if (iconBlock != null) iconBlock.Text = icon;
+            if (titleBlock != null)
+            {
+                titleBlock.Text = !string.IsNullOrWhiteSpace(title) ? title : defaultTitle;
+                titleBlock.Foreground = Avalonia.Media.Brush.Parse(color);
+            }
+            if (msgBlock != null) msgBlock.Text = message;
+            if (overlay != null) overlay.IsVisible = true;
+
+            await _alertTcs.Task;
+        });
     }
 }

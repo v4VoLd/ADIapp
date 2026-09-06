@@ -219,7 +219,7 @@ public partial class TuneView : UserControl
         var origBtnText = this.FindControl<TextBlock>("OriginalFilesBtnText");
         if (origBtnText != null)
         {
-            origBtnText.Text = string.Format(LanguageService.Get("Tune_OriginalFilesBtn"), _currentEcuData?.OriginalMatches?.Count ?? 0);
+            origBtnText.Text = string.Format(LanguageService.Get("Tune_OriginalFilesBtn"), _currentEcuData?.EffectiveOriginalMatches.Count ?? 0);
         }
 
         var origModalTitle = this.FindControl<TextBlock>("OriginalModalTitleText");
@@ -329,7 +329,7 @@ public partial class TuneView : UserControl
                     }
                 }
             }
-        }, token);
+        });
     }
 
     private void PopulateEcuInfo(EcuIdentifyData data)
@@ -453,13 +453,13 @@ public partial class TuneView : UserControl
         var ecuReadHw = this.FindControl<TextBlock>("EcuReadHardwareText");
         if (ecuReadHw != null)
         {
-            ecuReadHw.Text = !string.IsNullOrWhiteSpace(data.ReadHardware) ? data.ReadHardware : "-";
+            ecuReadHw.Text = !string.IsNullOrWhiteSpace(data.EffectiveReadHardware) ? data.EffectiveReadHardware : "-";
         }
 
         _currentEcuData = data;
         var origBtn = this.FindControl<Button>("OriginalFilesButton");
         var origBtnText = this.FindControl<TextBlock>("OriginalFilesBtnText");
-        int matchCount = data.OriginalMatches?.Count ?? 0;
+        int matchCount = data.EffectiveOriginalMatches.Count;
         if (origBtn != null)
         {
             origBtn.IsVisible = matchCount > 0;
@@ -1731,10 +1731,11 @@ public partial class TuneView : UserControl
 
     private void OriginalFilesButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (_currentEcuData?.OriginalMatches == null || _currentEcuData.OriginalMatches.Count == 0)
+        var matches = _currentEcuData?.EffectiveOriginalMatches;
+        if (matches == null || matches.Count == 0)
             return;
 
-        RenderOriginalMatches(_currentEcuData.OriginalMatches);
+        RenderOriginalMatches(matches);
         var overlay = this.FindControl<Border>("OriginalFilesOverlay");
         if (overlay != null)
         {
@@ -1749,6 +1750,20 @@ public partial class TuneView : UserControl
         {
             overlay.IsVisible = false;
         }
+    }
+
+    private void OriginalFilesOverlay_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        var overlay = this.FindControl<Border>("OriginalFilesOverlay");
+        if (overlay != null)
+        {
+            overlay.IsVisible = false;
+        }
+    }
+
+    private void OriginalFilesCard_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        e.Handled = true;
     }
 
     private void RenderOriginalMatches(List<OriginalMatchDto> matches)
@@ -1803,7 +1818,8 @@ public partial class TuneView : UserControl
             var infoStack = new StackPanel
             {
                 Spacing = 4,
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 16, 0)
             };
 
             // Flasher Tool / Read Hardware row
@@ -1825,14 +1841,15 @@ public partial class TuneView : UserControl
                 detailsList.Add($"HW: {match.EcuStgNr}");
             if (!string.IsNullOrWhiteSpace(match.EcuBuild))
                 detailsList.Add($"Build: {match.EcuBuild}");
-            if (!string.IsNullOrWhiteSpace(match.SoftwareSize))
-                detailsList.Add($"Size: {match.SoftwareSize}");
+            if (!string.IsNullOrWhiteSpace(match.FormattedSize))
+                detailsList.Add($"Size: {match.FormattedSize}");
 
             var detailsText = new TextBlock
             {
                 Text = string.Join("  |  ", detailsList),
                 FontSize = 11,
-                Foreground = Avalonia.Media.Brush.Parse("#9CA3AF")
+                Foreground = Avalonia.Media.Brush.Parse("#9CA3AF"),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
             };
             infoStack.Children.Add(detailsText);
 
@@ -1895,17 +1912,12 @@ public partial class TuneView : UserControl
                     "success"
                 );
 
-                var topLevel = TopLevel.GetTopLevel(this);
-                if (topLevel is Window window)
-                {
-                    await MessageDialog.ShowAsync(
-                        window,
-                        LanguageService.Get("Tune_OriginalOrderSuccess"),
-                        "Success"
-                    );
-                }
+                // Start global tracking just like normal orders (handles polling/websocket, persistent indicator, and native Save dialog)
+                OrderProcessingManager.StartTrackingOrder(targetHash, res.OrderId);
 
-                (this.VisualRoot as MainWindow)?.Navigate(new OrderHistoryView());
+                ResetWorkspace();
+                _ = ApiService.FetchProfileAsync();
+                _ = LoadProcessingFilesAsync();
             }
             else
             {
