@@ -33,14 +33,65 @@ public partial class TopUserPanelView : UserControl
         UpdateLocalizedText();
     }
 
+    private TopLevel? _topLevel;
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _topLevel = TopLevel.GetTopLevel(this);
+        if (_topLevel != null)
+        {
+            _topLevel.AddHandler(InputElement.PointerPressedEvent, OnTopLevelPointerPressed, RoutingStrategies.Tunnel);
+        }
+    }
+
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
+        if (_topLevel != null)
+        {
+            _topLevel.RemoveHandler(InputElement.PointerPressedEvent, OnTopLevelPointerPressed);
+            _topLevel = null;
+        }
+
         NotificationService.NotificationReceived -= OnNotificationReceived;
         NotificationService.NotificationsUpdated -= OnNotificationsUpdated;
         WebSocketManager.OrderUpdated -= OnOrderUpdated;
         LanguageService.LanguageChanged -= OnLanguageChanged;
         ApiService.CurrentUserChanged -= OnCurrentUserChanged;
+    }
+
+    private void OnTopLevelPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var sourceVisual = e.Source as Visual;
+        if (sourceVisual == null) return;
+
+        // 1. Hide user menu if clicked outside
+        if (Menu != null && Menu.IsVisible)
+        {
+            var userCard = this.FindControl<Border>("UserCardBorder");
+            bool isInsideMenu = Menu.IsVisualAncestorOf(sourceVisual) || sourceVisual == Menu;
+            bool isInsideCard = userCard != null && (userCard.IsVisualAncestorOf(sourceVisual) || sourceVisual == userCard);
+
+            if (!isInsideMenu && !isInsideCard)
+            {
+                Menu.IsVisible = false;
+            }
+        }
+
+        // 2. Hide notification menu if clicked outside
+        var notificationMenu = this.FindControl<Border>("NotificationMenu");
+        if (notificationMenu != null && notificationMenu.IsVisible)
+        {
+            var bellBtn = this.FindControl<Border>("BellButtonBorder");
+            bool isInsideNotif = notificationMenu.IsVisualAncestorOf(sourceVisual) || sourceVisual == notificationMenu;
+            bool isInsideBell = bellBtn != null && (bellBtn.IsVisualAncestorOf(sourceVisual) || sourceVisual == bellBtn);
+
+            if (!isInsideNotif && !isInsideBell)
+            {
+                notificationMenu.IsVisible = false;
+            }
+        }
     }
 
     private void OnCurrentUserChanged(UserDto? user)

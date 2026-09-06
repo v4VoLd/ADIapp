@@ -554,6 +554,77 @@ public class ApiService
         }
     }
 
+    public static async Task<(bool Success, string Message, int? OrderId)> CreateOriginalOrderAsync(string fileHash, string projectFile, string readHardware)
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return (false, "Not authenticated.", null);
+
+        try
+        {
+            var payload = new
+            {
+                file_hash = fileHash,
+                project_file = projectFile,
+                read_hardware = readHardware
+            };
+
+            var jsonContent = JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "order/original");
+            var response = await _httpClient.PostAsync(requestUri, content);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            using var doc = JsonDocument.Parse(responseString);
+            var root = doc.RootElement;
+
+            bool success = false;
+            if (root.TryGetProperty("success", out var successProp))
+            {
+                success = successProp.GetBoolean();
+            }
+
+            string message = "";
+            if (root.TryGetProperty("message", out var msgProp))
+            {
+                message = msgProp.GetString() ?? "";
+            }
+
+            int? orderId = null;
+            if (root.TryGetProperty("data", out var dataProp))
+            {
+                if (dataProp.ValueKind == JsonValueKind.Object)
+                {
+                    if (dataProp.TryGetProperty("id", out var idProp) && idProp.TryGetInt32(out int idVal))
+                    {
+                        orderId = idVal;
+                    }
+                    else if (dataProp.TryGetProperty("order_id", out var oidProp) && oidProp.TryGetInt32(out int oidVal))
+                    {
+                        orderId = oidVal;
+                    }
+                }
+                else if (dataProp.ValueKind == JsonValueKind.Number && dataProp.TryGetInt32(out int numId))
+                {
+                    orderId = numId;
+                }
+            }
+
+            if (success)
+            {
+                _ = FetchProfileAsync();
+                return (true, "Original file order created successfully.", orderId);
+            }
+
+            return (false, string.IsNullOrEmpty(message) ? "Failed to create original file order." : message, null);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error creating original file order: {ex.Message}", ex);
+            return (false, $"Connection error: {ex.Message}", null);
+        }
+    }
+
     public static async Task<List<SupportMessageDto>> GetSupportMessagesAsync()
     {
         if (string.IsNullOrEmpty(AccessToken))

@@ -47,6 +47,24 @@ public partial class SidebarView : UserControl
         if (NavInfoText != null) NavInfoText.Text = LanguageService.Get("Sidebar_Info");
         if (NavLogoutText != null) NavLogoutText.Text = LanguageService.Get("Sidebar_Logout");
         if (LicenseExpTitleText != null) LicenseExpTitleText.Text = LanguageService.Get("Sidebar_LicenseExp");
+        var renewBtn = this.FindControl<Button>("RenewLicenseBtn");
+        if (renewBtn != null) renewBtn.Content = LanguageService.Get("Sidebar_RenewLicense");
+    }
+
+    private void RenewLicense_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = $"{Config.AppConfig.BaseHost}subscriptions",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.Error($"Failed to open subscriptions URL: {ex.Message}");
+        }
     }
 
     private void UpdateExpirationDate()

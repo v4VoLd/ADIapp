@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="ADIapp.Views.OrderHistoryView">
 
-    <Grid RowDefinitions="Auto,Auto,*" Margin="60,20,60,40">
+    <Grid RowDefinitions="Auto,Auto,*" Margin="60,74,60,30">
 
         <!-- HEADER SECTION -->
         <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,20">

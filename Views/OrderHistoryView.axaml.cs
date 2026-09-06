@@ -191,14 +191,44 @@ public partial class OrderHistoryView : UserControl
         // Header Grid: Order ID & Date on left, Status Badge on right
         var headerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
 
-        var titleStack = new StackPanel { Spacing = 2 };
-        titleStack.Children.Add(new TextBlock
+        var titleStack = new StackPanel { Spacing = 3 };
+        var titleRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
+        titleRow.Children.Add(new TextBlock
         {
             Text = $" {LanguageService.Get("Orders_Title")} #{order.Id}",
             FontSize = 15,
             FontWeight = FontWeight.Bold,
             Foreground = Brushes.White
         });
+
+        if (order.IsOriginal)
+        {
+            titleRow.Children.Add(new Border
+            {
+                Background = Brush.Parse("#0369A1"),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(6, 2),
+                Child = new TextBlock
+                {
+                    Text = $"📁 {LanguageService.Get("Order_OriginalBadge")}",
+                    FontSize = 10,
+                    FontWeight = FontWeight.Bold,
+                    Foreground = Brushes.White
+                }
+            });
+        }
+        titleStack.Children.Add(titleRow);
+
+        if (order.IsOriginal && !string.IsNullOrEmpty(order.ReadHardware))
+        {
+            titleStack.Children.Add(new TextBlock
+            {
+                Text = $"⚡ {LanguageService.Get("Tune_ColReader")}: {order.ReadHardware}",
+                FontSize = 11,
+                Foreground = Brush.Parse("#38BDF8"),
+                FontWeight = FontWeight.SemiBold
+            });
+        }
 
         if (!string.IsNullOrEmpty(order.CreatedAt))
         {
@@ -262,6 +292,29 @@ public partial class OrderHistoryView : UserControl
                     }
                 });
             }
+            mainStack.Children.Add(servicesPanel);
+        }
+        else if (order.IsOriginal)
+        {
+            var servicesPanel = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 4) };
+            servicesPanel.Children.Add(new Border
+            {
+                Background = Brush.Parse("#0C4A6E"),
+                BorderBrush = Brush.Parse("#0284C7"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(8, 4),
+                Margin = new Thickness(0, 0, 6, 4),
+                Child = new TextBlock
+                {
+                    Text = !string.IsNullOrEmpty(order.ReadHardware) 
+                        ? $"📁 Factory Original Binary ({order.ReadHardware})" 
+                        : "📁 Factory Original Binary",
+                    FontSize = 11,
+                    FontWeight = FontWeight.SemiBold,
+                    Foreground = Brush.Parse("#BAE6FD")
+                }
+            });
             mainStack.Children.Add(servicesPanel);
         }
 

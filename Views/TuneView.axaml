@@ -65,7 +65,7 @@
         <!-- TITLE / HEADER WITH BACK BUTTON & DAILY QUOTA -->
         <Grid Grid.Row="0"
               ColumnDefinitions="*,Auto"
-              Margin="30,20,30,10">
+              Margin="30,20,280,10">
 
             <StackPanel Grid.Column="0"
                         Orientation="Horizontal"
@@ -99,7 +99,7 @@
                     <TextBlock x:Name="VehicleSubtitleText"
                                Text="Upload a binary file or select an active task to inspect specifications."
                                FontSize="12"
-                               Foreground="#4DFF8A"/>
+                               Foreground="#9E9EA0"/>
                 </StackPanel>
             </StackPanel>
 
@@ -210,7 +210,7 @@
                         <Border Grid.Column="2" Margin="4" Padding="12,10" Background="#141414" CornerRadius="14" BorderBrush="#262832" BorderThickness="1">
                             <StackPanel Spacing="6">
                                 <TextBlock x:Name="EcuSpecsTitleText" Text="ECU SPECS" FontSize="11" Foreground="#A855F7" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
-                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,2,0,0">
                                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,4,4">
                                         <TextBlock x:Name="LblProdBuildText" Text="PRODUCER / BUILD" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock x:Name="EcuBrandText" Text="Not Loaded" FontSize="12" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
@@ -238,6 +238,10 @@
                                             <TextBlock x:Name="StatusText" Text="Ready" FontSize="11" Foreground="#AAAAAA" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </StackPanel>
+                                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,4,0,0">
+                                        <TextBlock x:Name="LblReadHwText" Text="READ HARDWARE" FontSize="9" Foreground="#888888" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="EcuReadHardwareText" Text="-" FontSize="11" Foreground="#38BDF8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -252,85 +256,139 @@
                                VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="12">
 
-                        <!-- HEADER & SUMMARY COUNTER BAR -->
-                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center" Margin="0,4,0,4">
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <TextBlock x:Name="AvailableTunesTitleText"
-                                           Text="AVAILABLE DATABASE TUNES &amp; MODIFICATIONS" 
-                                           FontSize="13" 
-                                           FontWeight="Bold" 
-                                           Foreground="#4DFF8A"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- LIVE SUMMARY CHIP -->
-                            <Border Grid.Column="1" 
-                                    Background="#141E17" 
-                                    BorderBrush="#255233" 
-                                    BorderThickness="1" 
-                                    CornerRadius="12" 
-                                    Padding="12,6"
-                                    VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="Selected:" FontSize="11" Foreground="#888888"/>
-                                        <TextBlock x:Name="SummarySelectedCountText" Text="0 Tunes" FontSize="11" FontWeight="Bold" Foreground="#4DFF8A"/>
-                                    </StackPanel>
-                                    <TextBlock Text="•" Foreground="#444444" FontSize="11"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="Total:" FontSize="11" Foreground="#888888"/>
-                                        <TextBlock x:Name="SummaryTotalTokensText" Text="0 CBT" FontSize="11" FontWeight="Bold" Foreground="#3B82F6"/>
-                                    </StackPanel>
+                        <StackPanel x:Name="ServicesHeaderPanel" Spacing="12">
+                            <!-- HEADER & SUMMARY COUNTER BAR -->
+                            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center" Margin="0,4,0,4">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <TextBlock x:Name="AvailableTunesTitleText"
+                                               Text="AVAILABLE DATABASE TUNES &amp; MODIFICATIONS" 
+                                               FontSize="13" 
+                                               FontWeight="Bold" 
+                                               Foreground="#4DFF8A"
+                                               VerticalAlignment="Center"/>
                                 </StackPanel>
-                            </Border>
-                        </Grid>
 
-                        <!-- CATEGORY FILTER TABS BAR -->
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,4">
-                            <Button x:Name="FilterAllButton" 
-                                    Content="All Options" 
-                                    Click="FilterButton_Click" 
-                                    Tag="ALL"
-                                    Padding="14,6" 
-                                    FontSize="11" 
-                                    FontWeight="SemiBold" 
-                                    Background="#4DFF8A" 
-                                    Foreground="#0F172A" 
-                                    CornerRadius="8" 
-                                    Cursor="Hand"/>
-                            <Button x:Name="FilterPerfButton" 
-                                    Content="🚀 Performance" 
-                                    Click="FilterButton_Click" 
-                                    Tag="PERFORMANCE"
-                                    Padding="14,6" 
-                                    FontSize="11" 
-                                    FontWeight="SemiBold" 
-                                    Background="#22242D" 
-                                    Foreground="#CCCCCC" 
-                                    CornerRadius="8" 
-                                    Cursor="Hand"/>
-                            <Button x:Name="FilterDeletesButton" 
-                                    Content="🛡️ Deletes" 
-                                    Click="FilterButton_Click" 
-                                    Tag="DELETES"
-                                    Padding="14,6" 
-                                    FontSize="11" 
-                                    FontWeight="SemiBold" 
-                                    Background="#22242D" 
-                                    Foreground="#CCCCCC" 
-                                    CornerRadius="8" 
-                                    Cursor="Hand"/>
-                            <Button x:Name="FilterFeaturesButton" 
-                                    Content="⚡ Special Features" 
-                                    Click="FilterButton_Click" 
-                                    Tag="FEATURES"
-                                    Padding="14,6" 
-                                    FontSize="11" 
-                                    FontWeight="SemiBold" 
-                                    Background="#22242D" 
-                                    Foreground="#CCCCCC" 
-                                    CornerRadius="8" 
-                                    Cursor="Hand"/>
+                                <!-- LIVE SUMMARY CHIP -->
+                                <Border Grid.Column="1" 
+                                        Background="#141E17" 
+                                        BorderBrush="#255233" 
+                                        BorderThickness="1" 
+                                        CornerRadius="12" 
+                                        Padding="12,6"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="Selected:" FontSize="11" Foreground="#888888"/>
+                                            <TextBlock x:Name="SummarySelectedCountText" Text="0 Tunes" FontSize="11" FontWeight="Bold" Foreground="#4DFF8A"/>
+                                        </StackPanel>
+                                        <TextBlock Text="•" Foreground="#444444" FontSize="11"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="Total:" FontSize="11" Foreground="#888888"/>
+                                            <TextBlock x:Name="SummaryTotalTokensText" Text="0 CBT" FontSize="11" FontWeight="Bold" Foreground="#3B82F6"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- CATEGORY FILTER TABS & ACTIONS BAR -->
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="FilterAllButton" 
+                                            Content="All Options" 
+                                            Click="FilterButton_Click" 
+                                            Tag="ALL"
+                                            Padding="14,6" 
+                                            FontSize="11" 
+                                            FontWeight="SemiBold" 
+                                            Background="#4DFF8A" 
+                                            Foreground="#0F172A" 
+                                            CornerRadius="8" 
+                                            Cursor="Hand"/>
+                                    <Button x:Name="FilterPerfButton" 
+                                            Content="🚀 Performance" 
+                                            Click="FilterButton_Click" 
+                                            Tag="PERFORMANCE"
+                                            Padding="14,6" 
+                                            FontSize="11" 
+                                            FontWeight="SemiBold" 
+                                            Background="#22242D" 
+                                            Foreground="#CCCCCC" 
+                                            CornerRadius="8" 
+                                            Cursor="Hand"/>
+                                    <Button x:Name="FilterDeletesButton" 
+                                            Content="🛡️ Deletes" 
+                                            Click="FilterButton_Click" 
+                                            Tag="DELETES"
+                                            Padding="14,6" 
+                                            FontSize="11" 
+                                            FontWeight="SemiBold" 
+                                            Background="#22242D" 
+                                            Foreground="#CCCCCC" 
+                                            CornerRadius="8" 
+                                            Cursor="Hand"/>
+                                    <Button x:Name="FilterFeaturesButton" 
+                                            Content="⚡ Special Features" 
+                                            Click="FilterButton_Click" 
+                                            Tag="FEATURES"
+                                            Padding="14,6" 
+                                            FontSize="11" 
+                                            FontWeight="SemiBold" 
+                                            Background="#22242D" 
+                                            Foreground="#CCCCCC" 
+                                            CornerRadius="8" 
+                                            Cursor="Hand"/>
+                                </StackPanel>
+
+                                <!-- RIGHT SIDE: ACTION BUTTONS (ORIGINAL FILES & DTC OFF) -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <Button x:Name="OriginalFilesButton"
+                                            Click="OriginalFilesButton_Click"
+                                            Padding="14,6"
+                                            Background="#0C2D48"
+                                            BorderBrush="#0284C7"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Cursor="Hand"
+                                            IsVisible="False">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <TextBlock x:Name="OriginalFilesBtnText" 
+                                                       Text="📁 Original Files (0)" 
+                                                       FontSize="11" 
+                                                       FontWeight="Bold" 
+                                                       Foreground="#38BDF8"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="DtcOffButton"
+                                            Click="DtcOffButton_Click"
+                                            Padding="14,6"
+                                            Background="#231B10"
+                                            BorderBrush="#F59E0B"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <TextBlock x:Name="DtcOffBtnText" 
+                                                       Text="⚡ DTC Off" 
+                                                       FontSize="11" 
+                                                       FontWeight="Bold" 
+                                                       Foreground="#FBBF24"
+                                                       VerticalAlignment="Center"/>
+                                            <Border Background="#F59E0B" 
+                                                    CornerRadius="4" 
+                                                    Padding="6,1" 
+                                                    VerticalAlignment="Center">
+                                                <TextBlock x:Name="DtcOffBadgeText" 
+                                                           Text="Soon" 
+                                                           FontSize="9" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="#1E1B18"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
 
                         <!-- CARDS WRAP PANEL -->
@@ -427,6 +485,74 @@
                                MaxWidth="380"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- ORIGINAL FILES SELECTION MODAL -->
+        <Border x:Name="OriginalFilesOverlay"
+                Grid.RowSpan="2"
+                Grid.ColumnSpan="2"
+                Background="#D0000000"
+                IsVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border Background="#1A1D24"
+                    BorderBrush="#2A3040"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="24"
+                    MaxWidth="780"
+                    MaxHeight="580"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- HEADER -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" VerticalAlignment="Center" Margin="0,0,0,16">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock x:Name="OriginalModalTitleText"
+                                       Text="📁 Available Factory Original Files"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                            <TextBlock x:Name="OriginalModalDescText"
+                                       Text="Select the factory original binary matching your flasher hardware and software version."
+                                       FontSize="12"
+                                       Foreground="#9CA3AF"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="✕"
+                                Click="CloseOriginalFilesModal_Click"
+                                Background="Transparent"
+                                Foreground="#888888"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Padding="8,4"
+                                Cursor="Hand"/>
+                    </Grid>
+
+                    <!-- LIST OF CANDIDATES -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,4,0,16">
+                        <StackPanel x:Name="OriginalMatchesContainer" Spacing="10"/>
+                    </ScrollViewer>
+
+                    <!-- FOOTER -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                        <TextBlock x:Name="OriginalModalStatusText"
+                                   Text=""
+                                   FontSize="12"
+                                   Foreground="#FBBF24"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="1"
+                                x:Name="OriginalModalCloseBtn"
+                                Content="✕ Close"
+                                Click="CloseOriginalFilesModal_Click"
+                                Background="#2A2D3A"
+                                Foreground="White"
+                                CornerRadius="8"
+                                Padding="16,8"
+                                Cursor="Hand"/>
+                    </Grid>
+                </Grid>
             </Border>
         </Border>
 

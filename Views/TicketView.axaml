@@ -9,7 +9,7 @@
 
     <Grid>
         <!-- Main View: Split Master/Detail -->
-        <Grid x:Name="MainContainer" ColumnDefinitions="320,*" Margin="16">
+        <Grid x:Name="MainContainer" ColumnDefinitions="320,*" Margin="20,74,20,20">
             <!-- Left Side: Ticket List -->
             <Border Grid.Column="0"
                     Background="#181818"

@@ -220,6 +220,23 @@ public class EcuIdentifyData
     [JsonPropertyName("availableDatabaseTunes")]
     public List<DatabaseTuneDto>? AvailableDatabaseTunes { get; set; }
 
+    // Read Hardware & Original File Matches
+    [JsonPropertyName("read_hardware")]
+    public string? ReadHardware { get; set; }
+
+    [JsonPropertyName("readHardware")]
+    public string? ReadHardwareCamel { get; set; }
+
+    public string EffectiveReadHardware => !string.IsNullOrWhiteSpace(ReadHardware) ? ReadHardware : (!string.IsNullOrWhiteSpace(ReadHardwareCamel) ? ReadHardwareCamel : "Standard / OBD");
+
+    [JsonPropertyName("original_matches")]
+    public List<OriginalMatchDto>? OriginalMatches { get; set; }
+
+    [JsonPropertyName("originalMatches")]
+    public List<OriginalMatchDto>? OriginalMatchesCamel { get; set; }
+
+    public List<OriginalMatchDto> EffectiveOriginalMatches => OriginalMatches ?? OriginalMatchesCamel ?? new List<OriginalMatchDto>();
+
     // Computed / Helper Properties
     public string EcuBrand => !string.IsNullOrWhiteSpace(EcuProducer) ? EcuProducer : (EcuBrandRaw ?? "N/A");
     public string EcuModel => !string.IsNullOrWhiteSpace(EcuBuild) ? EcuBuild : (EcuModelRaw ?? "N/A");
@@ -283,6 +300,46 @@ public class ServiceDto
     public int? RemainingQuota { get; set; }
 }
 
+public class OriginalMatchDto
+{
+    [JsonPropertyName("projectFile")]
+    public string ProjectFile { get; set; } = string.Empty;
+
+    [JsonPropertyName("percent")]
+    public double Percent { get; set; }
+
+    [JsonPropertyName("readHardware")]
+    public string ReadHardware { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuSoftwareVersion")]
+    public string EcuSoftwareVersion { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuProdNr")]
+    public string EcuProdNr { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuStgNr")]
+    public string EcuStgNr { get; set; } = string.Empty;
+
+    [JsonPropertyName("ecuBuild")]
+    public string EcuBuild { get; set; } = string.Empty;
+
+    [JsonPropertyName("softwareSize")]
+    public string SoftwareSize { get; set; } = string.Empty;
+
+    public string FormattedMatch => $"{Percent:0.#}%";
+    public string FormattedSize
+    {
+        get
+        {
+            if (long.TryParse(SoftwareSize, out long bytes))
+            {
+                return $"{bytes / 1024.0 / 1024.0:0.##} MB";
+            }
+            return SoftwareSize;
+        }
+    }
+}
+
 public class ProcessingFileDto
 {
     [JsonPropertyName("file_hash")]
@@ -331,6 +388,12 @@ public class OrderHistoryItemDto
 
     [JsonPropertyName("status_code")]
     public int StatusCode { get; set; }
+
+    [JsonPropertyName("is_original")]
+    public bool IsOriginal { get; set; }
+
+    [JsonPropertyName("read_hardware")]
+    public string? ReadHardware { get; set; }
 
     [JsonPropertyName("file_received")]
     public string? FileReceived { get; set; }
