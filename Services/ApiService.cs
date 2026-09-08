@@ -478,7 +478,7 @@ public class ApiService
         }
     }
 
-    public static async Task<(bool Success, string Message, int? OrderId)> CreateOrderAsync(string fileHash, List<int> serviceIds, List<string>? serviceNames = null, string comment = "Created from Desktop App")
+    public static async Task<(bool Success, string Message, int? OrderId)> CreateOrderAsync(string fileHash, List<int> serviceIds, List<string>? serviceNames = null, string comment = "Created from Desktop App", string? originalFileName = null)
     {
         if (string.IsNullOrEmpty(AccessToken))
             return (false, "Not authenticated.", null);
@@ -490,7 +490,8 @@ public class ApiService
                 file_hash = fileHash,
                 services = serviceIds,
                 service_names = serviceNames ?? new List<string>(),
-                comment = comment
+                comment = comment,
+                original_filename = originalFileName
             };
 
             var jsonContent = JsonSerializer.Serialize(payload);
@@ -554,7 +555,7 @@ public class ApiService
         }
     }
 
-    public static async Task<(bool Success, string Message, int? OrderId)> CreateOriginalOrderAsync(string fileHash, string projectFile, string readHardware)
+    public static async Task<(bool Success, string Message, int? OrderId)> CreateOriginalOrderAsync(string fileHash, string projectFile, string readHardware, string? originalFileName = null)
     {
         if (string.IsNullOrEmpty(AccessToken))
             return (false, "Not authenticated.", null);
@@ -565,7 +566,8 @@ public class ApiService
             {
                 file_hash = fileHash,
                 project_file = projectFile,
-                read_hardware = readHardware
+                read_hardware = readHardware,
+                original_filename = originalFileName
             };
 
             var jsonContent = JsonSerializer.Serialize(payload);

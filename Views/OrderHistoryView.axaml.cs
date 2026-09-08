@@ -394,13 +394,19 @@ public partial class OrderHistoryView : UserControl
 
                         if (saveFile != null)
                         {
+                            bool isCompleted = false;
                             using var stream = await saveFile.OpenWriteAsync();
                             var progress = new System.Progress<double>(p =>
                             {
-                                downloadBtn.Content = $"{LanguageService.Get("Tune_Downloading")} {p:F0}%...";
+                                if (!isCompleted)
+                                {
+                                    downloadBtn.Content = $"{LanguageService.Get("Tune_Downloading")} {p:F0}%...";
+                                }
                             });
 
                             var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
+                            isCompleted = true;
+
                             if (success)
                             {
                                 downloadBtn.Content = LanguageService.Get("Tune_Downloaded");
@@ -409,6 +415,16 @@ public partial class OrderHistoryView : UserControl
                                     string.Format(LanguageService.Get("Tune_FileDownloadCompleted"), fileName),
                                     "info"
                                 );
+
+                                _ = Task.Run(async () =>
+                                {
+                                    await Task.Delay(2000);
+                                    await Dispatcher.UIThread.InvokeAsync(() =>
+                                    {
+                                        downloadBtn.IsEnabled = true;
+                                        downloadBtn.Content = LanguageService.Get("Download_ModFile");
+                                    });
+                                });
                             }
                             else
                             {
@@ -542,9 +558,9 @@ public partial class OrderHistoryView : UserControl
 
     private string FormatDate(string isoDate)
     {
-        if (DateTime.TryParse(isoDate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out var dt))
+        if (DateTimeOffset.TryParse(isoDate, out var dto))
         {
-            return dt.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+            return dto.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
         }
         if (DateTime.TryParse(isoDate, out var fallbackDt))
         {

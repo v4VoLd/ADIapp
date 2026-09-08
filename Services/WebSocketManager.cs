@@ -124,6 +124,8 @@ public static class WebSocketManager
                     _userChannel.Bind("OrderStatusUpdated", OnOrderUpdatedEvent);
 
                     Logger.Info($"[WebSocket] Successfully connected and subscribed to user {_currentUserId} channel.");
+                    OrderUpdated?.Invoke();
+                    TicketUpdated?.Invoke();
                     break; // Connected successfully
                 }
                 catch (Exception ex)

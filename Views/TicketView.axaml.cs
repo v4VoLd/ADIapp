@@ -366,9 +366,9 @@ public partial class TicketView : UserControl
             if (!string.IsNullOrEmpty(msg.CreatedAt))
             {
                 string displayDate = msg.CreatedAt;
-                if (DateTime.TryParse(msg.CreatedAt, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out var parsedDate))
+                if (DateTimeOffset.TryParse(msg.CreatedAt, out var dto))
                 {
-                    displayDate = parsedDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                    displayDate = dto.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
                 }
                 else if (DateTime.TryParse(msg.CreatedAt, out var fallbackDate))
                 {

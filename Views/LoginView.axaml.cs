@@ -20,6 +20,25 @@ public partial class LoginView : UserControl
         base.OnInitialized();
         UpdateLocalizedText();
         LanguageService.LanguageChanged += OnLanguageChanged;
+
+        // Restore remembered email and remember-me checkbox
+        try
+        {
+            var emailBox = this.FindControl<TextBox>("EmailBox");
+            var rememberMeCheck = this.FindControl<CheckBox>("RememberMeCheckBox");
+            string? rememberedEmail = SecureStorageHelper.GetRememberedEmail();
+
+            if (!string.IsNullOrWhiteSpace(rememberedEmail))
+            {
+                if (emailBox != null) emailBox.Text = rememberedEmail;
+                if (rememberMeCheck != null) rememberMeCheck.IsChecked = true;
+            }
+            else if (SecureStorageHelper.HasSavedSession())
+            {
+                if (rememberMeCheck != null) rememberMeCheck.IsChecked = true;
+            }
+        }
+        catch { }
     }
 
     protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
@@ -115,6 +134,15 @@ public partial class LoginView : UserControl
 
             if (success)
             {
+                if (rememberMe)
+                {
+                    SecureStorageHelper.SaveRememberedEmail(email);
+                }
+                else
+                {
+                    SecureStorageHelper.SaveRememberedEmail(string.Empty);
+                }
+
                 var window = this.FindAncestorOfType<MainWindow>();
                 window?.Navigate(new HomeView());
                 if (currentUser != null)

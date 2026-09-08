@@ -236,6 +236,9 @@ public class EcuIdentifyData
     [JsonPropertyName("originalMatches")]
     public List<OriginalMatchDto>? OriginalMatchesCamel { get; set; }
 
+    [JsonPropertyName("is_original_available")]
+    public bool IsOriginalAvailable { get; set; }
+
     public List<OriginalMatchDto> EffectiveOriginalMatches => OriginalMatches ?? OriginalMatchesCamel ?? new List<OriginalMatchDto>();
 
     // Computed / Helper Properties
@@ -447,6 +450,9 @@ public class OrderHistoryItemDto
 
     [JsonPropertyName("file_received")]
     public string? FileReceived { get; set; }
+
+    [JsonPropertyName("original_filename")]
+    public string? OriginalFilename { get; set; }
 
     [JsonPropertyName("file_sent")]
     public string? FileSent { get; set; }

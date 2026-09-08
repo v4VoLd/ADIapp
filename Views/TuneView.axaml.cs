@@ -21,6 +21,7 @@ public partial class TuneView : UserControl
     private TextBlock? SavedText;
     private string? _pendingFileHash;
     private string? _renderedFileHash;
+    private string? _originalFileName;
     private bool _isProcessing;
     private bool _isIdentifying;
     private Border? _activeBorder;
@@ -72,7 +73,33 @@ public partial class TuneView : UserControl
         UpdateDailyQuotaUi();
         UpdateOrderProgressModal();
         await LoadProcessingFilesAsync();
+        _ = CheckActiveOrderOnStartupAsync();
         StartPeriodicTuneViewPolling();
+    }
+
+    private async Task CheckActiveOrderOnStartupAsync()
+    {
+        try
+        {
+            var history = await ApiService.GetOrderHistoryAsync();
+            if (history?.Orders != null)
+            {
+                var activeOrder = history.Orders.FirstOrDefault(o =>
+                    string.Equals(o.Status, "pending", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(o.Status, "processing", StringComparison.OrdinalIgnoreCase));
+
+                if (activeOrder != null)
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        string trackingHash = !string.IsNullOrEmpty(activeOrder.OriginalFilename) ? activeOrder.OriginalFilename : (activeOrder.FileReceived ?? "");
+                        OrderProcessingManager.StartTrackingOrder(trackingHash, activeOrder.Id);
+                        UpdateOrderProgressModal();
+                    });
+                }
+            }
+        }
+        catch { }
     }
 
     protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
@@ -1561,7 +1588,18 @@ public partial class TuneView : UserControl
 
     private async Task OpenFilePickerAndUploadAsync()
     {
-        if (_isProcessing) return;
+        if (_isProcessing || OrderProcessingManager.IsProcessing)
+        {
+            if (OrderProcessingManager.IsProcessing)
+            {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel is Window window)
+                {
+                    await MessageBox(window, "An order is currently being processed. Please wait for it to complete before uploading a new file.");
+                }
+            }
+            return;
+        }
 
         if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
         {
@@ -1618,7 +1656,18 @@ public partial class TuneView : UserControl
 
     private async void OnFileDrop(object? sender, DragEventArgs e)
     {
-        if (_isProcessing) return;
+        if (_isProcessing || OrderProcessingManager.IsProcessing)
+        {
+            if (OrderProcessingManager.IsProcessing)
+            {
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel is Window window)
+                {
+                    await MessageBox(window, "An order is currently being processed. Please wait for it to complete before uploading a new file.");
+                }
+            }
+            return;
+        }
 
         if (ApiService.CurrentUser?.HasReachedDailyLimit == true)
         {
@@ -1651,6 +1700,7 @@ public partial class TuneView : UserControl
 
     private async Task ProcessAndUploadFileAsync(string filePath)
     {
+        _originalFileName = System.IO.Path.GetFileName(filePath);
         _isProcessing = true;
         _isIdentifying = true;
         string uploadingText = LanguageService.Get("Tune_StatusUploading");
@@ -1830,7 +1880,7 @@ public partial class TuneView : UserControl
 
         try
         {
-            var (success, message, orderId) = await ApiService.CreateOrderAsync(orderedHash, selectedServiceIds, selectedServiceNames);
+            var (success, message, orderId) = await ApiService.CreateOrderAsync(orderedHash, selectedServiceIds, selectedServiceNames, "Created from Desktop App", _originalFileName);
 
             if (!success)
             {
@@ -1927,6 +1977,7 @@ public partial class TuneView : UserControl
         _isIdentifying = false;
         _pendingFileHash = null;
         _renderedFileHash = null;
+        _originalFileName = null;
         _currentServices = null;
         _currentEcuData = null;
         _serviceSelectionStates.Clear();
@@ -2079,21 +2130,33 @@ public partial class TuneView : UserControl
             };
             infoStack.Children.Add(detailsText);
 
+            // Subscription status indicator
+            bool isAvailable = _currentEcuData?.IsOriginalAvailable ?? false;
+            var subBadge = new TextBlock
+            {
+                Text = isAvailable ? "✓ Included with Subscription" : "🔒 Subscription Required",
+                FontSize = 11,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                Foreground = Avalonia.Media.Brush.Parse(isAvailable ? "#4DFF8A" : "#EF4444")
+            };
+            infoStack.Children.Add(subBadge);
+
             Grid.SetColumn(infoStack, 1);
             grid.Children.Add(infoStack);
 
             // Column 2: Download Button
             var downloadBtn = new Button
             {
-                Content = LanguageService.Get("Tune_BtnDownloadOriginal"),
-                Background = Avalonia.Media.Brush.Parse("#0284C7"),
-                Foreground = Avalonia.Media.Brushes.White,
+                Content = isAvailable ? LanguageService.Get("Tune_BtnDownloadOriginal") : "Subscription Required",
+                Background = Avalonia.Media.Brush.Parse(isAvailable ? "#0284C7" : "#263147"),
+                Foreground = Avalonia.Media.Brush.Parse(isAvailable ? "#FFFFFF" : "#6B7280"),
                 FontWeight = Avalonia.Media.FontWeight.Bold,
                 FontSize = 12,
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(14, 8),
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+                IsEnabled = isAvailable,
+                Cursor = isAvailable ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null
             };
 
             downloadBtn.Click += async (_, _) =>
@@ -2126,7 +2189,7 @@ public partial class TuneView : UserControl
 
         try
         {
-            var res = await ApiService.CreateOriginalOrderAsync(targetHash, match.ProjectFile, match.ReadHardware);
+            var res = await ApiService.CreateOriginalOrderAsync(targetHash, match.ProjectFile, match.ReadHardware, _originalFileName);
             if (res.Success)
             {
                 var overlay = this.FindControl<Border>("OriginalFilesOverlay");

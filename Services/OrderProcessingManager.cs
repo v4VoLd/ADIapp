@@ -93,8 +93,8 @@ public static class OrderProcessingManager
         if ((!_activeOrderId.HasValue && string.IsNullOrEmpty(_activeOrderFileHash)) || !_isProcessing)
             return;
 
-        // WebSocket event received: trigger instant status resolution (0ms delay, event-driven)
-        Dispatcher.UIThread.Post(async () =>
+        // WebSocket event received: trigger instant status resolution
+        _ = Task.Run(async () =>
         {
             await CheckAndHandleOrderCompletionAsync();
         });
@@ -218,17 +218,25 @@ public static class OrderProcessingManager
 
         // Extract %NAME% candidate
         string name = string.Empty;
-        if (!string.IsNullOrWhiteSpace(order.FileReceived))
+        if (!string.IsNullOrWhiteSpace(order.OriginalFilename))
         {
-            name = System.IO.Path.GetFileNameWithoutExtension(order.FileReceived);
+            name = System.IO.Path.GetFileNameWithoutExtension(order.OriginalFilename);
         }
-        else if (!string.IsNullOrWhiteSpace(order.Title))
+        else if (!string.IsNullOrWhiteSpace(order.Title) && !IsHexHash(order.Title))
         {
             name = order.Title;
         }
-        else if (!string.IsNullOrWhiteSpace(order.FileSent))
+        else if (!string.IsNullOrWhiteSpace(order.FileReceived) && !IsHexHash(order.FileReceived))
+        {
+            name = System.IO.Path.GetFileNameWithoutExtension(order.FileReceived);
+        }
+        else if (!string.IsNullOrWhiteSpace(order.FileSent) && !IsHexHash(order.FileSent))
         {
             name = System.IO.Path.GetFileNameWithoutExtension(order.FileSent);
+        }
+        else if (!string.IsNullOrWhiteSpace(order.EcuBrand) || !string.IsNullOrWhiteSpace(order.EcuModel))
+        {
+            name = $"{order.EcuBrand}_{order.EcuModel}".Trim('_');
         }
 
         string cleanName = !string.IsNullOrWhiteSpace(name) ? SanitizeToken(name) : string.Empty;
@@ -276,6 +284,14 @@ public static class OrderProcessingManager
 
         string joined = string.Join("_", tokens);
         return $"ADI-Performance_{joined}{extension}";
+    }
+
+    private static bool IsHexHash(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return false;
+        string clean = System.IO.Path.GetFileNameWithoutExtension(input).Trim();
+        return (clean.Length == 32 || clean.Length == 40 || clean.Length == 64) &&
+               clean.All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
     }
 
     private static string SanitizeToken(string input)

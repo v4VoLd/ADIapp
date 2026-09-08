@@ -2,13 +2,14 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace ADIapp.Helpers
 {
     /// <summary>
-    /// Provides cross-platform, hardware-bound AES-256-GCM encrypted persistent token storage.
-    /// Tokens are encrypted with a key derived from the machine's unique hardware hash + application salt,
-    /// preventing unauthorized token extraction, tampering, or copying across machines/VMs.
+    /// Provides secure, cross-platform encrypted persistent token storage.
+    /// On Windows, uses native DPAPI (ProtectedData) bound to CurrentUser.
+    /// On macOS / Linux, uses AES-256-GCM hardware-derived key.
     /// </summary>
     public static class SecureStorageHelper
     {
@@ -18,9 +19,43 @@ namespace ADIapp.Helpers
         );
 
         private static readonly string SessionFilePath = Path.Combine(SessionDirectory, "session.dat");
+        private static readonly string RememberedEmailPath = Path.Combine(SessionDirectory, "user.dat");
 
         // Fixed application salt combined with machine hardware hash
         private static readonly byte[] AppSalt = Encoding.UTF8.GetBytes("ADIapp_Secured_Desktop_Session_Salt_2026");
+
+        private const byte FormatDpapi = 0x01;
+        private const byte FormatAesGcm = 0x02;
+
+        public static void SaveRememberedEmail(string email)
+        {
+            try
+            {
+                Directory.CreateDirectory(SessionDirectory);
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    if (File.Exists(RememberedEmailPath)) File.Delete(RememberedEmailPath);
+                }
+                else
+                {
+                    File.WriteAllText(RememberedEmailPath, email.Trim(), Encoding.UTF8);
+                }
+            }
+            catch { }
+        }
+
+        public static string? GetRememberedEmail()
+        {
+            try
+            {
+                if (File.Exists(RememberedEmailPath))
+                {
+                    return File.ReadAllText(RememberedEmailPath, Encoding.UTF8).Trim();
+                }
+            }
+            catch { }
+            return null;
+        }
 
         public static void SaveToken(string token)
         {
@@ -33,15 +68,30 @@ namespace ADIapp.Helpers
             try
             {
                 Directory.CreateDirectory(SessionDirectory);
-
                 byte[] plaintextBytes = Encoding.UTF8.GetBytes(token);
-                byte[] key = DeriveMachineKey();
 
-                // 96-bit (12 bytes) standard AES-GCM nonce
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    try
+                    {
+                        byte[] encrypted = ProtectedData.Protect(plaintextBytes, AppSalt, DataProtectionScope.CurrentUser);
+                        using var fs = new FileStream(SessionFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                        using var bw = new BinaryWriter(fs);
+                        bw.Write(FormatDpapi);
+                        bw.Write(encrypted.Length);
+                        bw.Write(encrypted);
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning($"[SecureStorageHelper] Windows DPAPI protect failed, falling back to AES-GCM: {ex.Message}");
+                    }
+                }
+
+                // AES-GCM for macOS/Linux or fallback
+                byte[] key = DeriveMachineKey();
                 byte[] nonce = new byte[12];
                 RandomNumberGenerator.Fill(nonce);
-
-                // 128-bit (16 bytes) authentication tag
                 byte[] tag = new byte[16];
                 byte[] ciphertext = new byte[plaintextBytes.Length];
 
@@ -50,15 +100,15 @@ namespace ADIapp.Helpers
                     aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
                 }
 
-                // File format: [Nonce (12B)] [Tag (16B)] [Ciphertext (NB)]
-                using var fs = new FileStream(SessionFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
-                using var bw = new BinaryWriter(fs);
-                bw.Write(nonce.Length);
-                bw.Write(nonce);
-                bw.Write(tag.Length);
-                bw.Write(tag);
-                bw.Write(ciphertext.Length);
-                bw.Write(ciphertext);
+                using var fsFallback = new FileStream(SessionFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                using var bwFallback = new BinaryWriter(fsFallback);
+                bwFallback.Write(FormatAesGcm);
+                bwFallback.Write(nonce.Length);
+                bwFallback.Write(nonce);
+                bwFallback.Write(tag.Length);
+                bwFallback.Write(tag);
+                bwFallback.Write(ciphertext.Length);
+                bwFallback.Write(ciphertext);
             }
             catch (Exception ex)
             {
@@ -75,34 +125,78 @@ namespace ADIapp.Helpers
 
             try
             {
-                using var fs = new FileStream(SessionFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var br = new BinaryReader(fs);
+                byte[] fileBytes = File.ReadAllBytes(SessionFilePath);
+                if (fileBytes.Length < 4) return null;
 
-                int nonceLen = br.ReadInt32();
-                if (nonceLen != 12) return null;
-                byte[] nonce = br.ReadBytes(nonceLen);
+                using var ms = new MemoryStream(fileBytes);
+                using var br = new BinaryReader(ms);
 
-                int tagLen = br.ReadInt32();
-                if (tagLen != 16) return null;
-                byte[] tag = br.ReadBytes(tagLen);
+                byte firstByte = fileBytes[0];
 
-                int cipherLen = br.ReadInt32();
-                if (cipherLen <= 0 || cipherLen > 1024 * 64) return null;
-                byte[] ciphertext = br.ReadBytes(cipherLen);
-
-                byte[] key = DeriveMachineKey();
-                byte[] decryptedBytes = new byte[ciphertext.Length];
-
-                using (var aesGcm = new AesGcm(key, 16))
+                if (firstByte == FormatDpapi && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    aesGcm.Decrypt(nonce, ciphertext, tag, decryptedBytes);
+                    br.ReadByte(); // skip format byte
+                    int len = br.ReadInt32();
+                    if (len <= 0 || len > fileBytes.Length) return null;
+                    byte[] encrypted = br.ReadBytes(len);
+                    byte[] decrypted = ProtectedData.Unprotect(encrypted, AppSalt, DataProtectionScope.CurrentUser);
+                    return Encoding.UTF8.GetString(decrypted);
                 }
 
-                return Encoding.UTF8.GetString(decryptedBytes);
+                if (firstByte == FormatAesGcm)
+                {
+                    br.ReadByte(); // skip format byte
+                    int nonceLen = br.ReadInt32();
+                    if (nonceLen != 12) return null;
+                    byte[] nonce = br.ReadBytes(nonceLen);
+
+                    int tagLen = br.ReadInt32();
+                    if (tagLen != 16) return null;
+                    byte[] tag = br.ReadBytes(tagLen);
+
+                    int cipherLen = br.ReadInt32();
+                    if (cipherLen <= 0 || cipherLen > 1024 * 64) return null;
+                    byte[] ciphertext = br.ReadBytes(cipherLen);
+
+                    byte[] key = DeriveMachineKey();
+                    byte[] decryptedBytes = new byte[ciphertext.Length];
+
+                    using (var aesGcm = new AesGcm(key, 16))
+                    {
+                        aesGcm.Decrypt(nonce, ciphertext, tag, decryptedBytes);
+                    }
+
+                    return Encoding.UTF8.GetString(decryptedBytes);
+                }
+
+                // Legacy format fallback (no format prefix byte; starts with nonceLen = 12 as 32-bit int)
+                int legacyNonceLen = BitConverter.ToInt32(fileBytes, 0);
+                if (legacyNonceLen == 12)
+                {
+                    ms.Position = 0;
+                    int nonceLen = br.ReadInt32();
+                    byte[] nonce = br.ReadBytes(nonceLen);
+                    int tagLen = br.ReadInt32();
+                    byte[] tag = br.ReadBytes(tagLen);
+                    int cipherLen = br.ReadInt32();
+                    byte[] ciphertext = br.ReadBytes(cipherLen);
+
+                    byte[] key = DeriveMachineKey();
+                    byte[] decryptedBytes = new byte[ciphertext.Length];
+
+                    using (var aesGcm = new AesGcm(key, 16))
+                    {
+                        aesGcm.Decrypt(nonce, ciphertext, tag, decryptedBytes);
+                    }
+
+                    return Encoding.UTF8.GetString(decryptedBytes);
+                }
+
+                return null;
             }
-            catch (CryptographicException)
+            catch (CryptographicException ex)
             {
-                Logger.Warning("[SecureStorageHelper] Session decryption failed (hardware signature mismatch or corrupted data). Clearing session.");
+                Logger.Warning($"[SecureStorageHelper] Session decryption failed ({ex.Message}). Clearing session.");
                 ClearToken();
                 return null;
             }

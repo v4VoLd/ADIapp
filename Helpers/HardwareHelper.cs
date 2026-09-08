@@ -48,9 +48,25 @@ namespace ADIapp.Helpers
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var output = GetCmdOutput("cmd.exe", "/c wmic diskdrive get serialnumber");
-                output = StripHeader(output, "SerialNumber");
-                return string.IsNullOrEmpty(output) ? "WIN-DISK-SERIAL-FALLBACK" : output;
+                try
+                {
+                    var machineGuid = GetWindowsRegistryValue(@"SOFTWARE\Microsoft\Cryptography", "MachineGuid");
+                    if (!string.IsNullOrWhiteSpace(machineGuid))
+                    {
+                        return machineGuid;
+                    }
+                }
+                catch {}
+
+                try
+                {
+                    var output = GetCmdOutput("cmd.exe", "/c wmic diskdrive get serialnumber");
+                    output = StripHeader(output, "SerialNumber");
+                    if (!string.IsNullOrEmpty(output)) return output;
+                }
+                catch {}
+
+                return "WIN-DISK-SERIAL-FALLBACK";
             }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
