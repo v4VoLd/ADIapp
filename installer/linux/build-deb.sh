@@ -6,7 +6,8 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
 
 RID="${1:-linux-x64}"
-VERSION="1.0.2"
+CSPROJ_VERSION=$(grep -oE '<Version>[^<]+' "$PROJECT_ROOT/ADIapp.csproj" 2>/dev/null | sed 's/<Version>//' || echo "1.0.3")
+VERSION="${2:-$CSPROJ_VERSION}"
 APP_NAME="adiapp"
 DEB_DIR="/tmp/${APP_NAME}_${VERSION}_amd64"
 

@@ -20,5 +20,8 @@ public static class AppConfig
 
     public const bool WebsocketEncrypted = true;
 
-    public const string AppVersion = "1.0.2";
+    public static readonly string AppVersion =
+        typeof(AppConfig).Assembly.GetName().Version is { } v
+            ? $"{v.Major}.{v.Minor}.{v.Build}"
+            : "1.0.3";
 }
