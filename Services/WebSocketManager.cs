@@ -122,6 +122,7 @@ public static class WebSocketManager
                     _userChannel.Bind("TicketUpdated", OnTicketUpdatedEvent);
                     _userChannel.Bind("OrderUpdated", OnOrderUpdatedEvent);
                     _userChannel.Bind("OrderStatusUpdated", OnOrderUpdatedEvent);
+                    _userChannel.Bind("UserProfileUpdated", OnUserProfileUpdatedEvent);
 
                     Logger.Info($"[WebSocket] Successfully connected and subscribed to user {_currentUserId} channel.");
                     OrderUpdated?.Invoke();
@@ -169,13 +170,24 @@ public static class WebSocketManager
         {
             Logger.Info($"[WebSocket] Received OrderUpdated event: {eventData.Data}");
             OrderUpdated?.Invoke();
-
-            NotificationService.AddNotification(Guid.NewGuid().ToString(), LanguageService.Get("Tune_OrderStatusUpdated"), "info");
             _ = ApiService.FetchProfileAsync();
         }
         catch (Exception ex)
         {
             Logger.Error($"[WebSocket] Error handling OrderUpdated event: {ex.Message}", ex);
+        }
+    }
+
+    private static void OnUserProfileUpdatedEvent(PusherEvent eventData)
+    {
+        try
+        {
+            Logger.Info($"[WebSocket] Received UserProfileUpdated event: {eventData.Data}");
+            _ = ApiService.FetchProfileAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[WebSocket] Error handling UserProfileUpdated event: {ex.Message}", ex);
         }
     }
 
@@ -204,6 +216,18 @@ public static class WebSocketManager
             }
 
             string message = "";
+            int? ticketId = null;
+            string? ticketNumber = null;
+
+            if (root.TryGetProperty("ticket_id", out var tIdProp) && tIdProp.TryGetInt32(out var tIdVal))
+            {
+                ticketId = tIdVal;
+            }
+            if (root.TryGetProperty("ticket_number", out var tNumProp))
+            {
+                ticketNumber = tNumProp.GetString();
+            }
+
             if (root.TryGetProperty("data", out var dataProp))
             {
                 if (dataProp.ValueKind == System.Text.Json.JsonValueKind.Object)
@@ -224,6 +248,15 @@ public static class WebSocketManager
                     {
                         message = dataProp.GetRawText();
                     }
+
+                    if (!ticketId.HasValue && dataProp.TryGetProperty("ticket_id", out var dTicketId) && dTicketId.TryGetInt32(out var dtVal))
+                    {
+                        ticketId = dtVal;
+                    }
+                    if (string.IsNullOrEmpty(ticketNumber) && dataProp.TryGetProperty("ticket_number", out var dTicketNum))
+                    {
+                        ticketNumber = dTicketNum.GetString();
+                    }
                 }
                 else if (dataProp.ValueKind == System.Text.Json.JsonValueKind.String)
                 {
@@ -243,12 +276,11 @@ public static class WebSocketManager
                 }
             }
 
-            NotificationService.AddNotification(id, message, type);
+            NotificationService.AddNotification(id, message, type, ticketId, ticketNumber);
         }
         catch (Exception ex)
         {
             Logger.Error($"Error parsing notification payload: {ex.Message}", ex);
-            NotificationService.AddNotification(Guid.NewGuid().ToString(), LanguageService.Get("Tune_NewNotification"), "Info");
         }
     }
 

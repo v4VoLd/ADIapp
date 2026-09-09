@@ -410,11 +410,6 @@ public partial class OrderHistoryView : UserControl
                             if (success)
                             {
                                 downloadBtn.Content = LanguageService.Get("Tune_Downloaded");
-                                NotificationService.AddNotification(
-                                    $"download_done_{order.Id}",
-                                    string.Format(LanguageService.Get("Tune_FileDownloadCompleted"), fileName),
-                                    "info"
-                                );
 
                                 _ = Task.Run(async () =>
                                 {

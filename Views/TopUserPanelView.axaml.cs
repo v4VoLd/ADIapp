@@ -295,10 +295,14 @@ public partial class TopUserPanelView : UserControl
                 ColumnDefinitions = new ColumnDefinitions("*,Auto")
             };
 
+            string displayText = notif.Type == "ticket_answered"
+                ? string.Format(LanguageService.Get("Notification_TicketAnswered"), notif.TicketNumber ?? notif.TicketId?.ToString() ?? "")
+                : notif.Message;
+
             var textStack = new StackPanel { Spacing = 4, Margin = new Thickness(0, 0, 8, 0) };
             textStack.Children.Add(new TextBlock
             {
-                Text = notif.Message,
+                Text = displayText,
                 Foreground = Avalonia.Media.Brushes.White,
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                 FontSize = 12
@@ -332,6 +336,20 @@ public partial class TopUserPanelView : UserControl
             grid.Children.Add(deleteBtn);
 
             notifBorder.Child = grid;
+
+            if (notif.TicketId.HasValue)
+            {
+                int tId = notif.TicketId.Value;
+                notifBorder.Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand);
+                notifBorder.PointerPressed += (s, e) =>
+                {
+                    var notificationMenu = this.FindControl<Border>("NotificationMenu");
+                    if (notificationMenu != null) notificationMenu.IsVisible = false;
+                    NotificationService.MarkTicketAsRead(tId);
+                    Window?.Navigate(new TicketView(tId));
+                };
+            }
+
             notificationsList.Children.Add(notifBorder);
         }
 

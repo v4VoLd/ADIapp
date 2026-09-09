@@ -13,13 +13,15 @@ public static class NotificationService
     public static event Action<NotificationModel>? NotificationReceived;
     public static event Action? NotificationsUpdated;
 
-    public static void AddNotification(string id, string message, string type)
+    public static void AddNotification(string id, string message, string type, int? ticketId = null, string? ticketNumber = null)
     {
         var notif = new NotificationModel
         {
             Id = id,
             Message = message,
             Type = type,
+            TicketId = ticketId,
+            TicketNumber = ticketNumber,
             CreatedAt = DateTime.Now,
             IsRead = false
         };
@@ -30,6 +32,28 @@ public static class NotificationService
         }
 
         NotificationReceived?.Invoke(notif);
+    }
+
+    public static void MarkTicketAsRead(int ticketId)
+    {
+        bool changed = false;
+        lock (Notifications)
+        {
+            foreach (var notif in Notifications)
+            {
+                if (notif.TicketId == ticketId && !notif.IsRead)
+                {
+                    notif.IsRead = true;
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed)
+        {
+            NotificationsUpdated?.Invoke();
+            _ = ApiService.MarkTicketNotificationsAsReadAsync(ticketId);
+        }
     }
 
     public static async Task LoadNotificationsAsync()

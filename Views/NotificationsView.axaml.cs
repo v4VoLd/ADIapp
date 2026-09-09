@@ -148,11 +148,15 @@ public partial class NotificationsView : UserControl
             Grid.SetColumn(iconBorder, 0);
             grid.Children.Add(iconBorder);
 
+            string displayText = notif.Type == "ticket_answered"
+                ? string.Format(LanguageService.Get("Notification_TicketAnswered"), notif.TicketNumber ?? notif.TicketId?.ToString() ?? "")
+                : notif.Message;
+
             // 2. Content Stack (Message & Timestamp)
             var contentStack = new StackPanel { Spacing = 4, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             contentStack.Children.Add(new TextBlock
             {
-                Text = notif.Message,
+                Text = displayText,
                 FontSize = 14,
                 FontWeight = notif.IsRead ? FontWeight.Normal : FontWeight.SemiBold,
                 Foreground = Brushes.White,
@@ -210,6 +214,19 @@ public partial class NotificationsView : UserControl
             grid.Children.Add(deleteBtn);
 
             cardBorder.Child = grid;
+
+            if (notif.TicketId.HasValue)
+            {
+                int tId = notif.TicketId.Value;
+                cardBorder.Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand);
+                cardBorder.PointerPressed += (s, e) =>
+                {
+                    NotificationService.MarkTicketAsRead(tId);
+                    var mainWin = this.FindAncestorOfType<MainWindow>();
+                    mainWin?.Navigate(new TicketView(tId));
+                };
+            }
+
             NotificationsListPanel.Children.Add(cardBorder);
         }
     }

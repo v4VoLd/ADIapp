@@ -245,7 +245,9 @@ public class EcuIdentifyData
     public string EcuBrand => !string.IsNullOrWhiteSpace(EcuProducer) ? EcuProducer : (EcuBrandRaw ?? "N/A");
     public string EcuModel => !string.IsNullOrWhiteSpace(EcuBuild) ? EcuBuild : (EcuModelRaw ?? "N/A");
     public string HardwareId => !string.IsNullOrWhiteSpace(EcuStgNr) ? EcuStgNr : (!string.IsNullOrWhiteSpace(EcuProdNr) ? EcuProdNr : (HardwareIdRaw ?? "N/A"));
-    public string SoftwareId => !string.IsNullOrWhiteSpace(EcuSoftwareVersion) ? EcuSoftwareVersion : (SoftwareIdRaw ?? "N/A");
+    public string SoftwareId => !string.IsNullOrWhiteSpace(EcuSoftwareVersion) 
+        ? EcuSoftwareVersion 
+        : (!string.IsNullOrWhiteSpace(EcuSoftwareVersionVersion) ? EcuSoftwareVersionVersion : (SoftwareIdRaw ?? "N/A"));
 
     public string FullVehicleTitle
     {
@@ -302,6 +304,10 @@ public class ServiceDto
 
     [JsonPropertyName("remaining_quota")]
     public int? RemainingQuota { get; set; }
+
+    [JsonIgnore]
+    public bool IsCoveredBySubscription =>
+        IsIncludedInSubscription && (!RemainingQuota.HasValue || RemainingQuota.Value > 0 || RemainingQuota.Value == -1);
 }
 
 public class OriginalMatchDto

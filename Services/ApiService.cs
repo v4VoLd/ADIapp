@@ -374,6 +374,26 @@ public class ApiService
         }
     }
 
+    public static async Task<bool> MarkTicketNotificationsAsReadAsync(int ticketId)
+    {
+        if (string.IsNullOrEmpty(AccessToken))
+            return false;
+
+        try
+        {
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "notifications/read");
+            var payload = new { ticket_id = ticketId };
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(requestUri, content);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error marking ticket {ticketId} notifications as read: {ex.Message}", ex);
+            return false;
+        }
+    }
+
     public static async Task<bool> ClearNotificationsAsync()
     {
         if (string.IsNullOrEmpty(AccessToken))

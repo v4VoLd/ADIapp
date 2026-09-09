@@ -237,6 +237,7 @@ public partial class TicketView : UserControl
     private async Task SelectTicketAsync(TicketDto ticket)
     {
         _selectedTicket = ticket;
+        NotificationService.MarkTicketAsRead(ticket.Id);
         RenderTicketList();
 
         if (TicketNumberText != null) TicketNumberText.Text = ticket.TicketNumber;

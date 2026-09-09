@@ -620,8 +620,6 @@ public partial class TuneView : UserControl
                             }
 
                             _renderedFileHash = _pendingFileHash;
-
-                            NotificationService.AddNotification($"ecu_done_{_pendingFileHash}", LanguageService.Get("Tune_EcuIdentDone"), "info");
                         });
                     }
                 }
@@ -737,7 +735,6 @@ public partial class TuneView : UserControl
                         if (success)
                         {
                             downloadBtn.Content = LanguageService.Get("Tune_Downloaded");
-                            NotificationService.AddNotification($"download_done_{fileName}", string.Format(LanguageService.Get("Tune_FileDownloadCompleted"), fileName), "info");
                         }
                         else
                         {
@@ -925,7 +922,7 @@ public partial class TuneView : UserControl
         var response = await ApiService.CheckStatusAsync(hash);
         if (response.Success)
         {
-            if (response.Status == "completed" && response.Data != null)
+            if ((response.Status == "completed" || response.Status == "failed") && response.Data != null)
             {
                 _isIdentifying = false;
                 PopulateEcuInfo(response.Data);
@@ -1310,7 +1307,7 @@ public partial class TuneView : UserControl
             // FOOTER ROW WITH PRICE CHIP & TOGGLE SWITCH
             var footerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
 
-            bool isCoveredBySub = service.IsIncludedInSubscription && (!service.RemainingQuota.HasValue || service.RemainingQuota.Value > 0);
+            bool isCoveredBySub = service.IsCoveredBySubscription;
             double cost = 0;
             if (!string.IsNullOrWhiteSpace(service.Price) &&
                 double.TryParse(service.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double parsedVal))
@@ -1321,9 +1318,10 @@ public partial class TuneView : UserControl
             string priceDisplay;
             if (isCoveredBySub)
             {
-                priceDisplay = service.RemainingQuota.HasValue
-                    ? string.Format(LanguageService.Get("Tune_IncludedLeft"), service.RemainingQuota.Value)
-                    : LanguageService.Get("Tune_IncludedPlan");
+                bool isUnlimited = !service.RemainingQuota.HasValue || service.RemainingQuota.Value == -1;
+                priceDisplay = isUnlimited
+                    ? LanguageService.Get("Tune_IncludedPlan")
+                    : string.Format(LanguageService.Get("Tune_IncludedLeft"), service.RemainingQuota.GetValueOrDefault());
             }
             else
             {
@@ -1427,7 +1425,7 @@ public partial class TuneView : UserControl
                 {
                     if (_serviceSelectionStates.TryGetValue(s.Id, out bool isSel) && isSel)
                     {
-                        bool isCovered = s.IsIncludedInSubscription && (!s.RemainingQuota.HasValue || s.RemainingQuota.Value > 0);
+                        bool isCovered = s.IsCoveredBySubscription;
                         if (!isCovered && !string.IsNullOrWhiteSpace(s.Price) &&
                             double.TryParse(s.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double sCost) && sCost > 0)
                         {
@@ -1531,7 +1529,7 @@ public partial class TuneView : UserControl
                 if (_serviceSelectionStates.TryGetValue(service.Id, out bool sel) && sel)
                 {
                     selectedCount++;
-                    bool isCovered = service.IsIncludedInSubscription && (!service.RemainingQuota.HasValue || service.RemainingQuota.Value > 0);
+                    bool isCovered = service.IsCoveredBySubscription;
                     if (!isCovered && !string.IsNullOrWhiteSpace(service.Price) &&
                         double.TryParse(service.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double priceVal) && priceVal > 0)
                     {
@@ -1849,7 +1847,7 @@ public partial class TuneView : UserControl
             {
                 if (_serviceSelectionStates.TryGetValue(service.Id, out bool sel) && sel)
                 {
-                    bool isCovered = service.IsIncludedInSubscription && (!service.RemainingQuota.HasValue || service.RemainingQuota.Value > 0);
+                    bool isCovered = service.IsCoveredBySubscription;
                     if (!isCovered && !string.IsNullOrWhiteSpace(service.Price) &&
                         double.TryParse(service.Price, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double cost) && cost > 0)
                     {
@@ -2194,12 +2192,6 @@ public partial class TuneView : UserControl
             {
                 var overlay = this.FindControl<Border>("OriginalFilesOverlay");
                 if (overlay != null) overlay.IsVisible = false;
-
-                NotificationService.AddNotification(
-                    $"orig_order_{DateTime.UtcNow.Ticks}",
-                    LanguageService.Get("Tune_OriginalOrderSuccess"),
-                    "success"
-                );
 
                 // Start global tracking just like normal orders (handles polling/websocket, persistent indicator, and native Save dialog)
                 OrderProcessingManager.StartTrackingOrder(targetHash, res.OrderId);

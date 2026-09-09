@@ -126,7 +126,6 @@ public static class OrderProcessingManager
                         StopTracking();
                         if (matchingOrder.IsDownloadExpired)
                         {
-                            NotificationService.AddNotification($"order_expired_{matchingOrder.Id}", LanguageService.Get("Tune_LinkExpired"), "warning");
                             return true;
                         }
 
@@ -136,7 +135,6 @@ public static class OrderProcessingManager
                     else if (matchingOrder.IsCanceled)
                     {
                         StopTracking();
-                        NotificationService.AddNotification($"order_canceled_{matchingOrder.Id}", LanguageService.Get("Tune_OrderCanceled"), "error");
                         return true;
                     }
                 }
@@ -192,11 +190,6 @@ public static class OrderProcessingManager
                     var (success, msg) = await ApiService.DownloadFileToStreamAsync(downloadUrl, stream, progress);
                     if (success)
                     {
-                        NotificationService.AddNotification(
-                            $"order_download_{order.Id}",
-                            string.Format(LanguageService.Get("Tune_SavedSuccess"), fileName),
-                            "info"
-                        );
                         _ = ApiService.FetchProfileAsync();
                     }
                 }

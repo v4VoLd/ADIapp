@@ -25,12 +25,19 @@ public partial class SidebarView : UserControl
         UpdateExpirationDate();
         UpdateLocalizedText();
         LanguageService.LanguageChanged += OnLanguageChanged;
+        ApiService.CurrentUserChanged += OnCurrentUserChanged;
     }
 
     protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
         LanguageService.LanguageChanged -= OnLanguageChanged;
+        ApiService.CurrentUserChanged -= OnCurrentUserChanged;
+    }
+
+    private void OnCurrentUserChanged(Models.UserDto? user)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(UpdateExpirationDate);
     }
 
     private void OnLanguageChanged()
