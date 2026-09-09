@@ -18,7 +18,7 @@ public static class UpdateService
         try
         {
             string currentVersion = AppConfig.AppVersion;
-            string platform = HardwareHelper.GetPlatform();
+            string platform = GetUpdatePlatform();
 
             Logger.Info($"Checking for desktop application updates. Current version: {currentVersion}, Platform: {platform}");
 
@@ -50,5 +50,14 @@ public static class UpdateService
         {
             _isChecking = false;
         }
+    }
+
+    public static string GetUpdatePlatform()
+    {
+        bool isArm64 = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64;
+        if (OperatingSystem.IsWindows()) return "win-x64";
+        if (OperatingSystem.IsMacOS()) return isArm64 ? "osx-arm64" : "osx-x64";
+        if (OperatingSystem.IsLinux()) return isArm64 ? "linux-arm64" : "linux-x64";
+        return "win-x64";
     }
 }
