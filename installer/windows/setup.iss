@@ -1,6 +1,6 @@
 #define MyAppName "ADI Application"
 #ifndef MyAppVersion
-#define MyAppVersion "1.0.3"
+#define MyAppVersion "1.0.4"
 #endif
 #define MyAppPublisher "ADI Performance"
 #define MyAppURL "https://adi-performance.com"
