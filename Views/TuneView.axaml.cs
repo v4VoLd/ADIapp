@@ -726,9 +726,24 @@ public partial class TuneView : UserControl
                         downloadBtn.IsEnabled = false;
                         downloadBtn.Content = LanguageService.Get("Tune_Downloading");
 
+                        string suggestedFileName = fileName;
+                        if (file.OrderId.HasValue)
+                        {
+                            try
+                            {
+                                var history = await ApiService.GetOrderHistoryAsync();
+                                var matchingOrder = history?.Orders?.FirstOrDefault(o => o.Id == file.OrderId.Value);
+                                if (matchingOrder != null)
+                                {
+                                    suggestedFileName = OrderProcessingManager.GenerateSuggestedFileName(matchingOrder);
+                                }
+                            }
+                            catch { }
+                        }
+
                         var (success, msg) = await DownloadAndSaveFileAsync(
                             targetDownloadUrl,
-                            fileName,
+                            suggestedFileName,
                             progressText => downloadBtn.Content = progressText
                         );
 

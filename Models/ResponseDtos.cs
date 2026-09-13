@@ -502,6 +502,43 @@ public class OrderHistoryItemDto
     [JsonPropertyName("title")]
     public string? Title { get; set; }
 
+    [JsonPropertyName("vehicle_producer")]
+    public string? VehicleProducer { get; set; }
+
+    [JsonPropertyName("series")]
+    public string? Series { get; set; }
+
+    [JsonPropertyName("vehicle_model")]
+    public string? VehicleModel { get; set; }
+
+    [JsonPropertyName("ecu_producer")]
+    public string? EcuProducer { get; set; }
+
+    [JsonPropertyName("ecu_prod_nr")]
+    public string? EcuProdNr { get; set; }
+
+    [JsonPropertyName("ecu_stg_nr")]
+    public string? EcuStgNr { get; set; }
+
+    [JsonPropertyName("software")]
+    public string? Software { get; set; }
+
+    [JsonPropertyName("version")]
+    public string? Version { get; set; }
+
+    [JsonPropertyName("read")]
+    public string? Read { get; set; }
+
+    public string EffectiveVehicleProducer => !string.IsNullOrWhiteSpace(VehicleProducer) ? VehicleProducer : string.Empty;
+    public string EffectiveSeries => !string.IsNullOrWhiteSpace(Series) ? Series : string.Empty;
+    public string EffectiveVehicleModel => !string.IsNullOrWhiteSpace(VehicleModel) ? VehicleModel : (!string.IsNullOrWhiteSpace(Title) && !Title.StartsWith("Unfound", StringComparison.OrdinalIgnoreCase) ? Title : string.Empty);
+    public string EffectiveEcuProducer => !string.IsNullOrWhiteSpace(EcuProducer) ? EcuProducer : (!string.IsNullOrWhiteSpace(EcuBrand) ? EcuBrand : string.Empty);
+    public string EffectiveEcuProdNr => !string.IsNullOrWhiteSpace(EcuProdNr) ? EcuProdNr : string.Empty;
+    public string EffectiveEcuStgNr => !string.IsNullOrWhiteSpace(EcuStgNr) ? EcuStgNr : (!string.IsNullOrWhiteSpace(HardwareId) ? HardwareId : (!string.IsNullOrWhiteSpace(EcuModel) ? EcuModel : string.Empty));
+    public string EffectiveSoftware => !string.IsNullOrWhiteSpace(Software) ? Software : (!string.IsNullOrWhiteSpace(SoftwareId) ? SoftwareId : string.Empty);
+    public string EffectiveVersion => !string.IsNullOrWhiteSpace(Version) ? Version : string.Empty;
+    public string EffectiveRead => !string.IsNullOrWhiteSpace(Read) ? Read : (!string.IsNullOrWhiteSpace(ReadHardware) ? ReadHardware : "Standard / OBD");
+
     [JsonPropertyName("created_at")]
     public string? CreatedAt { get; set; }
 

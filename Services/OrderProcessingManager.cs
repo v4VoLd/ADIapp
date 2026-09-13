@@ -209,74 +209,85 @@ public static class OrderProcessingManager
     {
         string extension = ".bin";
 
-        // Extract %NAME% candidate
-        string name = string.Empty;
-        if (!string.IsNullOrWhiteSpace(order.OriginalFilename))
-        {
-            name = System.IO.Path.GetFileNameWithoutExtension(order.OriginalFilename);
-        }
-        else if (!string.IsNullOrWhiteSpace(order.Title) && !IsHexHash(order.Title))
-        {
-            name = order.Title;
-        }
-        else if (!string.IsNullOrWhiteSpace(order.FileReceived) && !IsHexHash(order.FileReceived))
-        {
-            name = System.IO.Path.GetFileNameWithoutExtension(order.FileReceived);
-        }
-        else if (!string.IsNullOrWhiteSpace(order.FileSent) && !IsHexHash(order.FileSent))
-        {
-            name = System.IO.Path.GetFileNameWithoutExtension(order.FileSent);
-        }
-        else if (!string.IsNullOrWhiteSpace(order.EcuBrand) || !string.IsNullOrWhiteSpace(order.EcuModel))
-        {
-            name = $"{order.EcuBrand}_{order.EcuModel}".Trim('_');
-        }
+        var tokens = new List<string>();
 
-        string cleanName = !string.IsNullOrWhiteSpace(name) ? SanitizeToken(name) : string.Empty;
+        // 1. Vehicule Producer
+        string vehProducer = SanitizeToken(order.EffectiveVehicleProducer);
+        if (!string.IsNullOrWhiteSpace(vehProducer)) tokens.Add(vehProducer);
 
-        // Extract services
-        string joinedServices = string.Empty;
-        if (order.Services != null && order.Services.Count > 0)
+        // 2. Series
+        string series = SanitizeToken(order.EffectiveSeries);
+        if (!string.IsNullOrWhiteSpace(series)) tokens.Add(series);
+
+        // 3. Model
+        string vehModel = SanitizeToken(order.EffectiveVehicleModel);
+        if (!string.IsNullOrWhiteSpace(vehModel)) tokens.Add(vehModel);
+
+        // 4. ECU Producer
+        string ecuProducer = SanitizeToken(order.EffectiveEcuProducer);
+        if (!string.IsNullOrWhiteSpace(ecuProducer)) tokens.Add(ecuProducer);
+
+        // 5. ECU -Nr
+        string ecuProdNr = SanitizeToken(order.EffectiveEcuProdNr);
+        if (!string.IsNullOrWhiteSpace(ecuProdNr)) tokens.Add(ecuProdNr);
+
+        // 6. ECU-Nr
+        string ecuStgNr = SanitizeToken(order.EffectiveEcuStgNr);
+        if (!string.IsNullOrWhiteSpace(ecuStgNr)) tokens.Add(ecuStgNr);
+
+        // 7. Software
+        string software = SanitizeToken(order.EffectiveSoftware);
+        if (!string.IsNullOrWhiteSpace(software)) tokens.Add(software);
+
+        // 8. Version
+        string version = SanitizeToken(order.EffectiveVersion);
+        if (!string.IsNullOrWhiteSpace(version)) tokens.Add(version);
+
+        // 9. Read
+        string read = SanitizeToken(order.EffectiveRead);
+        if (!string.IsNullOrWhiteSpace(read)) tokens.Add(read);
+
+        // Services token
+        string servicesToken = string.Empty;
+        if (order.IsOriginal)
+        {
+            servicesToken = "(Original)";
+        }
+        else if (order.Services != null && order.Services.Count > 0)
         {
             var serviceNames = order.Services
                 .Where(s => !string.IsNullOrWhiteSpace(s.Name))
                 .Select(s => string.Join("_", s.Name.Split(new[] { ' ', '-', '/', '\\', '+', '•', ',' }, StringSplitOptions.RemoveEmptyEntries)))
                 .Where(s => !string.IsNullOrWhiteSpace(s));
-            joinedServices = string.Join("_", serviceNames);
+            string joinedServices = string.Join("_", serviceNames);
+            if (!string.IsNullOrWhiteSpace(joinedServices))
+            {
+                servicesToken = $"({joinedServices})";
+            }
         }
 
-        // Build name and services enclosed in parentheses: (Name_Services)
-        string nameWithServices;
-        if (!string.IsNullOrWhiteSpace(cleanName) && !string.IsNullOrWhiteSpace(joinedServices))
+        if (string.IsNullOrWhiteSpace(servicesToken))
         {
-            nameWithServices = $"({cleanName}_{joinedServices})";
+            if (!string.IsNullOrWhiteSpace(order.OriginalFilename))
+            {
+                string orig = SanitizeToken(System.IO.Path.GetFileNameWithoutExtension(order.OriginalFilename));
+                servicesToken = $"({orig})";
+            }
+            else
+            {
+                servicesToken = $"(Order_{order.Id})";
+            }
         }
-        else if (!string.IsNullOrWhiteSpace(cleanName))
+
+        string joinedMeta = string.Join("_", tokens);
+        if (!string.IsNullOrWhiteSpace(joinedMeta))
         {
-            nameWithServices = $"({cleanName})";
-        }
-        else if (!string.IsNullOrWhiteSpace(joinedServices))
-        {
-            nameWithServices = $"({joinedServices})";
+            return $"ADI-Performance_{joinedMeta}_{servicesToken}{extension}";
         }
         else
         {
-            nameWithServices = $"(Order_{order.Id})";
+            return $"ADI-Performance_{servicesToken}{extension}";
         }
-
-        string ecuBuild = !string.IsNullOrWhiteSpace(order.EcuModel) ? SanitizeToken(order.EcuModel) : string.Empty;
-        string ecuProd = !string.IsNullOrWhiteSpace(order.EcuBrand) ? SanitizeToken(order.EcuBrand) : string.Empty;
-        string ecuStg = !string.IsNullOrWhiteSpace(order.HardwareId) ? SanitizeToken(order.HardwareId) : string.Empty;
-        string ecuSoftwareVersion = !string.IsNullOrWhiteSpace(order.SoftwareId) ? SanitizeToken(order.SoftwareId) : string.Empty;
-
-        var tokens = new List<string> { nameWithServices };
-        if (!string.IsNullOrWhiteSpace(ecuBuild)) tokens.Add(ecuBuild);
-        if (!string.IsNullOrWhiteSpace(ecuProd)) tokens.Add(ecuProd);
-        if (!string.IsNullOrWhiteSpace(ecuStg)) tokens.Add(ecuStg);
-        if (!string.IsNullOrWhiteSpace(ecuSoftwareVersion)) tokens.Add(ecuSoftwareVersion);
-
-        string joined = string.Join("_", tokens);
-        return $"ADI-Performance_{joined}{extension}";
     }
 
     private static bool IsHexHash(string? input)

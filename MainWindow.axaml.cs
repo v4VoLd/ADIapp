@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using ADIapp.Views;
@@ -19,6 +20,7 @@ public partial class MainWindow : Window
 #if DEBUG
         this.AttachDevTools();
 #endif
+        ApplyScreenRelativeSize();
         this.KeyDown += (s, e) =>
         {
             if (e.Key == Avalonia.Input.Key.Escape && GlobalAlertOverlay.IsVisible)
@@ -239,4 +241,39 @@ public partial class MainWindow : Window
             await _alertTcs.Task;
         });
     }
+
+    private void ApplyScreenRelativeSize()
+    {
+        try
+        {
+            var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+            if (screen != null)
+            {
+                double workingWidth = screen.WorkingArea.Width / screen.Scaling;
+                double workingHeight = screen.WorkingArea.Height / screen.Scaling;
+
+                if (workingWidth > 0 && workingHeight > 0)
+                {
+                    // Adjust minimum bounds if the monitor working area is smaller than the default 1200x700
+                    if (workingWidth < MinWidth)
+                    {
+                        MinWidth = Math.Min(1000, workingWidth * 0.95);
+                    }
+                    if (workingHeight < MinHeight)
+                    {
+                        MinHeight = Math.Min(600, workingHeight * 0.95);
+                    }
+
+                    // Set default window size to 85% of available screen working area
+                    Width = Math.Clamp(workingWidth * 0.85, MinWidth, workingWidth);
+                    Height = Math.Clamp(workingHeight * 0.85, MinHeight, workingHeight);
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Helpers.Logger.Error($"Failed to adjust window size relative to screen: {ex.Message}", ex);
+        }
+    }
 }
+
