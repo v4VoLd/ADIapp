@@ -32,7 +32,7 @@ public partial class MainWindow : Window
 
         try
         {
-            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/app_icon.ico")));
+            Icon = new WindowIcon(Avalonia.Platform.AssetLoader.Open(new System.Uri("avares://ADIapp/Assets/app_dock_logo3.ico")));
         }
         catch (System.Exception ex)
         {

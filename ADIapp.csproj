@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\app_dock_logo3.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <Version>1.0.4</Version>
@@ -16,6 +16,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\app_dock_logo3.ico" />
+    <None Remove="Assets\app_dock_logo2.ico" />
+    <None Remove="Assets\app_dock_logo.ico" />
     <None Remove="Assets\app_dock_logo.png" />
     <None Remove="Assets\app_icon.ico" />
     <None Remove="Assets\avatar.png" />
@@ -31,6 +34,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="Assets\app_dock_logo3.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Assets\app_dock_logo.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
     <AvaloniaResource Include="Assets\app_dock_logo.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
