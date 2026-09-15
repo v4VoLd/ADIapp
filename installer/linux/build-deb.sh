@@ -6,19 +6,21 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
 
 RID="${1:-linux-x64}"
-CSPROJ_VERSION=$(grep -oE '<Version>[^<]+' "$PROJECT_ROOT/ADIapp.csproj" 2>/dev/null | sed 's/<Version>//' || echo "1.0.3")
+CSPROJ_VERSION=$(grep -oE '<Version>[^<]+' "$PROJECT_ROOT/ADIapp.csproj" 2>/dev/null | sed 's/<Version>//' || echo "1.0.4")
 VERSION="${2:-$CSPROJ_VERSION}"
+TARGET_ENV="${3:-${TARGET_ENV:-Testing}}"
 APP_NAME="adiapp"
 DEB_DIR="/tmp/${APP_NAME}_${VERSION}_amd64"
 
-echo "=== Building Linux Self-Contained App for $RID ==="
+echo "=== Building Linux Self-Contained App for $RID [$TARGET_ENV] ==="
 
 cd "$PROJECT_ROOT"
 dotnet publish ADIapp.csproj \
     -c Release \
     -r "$RID" \
     --self-contained true \
-    -p:PublishSingleFile=false
+    -p:PublishSingleFile=false \
+    -p:TargetEnvironment="$TARGET_ENV"
 
 echo "=== Assembling Debian Package Directory Structure ==="
 rm -rf "$DEB_DIR"

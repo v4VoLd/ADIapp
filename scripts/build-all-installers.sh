@@ -40,8 +40,9 @@ dotnet publish ADIapp.csproj \
     -p:TargetEnvironment="$TARGET_ENV"
 
 if [ "$OS_TYPE" = "Linux" ]; then
-    echo "-> Packaging Linux DEB Installer..."
-    bash "$PROJECT_ROOT/installer/linux/build-deb.sh" linux-x64
+    echo "-> Packaging Linux DEB Installer [$TARGET_ENV]..."
+    export TARGET_ENV="$TARGET_ENV"
+    bash "$PROJECT_ROOT/installer/linux/build-deb.sh" linux-x64 "" "$TARGET_ENV"
 fi
 
 echo ""
