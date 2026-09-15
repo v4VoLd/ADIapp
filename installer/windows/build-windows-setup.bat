@@ -7,8 +7,11 @@ echo ========================================================
 
 cd /d "%~dp0..\.."
 
-echo -> Publishing self-contained release (win-x64)...
-dotnet publish ADIapp.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false
+set "TARGET_ENV=%~1"
+if "%TARGET_ENV%"=="" set "TARGET_ENV=Testing"
+
+echo -> Publishing self-contained release (win-x64) for environment: %TARGET_ENV%...
+dotnet publish ADIapp.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:TargetEnvironment="%TARGET_ENV%"
 if %ERRORLEVEL% NEQ 0 (
     echo Error publishing dotnet app.
     exit /b %ERRORLEVEL%

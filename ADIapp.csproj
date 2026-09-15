@@ -13,6 +13,17 @@
     <Company>ADI Performance</Company>
     <Copyright>Copyright © ADI Performance 2026</Copyright>
     <UseSharedCompilation>false</UseSharedCompilation>
+    <TargetEnvironment Condition="'$(TargetEnvironment)' == '' and '$(Environment)' != ''">$(Environment)</TargetEnvironment>
+    <TargetEnvironment Condition="'$(TargetEnvironment)' == ''">Testing</TargetEnvironment>
+  </PropertyGroup>
+
+  <!-- Environment Configuration Constants -->
+  <PropertyGroup Condition="'$(TargetEnvironment)' == 'Production' or '$(TargetEnvironment)' == 'Prod' or '$(TargetEnvironment)' == 'prod'">
+    <DefineConstants>$(DefineConstants);ENV_PROD</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetEnvironment)' != 'Production' and '$(TargetEnvironment)' != 'Prod' and '$(TargetEnvironment)' != 'prod'">
+    <DefineConstants>$(DefineConstants);ENV_TESTING</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

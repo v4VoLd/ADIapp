@@ -365,3 +365,4 @@ FodyWeavers.xsd
 Compiling
 Publishing
 graphify-out/
+.env

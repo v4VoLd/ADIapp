@@ -6,6 +6,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DIST_DIR="$PROJECT_ROOT/dist"
 
 MODE="${1:-osx-x64}"
+TARGET_ENV="${2:-${TARGET_ENV:-Testing}}"
 APP_NAME="ADIapp"
 
 cd "$PROJECT_ROOT"
@@ -16,9 +17,9 @@ build_for_rid() {
     local DMG_TMP="/tmp/adi_dmg_$RID"
     local FINAL_DMG="$DIST_DIR/$APP_NAME-macOS-$RID.dmg"
 
-    echo "=== Building macOS Self-Contained App for $RID ==="
+    echo "=== Building macOS Self-Contained App for $RID [$TARGET_ENV] ==="
     rm -rf "$PROJECT_ROOT/bin/Release/net9.0/$RID"
-    dotnet publish ADIapp.csproj -c Release -r "$RID" --self-contained true -p:PublishSingleFile=false -p:UseAppHost=true
+    dotnet publish ADIapp.csproj -c Release -r "$RID" --self-contained true -p:PublishSingleFile=false -p:UseAppHost=true -p:TargetEnvironment="$TARGET_ENV"
 
     rm -rf "$BUNDLE_DIR"
     mkdir -p "$BUNDLE_DIR/Contents/MacOS"
