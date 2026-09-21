@@ -1008,5 +1008,43 @@ public class ApiService
             return null;
         }
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // Company Info / Support Details
+    // ─────────────────────────────────────────────────────────────
+
+    public static CompanyInfoDto? CachedCompanyInfo { get; private set; }
+
+    public static async Task<CompanyInfoDto?> FetchCompanyInfoAsync()
+    {
+        if (!NetworkHelper.IsNetworkAvailable())
+            return CachedCompanyInfo;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "company-info");
+            var response = await _httpClient.GetAsync(requestUri, cts.Token);
+
+            if (!response.IsSuccessStatusCode)
+                return CachedCompanyInfo;
+
+            var responseString = await response.Content.ReadAsStringAsync(cts.Token);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var result = JsonSerializer.Deserialize<CompanyInfoResponse>(responseString, options);
+
+            if (result?.Success == true && result.Data != null)
+            {
+                CachedCompanyInfo = result.Data;
+                return CachedCompanyInfo;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning($"Error fetching company info: {ex.Message}");
+        }
+
+        return CachedCompanyInfo;
+    }
 }
 

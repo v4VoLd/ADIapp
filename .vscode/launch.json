@@ -2,12 +2,45 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C#: ADIapp",
+            "name": "ADIapp (Testing)",
             "type": "coreclr",
             "request": "launch",
+            "preLaunchTask": "build",
             "program": "${workspaceFolder}/bin/Debug/net9.0/ADIapp.dll",
-            // CHANGE THIS PROPERTY:
-            "console": "internalConsole" ,
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "env": {
+                "ADI_ENV": "Testing",
+                "ADI_BASE_HOST": "https://adi-file-service.fb-technologies.com/",
+                "ADI_WS_HOST": "adi-file-service.fb-technologies.com",
+                "ADI_WS_PORT": "443",
+                "ADI_PUSHER_KEY": "lskldjfhskdjhf9283648792324",
+                "ADI_WS_ENCRYPTED": "true"
+            },
+            "logging": {
+                "moduleLoad": false
+            }
+        },
+        {
+            "name": "ADIapp (Production)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net9.0/ADIapp.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "env": {
+                "ADI_ENV": "Production",
+                "ADI_BASE_HOST": "https://adi-performance.com/",
+                "ADI_WS_HOST": "adi-performance.com",
+                "ADI_WS_PORT": "443",
+                "ADI_PUSHER_KEY": "c05340c18ec069708baaqcsqscz",
+                "ADI_WS_ENCRYPTED": "true"
+            },
             "logging": {
                 "moduleLoad": false
             }

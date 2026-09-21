@@ -7,11 +7,27 @@
              d:DesignHeight="800"
              x:Class="ADIapp.Views.InfoView">
 
+    <UserControl.Styles>
+        <Style Selector="Border.info-card">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.info-card:pointerover">
+            <Setter Property="Background" Value="#2D2D2D"/>
+            <Setter Property="BorderBrush" Value="#007ACC"/>
+        </Style>
+    </UserControl.Styles>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <Grid MinHeight="600" Margin="32,40">
             <StackPanel HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Width="640"
+                        Width="720"
                         Spacing="28">
 
                 <!-- TITLE HEADER -->
@@ -34,18 +50,21 @@
                         BorderBrush="#2D2D2D"
                         BorderThickness="1"
                         CornerRadius="16"
-                        Padding="36,32">
+                        Padding="32,28">
 
                     <!-- INFO TILES GRID -->
                     <UniformGrid Columns="2" HorizontalAlignment="Stretch">
                         
                         <!-- WEBSITE TILE -->
-                        <Border Background="#252525"
+                        <Border Classes="info-card"
+                                Background="#252525"
                                 BorderBrush="#3D3D3D"
                                 BorderThickness="1"
                                 CornerRadius="12"
                                 Padding="20,18"
-                                Margin="8">
+                                Margin="8"
+                                PointerPressed="WebsiteTile_PointerPressed"
+                                ToolTip.Tip="Open website">
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center"/>
@@ -55,66 +74,53 @@
                                                FontWeight="Bold"
                                                Foreground="White"
                                                VerticalAlignment="Center"/>
+                                    <TextBlock Text="↗" FontSize="13" Foreground="#707080" VerticalAlignment="Center" Margin="2,0,0,0"/>
                                 </StackPanel>
-                                <TextBlock Text="adi-performance.com"
+                                <TextBlock x:Name="WebsiteValueBlock"
+                                           Text="adi-performance.com"
                                            FontSize="13"
                                            Foreground="#CFCFCF"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- UPDATES TILE -->
-                        <Border Background="#252525"
+                        <!-- EMAIL TILE -->
+                        <Border Classes="info-card"
+                                Background="#252525"
                                 BorderBrush="#3D3D3D"
                                 BorderThickness="1"
                                 CornerRadius="12"
                                 Padding="20,18"
-                                Margin="8">
+                                Margin="8"
+                                PointerPressed="EmailTile_PointerPressed"
+                                ToolTip.Tip="Send email">
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="🔄" FontSize="16" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="UpdatesTileBlock"
-                                               Text="Updates"
+                                    <TextBlock Text="✉️" FontSize="16" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="EmailTileBlock"
+                                               Text="Email Support"
                                                FontSize="14"
                                                FontWeight="Bold"
                                                Foreground="White"
                                                VerticalAlignment="Center"/>
+                                    <TextBlock Text="↗" FontSize="13" Foreground="#707080" VerticalAlignment="Center" Margin="2,0,0,0"/>
                                 </StackPanel>
-                                <TextBlock Text="adi-performance.com"
-                                           FontSize="13"
-                                           Foreground="#CFCFCF"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- NEWS TILE -->
-                        <Border Background="#252525"
-                                BorderBrush="#3D3D3D"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Padding="20,18"
-                                Margin="8">
-                            <StackPanel Spacing="6">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="📰" FontSize="16" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="NewsTileBlock"
-                                               Text="News &amp; Portal"
-                                               FontSize="14"
-                                               FontWeight="Bold"
-                                               Foreground="White"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="adi-performance.com"
+                                <TextBlock x:Name="EmailValueBlock"
+                                           Text="contact@adi-performance.com"
                                            FontSize="13"
                                            Foreground="#CFCFCF"/>
                             </StackPanel>
                         </Border>
 
                         <!-- PHONE TILE -->
-                        <Border Background="#252525"
+                        <Border Classes="info-card"
+                                Background="#252525"
                                 BorderBrush="#3D3D3D"
                                 BorderThickness="1"
                                 CornerRadius="12"
                                 Padding="20,18"
-                                Margin="8">
+                                Margin="8"
+                                PointerPressed="PhoneTile_PointerPressed"
+                                ToolTip.Tip="Call phone support">
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="📞" FontSize="16" VerticalAlignment="Center"/>
@@ -124,9 +130,103 @@
                                                FontWeight="Bold"
                                                Foreground="White"
                                                VerticalAlignment="Center"/>
+                                    <TextBlock Text="↗" FontSize="13" Foreground="#707080" VerticalAlignment="Center" Margin="2,0,0,0"/>
                                 </StackPanel>
-                                <TextBlock Text="05515454564"
+                                <TextBlock x:Name="PhoneValueBlock"
+                                           Text="+213 559 80 85 01"
                                            FontSize="13"
+                                           Foreground="#CFCFCF"/>
+                                <TextBlock x:Name="Phone2ValueBlock"
+                                           Text="+213 23 21 55 40"
+                                           FontSize="12"
+                                           Foreground="#8E8E93"
+                                           IsVisible="False"
+                                           PointerPressed="Phone2_PointerPressed"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- WHATSAPP TILE -->
+                        <Border Classes="info-card"
+                                Background="#252525"
+                                BorderBrush="#3D3D3D"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="20,18"
+                                Margin="8"
+                                PointerPressed="WhatsappTile_PointerPressed"
+                                ToolTip.Tip="Open WhatsApp chat">
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="💬" FontSize="16" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="WhatsappTileBlock"
+                                               Text="WhatsApp Support"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="↗" FontSize="13" Foreground="#707080" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="WhatsappValueBlock"
+                                           Text="+213 770 95 72 27"
+                                           FontSize="13"
+                                           Foreground="#CFCFCF"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ADDRESS TILE (MAP) -->
+                        <Border Classes="info-card"
+                                Background="#252525"
+                                BorderBrush="#3D3D3D"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="20,18"
+                                Margin="8"
+                                PointerPressed="AddressTile_PointerPressed"
+                                ToolTip.Tip="Open location in Google Maps">
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="📍" FontSize="16" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="AddressTileBlock"
+                                               Text="Office Address"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="↗" FontSize="13" Foreground="#707080" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="AddressValueBlock"
+                                           Text="Cité Djilali Ahmed, Staoueli, Alger"
+                                           FontSize="13"
+                                           TextWrapping="Wrap"
+                                           Foreground="#CFCFCF"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SOCIAL TILE -->
+                        <Border Classes="info-card"
+                                Background="#252525"
+                                BorderBrush="#3D3D3D"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="20,18"
+                                Margin="8"
+                                PointerPressed="SocialTile_PointerPressed"
+                                ToolTip.Tip="Open official social page">
+                            <StackPanel Spacing="6">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="SocialTileBlock"
+                                               Text="Official Page"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="↗" FontSize="13" Foreground="#707080" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="SocialValueBlock"
+                                           Text="https://www.facebook.com/ADIPerformance/"
+                                           FontSize="13"
+                                           TextWrapping="Wrap"
                                            Foreground="#CFCFCF"/>
                             </StackPanel>
                         </Border>

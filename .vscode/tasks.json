@@ -9,7 +9,8 @@
                 "build",
                 "${workspaceFolder}/ADIapp.csproj",
                 "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+                "/consoleloggerparameters:NoSummary;ForceNoAlign",
+                "/p:TargetEnvironment=Testing"
             ],
             "problemMatcher": "$msCompile"
         },
