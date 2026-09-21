@@ -438,6 +438,16 @@ public partial class TuneView : UserControl
     {
         var vehTitle = this.FindControl<TextBlock>("VehicleTitleText");
         var vehSub = this.FindControl<TextBlock>("VehicleSubtitleText");
+        var brandLogoImg = this.FindControl<Image>("BrandLogoImage");
+
+        if (brandLogoImg != null)
+        {
+            brandLogoImg.Source = BrandLogoService.GetBrandLogo(
+                data.BrandLogo,
+                brandName: data.VehicleProducer ?? data.EcuBrand,
+                onAsyncLoaded: bmp => brandLogoImg.Source = bmp
+            );
+        }
 
         var vehProducer = this.FindControl<TextBlock>("VehProducerText");
         var vehModel = this.FindControl<TextBlock>("VehModelText");
@@ -874,6 +884,11 @@ public partial class TuneView : UserControl
 
         var vehTitle = this.FindControl<TextBlock>("VehicleTitleText");
         var vehSub = this.FindControl<TextBlock>("VehicleSubtitleText");
+        var brandLogoImg = this.FindControl<Image>("BrandLogoImage");
+        if (brandLogoImg != null)
+        {
+            brandLogoImg.Source = BrandLogoService.DefaultLogo;
+        }
 
         var vehProducer = this.FindControl<TextBlock>("VehProducerText");
         var vehModel = this.FindControl<TextBlock>("VehModelText");

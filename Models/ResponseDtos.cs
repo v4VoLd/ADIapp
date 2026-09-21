@@ -312,6 +312,9 @@ public class EcuIdentifyData
         ? EcuSoftwareVersion 
         : (!string.IsNullOrWhiteSpace(EcuSoftwareVersionVersion) ? EcuSoftwareVersionVersion : (SoftwareIdRaw ?? "N/A"));
 
+    [JsonPropertyName("brand_logo")]
+    public string? BrandLogo { get; set; }
+
     [JsonIgnore]
     public string FullVehicleTitle
     {
@@ -319,6 +322,7 @@ public class EcuIdentifyData
         {
             var parts = new List<string>();
             if (!string.IsNullOrWhiteSpace(VehicleProducer)) parts.Add(VehicleProducer);
+            if (!string.IsNullOrWhiteSpace(VehicleChassis)) parts.Add(VehicleChassis);
             if (!string.IsNullOrWhiteSpace(VehicleModel)) parts.Add(VehicleModel);
             if (!string.IsNullOrWhiteSpace(EngineName) && (VehicleModel == null || !VehicleModel.Contains(EngineName))) parts.Add($"({EngineName})");
             return parts.Count > 0 ? string.Join(" ", parts) : "Vehicle Information";

@@ -87,6 +87,9 @@
     <AvaloniaResource Include="Assets\sidebar_logo.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </AvaloniaResource>
+    <AvaloniaResource Include="Assets\brands\*.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </AvaloniaResource>
   </ItemGroup>
 
   <ItemGroup>
