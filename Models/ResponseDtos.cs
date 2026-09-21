@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using ADIapp.Services;
 
 namespace ADIapp.Models;
 
@@ -76,8 +77,42 @@ public class UserDto
     [JsonPropertyName("remaining_daily_limit")]
     public int? RemainingDailyLimit { get; set; }
 
+    [JsonPropertyName("is_original_available")]
+    public bool? RawIsOriginalAvailable { get; set; }
+
+    [JsonIgnore]
+    public bool IsOriginalAvailable => RawIsOriginalAvailable == true;
+
+    [JsonIgnore]
+    public bool HasActiveSubscription
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(SubscriptionEndDate) &&
+                DateTime.TryParse(SubscriptionEndDate, out var date) &&
+                date.Date >= DateTime.Today)
+            {
+                return true;
+            }
+            if (OrderLimit.HasValue && OrderLimit.Value > 0)
+            {
+                return true;
+            }
+            if (RemainingDailyLimit.HasValue && RemainingDailyLimit.Value > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    [JsonIgnore]
     public bool HasDailyLimit => OrderLimit.HasValue && OrderLimit.Value > 0;
+
+    [JsonIgnore]
     public int RemainingDailyTunes => RemainingDailyLimit ?? (HasDailyLimit ? Math.Max(0, OrderLimit!.Value - (TodayOrdersCount ?? 0)) : int.MaxValue);
+
+    [JsonIgnore]
     public bool HasReachedDailyLimit => HasDailyLimit && RemainingDailyTunes <= 0;
 }
 
@@ -228,6 +263,7 @@ public class EcuIdentifyData
     [JsonPropertyName("readHardware")]
     public string? ReadHardwareCamel { get; set; }
 
+    [JsonIgnore]
     public string EffectiveReadHardware => !string.IsNullOrWhiteSpace(ReadHardware) ? ReadHardware : (!string.IsNullOrWhiteSpace(ReadHardwareCamel) ? ReadHardwareCamel : "Standard / OBD");
 
     [JsonPropertyName("original_matches")]
@@ -237,18 +273,46 @@ public class EcuIdentifyData
     public List<OriginalMatchDto>? OriginalMatchesCamel { get; set; }
 
     [JsonPropertyName("is_original_available")]
-    public bool IsOriginalAvailable { get; set; }
+    public bool? RawIsOriginalAvailable { get; set; }
 
+    [JsonIgnore]
+    public bool IsOriginalAvailable
+    {
+        get
+        {
+            if (RawIsOriginalAvailable == true)
+                return true;
+
+            if (ApiService.CurrentUser?.IsOriginalAvailable == true)
+                return true;
+
+            if (ApiService.CurrentUser?.HasActiveSubscription == true)
+                return true;
+
+            return false;
+        }
+        set
+        {
+            RawIsOriginalAvailable = value;
+        }
+    }
+
+    [JsonIgnore]
     public List<OriginalMatchDto> EffectiveOriginalMatches => OriginalMatches ?? OriginalMatchesCamel ?? new List<OriginalMatchDto>();
 
     // Computed / Helper Properties
+    [JsonIgnore]
     public string EcuBrand => !string.IsNullOrWhiteSpace(EcuProducer) ? EcuProducer : (EcuBrandRaw ?? "N/A");
+    [JsonIgnore]
     public string EcuModel => !string.IsNullOrWhiteSpace(EcuBuild) ? EcuBuild : (EcuModelRaw ?? "N/A");
+    [JsonIgnore]
     public string HardwareId => !string.IsNullOrWhiteSpace(EcuStgNr) ? EcuStgNr : (!string.IsNullOrWhiteSpace(EcuProdNr) ? EcuProdNr : (HardwareIdRaw ?? "N/A"));
+    [JsonIgnore]
     public string SoftwareId => !string.IsNullOrWhiteSpace(EcuSoftwareVersion) 
         ? EcuSoftwareVersion 
         : (!string.IsNullOrWhiteSpace(EcuSoftwareVersionVersion) ? EcuSoftwareVersionVersion : (SoftwareIdRaw ?? "N/A"));
 
+    [JsonIgnore]
     public string FullVehicleTitle
     {
         get
