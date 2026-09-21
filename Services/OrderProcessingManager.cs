@@ -219,33 +219,21 @@ public static class OrderProcessingManager
         string series = SanitizeToken(order.EffectiveSeries);
         if (!string.IsNullOrWhiteSpace(series)) tokens.Add(series);
 
-        // 3. Model
-        string vehModel = SanitizeToken(order.EffectiveVehicleModel);
-        if (!string.IsNullOrWhiteSpace(vehModel)) tokens.Add(vehModel);
+        // 3. ECU Build
+        string ecuBuild = SanitizeToken(order.EffectiveEcuBuild);
+        if (!string.IsNullOrWhiteSpace(ecuBuild)) tokens.Add(ecuBuild);
 
-        // 4. ECU Producer
-        string ecuProducer = SanitizeToken(order.EffectiveEcuProducer);
-        if (!string.IsNullOrWhiteSpace(ecuProducer)) tokens.Add(ecuProducer);
-
-        // 5. ECU -Nr
+        // 4. ECU -Nr Producer
         string ecuProdNr = SanitizeToken(order.EffectiveEcuProdNr);
         if (!string.IsNullOrWhiteSpace(ecuProdNr)) tokens.Add(ecuProdNr);
 
-        // 6. ECU-Nr
+        // 5. ECU -Nr Stg / Hardware
         string ecuStgNr = SanitizeToken(order.EffectiveEcuStgNr);
         if (!string.IsNullOrWhiteSpace(ecuStgNr)) tokens.Add(ecuStgNr);
 
-        // 7. Software
+        // 6. ECU Software
         string software = SanitizeToken(order.EffectiveSoftware);
         if (!string.IsNullOrWhiteSpace(software)) tokens.Add(software);
-
-        // 8. Version
-        string version = SanitizeToken(order.EffectiveVersion);
-        if (!string.IsNullOrWhiteSpace(version)) tokens.Add(version);
-
-        // 9. Read
-        string read = SanitizeToken(order.EffectiveRead);
-        if (!string.IsNullOrWhiteSpace(read)) tokens.Add(read);
 
         // Services token
         string servicesToken = string.Empty;

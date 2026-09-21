@@ -582,6 +582,9 @@ public class OrderHistoryItemDto
     [JsonPropertyName("ecu_producer")]
     public string? EcuProducer { get; set; }
 
+    [JsonPropertyName("ecu_build")]
+    public string? EcuBuild { get; set; }
+
     [JsonPropertyName("ecu_prod_nr")]
     public string? EcuProdNr { get; set; }
 
@@ -601,6 +604,7 @@ public class OrderHistoryItemDto
     public string EffectiveSeries => !string.IsNullOrWhiteSpace(Series) ? Series : string.Empty;
     public string EffectiveVehicleModel => !string.IsNullOrWhiteSpace(VehicleModel) ? VehicleModel : (!string.IsNullOrWhiteSpace(Title) && !Title.StartsWith("Unfound", StringComparison.OrdinalIgnoreCase) ? Title : string.Empty);
     public string EffectiveEcuProducer => !string.IsNullOrWhiteSpace(EcuProducer) ? EcuProducer : (!string.IsNullOrWhiteSpace(EcuBrand) ? EcuBrand : string.Empty);
+    public string EffectiveEcuBuild => !string.IsNullOrWhiteSpace(EcuBuild) ? EcuBuild : (!string.IsNullOrWhiteSpace(EcuModel) ? EcuModel : string.Empty);
     public string EffectiveEcuProdNr => !string.IsNullOrWhiteSpace(EcuProdNr) ? EcuProdNr : string.Empty;
     public string EffectiveEcuStgNr => !string.IsNullOrWhiteSpace(EcuStgNr) ? EcuStgNr : (!string.IsNullOrWhiteSpace(HardwareId) ? HardwareId : (!string.IsNullOrWhiteSpace(EcuModel) ? EcuModel : string.Empty));
     public string EffectiveSoftware => !string.IsNullOrWhiteSpace(Software) ? Software : (!string.IsNullOrWhiteSpace(SoftwareId) ? SoftwareId : string.Empty);
