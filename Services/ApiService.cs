@@ -1046,5 +1046,55 @@ public class ApiService
 
         return CachedCompanyInfo;
     }
+
+    /// <summary>Fallback tuning-file extensions used until/unless the server list is fetched.</summary>
+    public static readonly string[] DefaultTuningExtensions =
+        { "bin", "ori", "org", "mod", "rom", "hex", "s19", "dflash", "pflash", "fls", "mpc" };
+
+    /// <summary>Allowed tuning-file extensions (lowercase, no leading dot).</summary>
+    public static IReadOnlyList<string> AllowedTuningExtensions { get; private set; } = DefaultTuningExtensions;
+
+    public static async Task FetchAllowedExtensionsAsync()
+    {
+        if (string.IsNullOrEmpty(AccessToken) || !NetworkHelper.IsNetworkAvailable())
+            return;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var requestUri = new Uri(new Uri(AppConfig.BaseUrl), "file/allowed-extensions");
+            var response = await _httpClient.GetAsync(requestUri, cts.Token);
+            if (!response.IsSuccessStatusCode)
+                return;
+
+            var responseString = await response.Content.ReadAsStringAsync(cts.Token);
+            using var doc = JsonDocument.Parse(responseString);
+            if (doc.RootElement.TryGetProperty("data", out var data) &&
+                data.TryGetProperty("extensions", out var exts) &&
+                exts.ValueKind == JsonValueKind.Array)
+            {
+                var list = new List<string>();
+                foreach (var item in exts.EnumerateArray())
+                {
+                    var ext = item.GetString()?.Trim().TrimStart('.').ToLowerInvariant();
+                    if (!string.IsNullOrEmpty(ext) && !list.Contains(ext))
+                        list.Add(ext);
+                }
+
+                if (list.Count > 0)
+                    AllowedTuningExtensions = list;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning($"Error fetching allowed extensions: {ex.Message}");
+        }
+    }
+
+    public static bool IsAllowedTuningFile(string path)
+    {
+        var ext = System.IO.Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
+        return ext.Length > 0 && System.Linq.Enumerable.Contains(AllowedTuningExtensions, ext);
+    }
 }
 

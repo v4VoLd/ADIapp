@@ -72,6 +72,7 @@ public partial class TuneView : UserControl
         UpdateLocalizedText();
         UpdateDailyQuotaUi();
         UpdateOrderProgressModal();
+        _ = ApiService.FetchAllowedExtensionsAsync();
         await LoadProcessingFilesAsync();
         _ = CheckActiveOrderOnStartupAsync();
         StartPeriodicTuneViewPolling();
@@ -1649,7 +1650,7 @@ public partial class TuneView : UserControl
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
-                new FilePickerFileType("Binary Files") { Patterns = new[] { "*.bin", "*.hex", "*.ori", "*.dec" } },
+                new FilePickerFileType("ECU Files") { Patterns = ApiService.AllowedTuningExtensions.Select(ext => "*." + ext).ToArray() },
                 new FilePickerFileType("All Files") { Patterns = new[] { "*" } }
             }
         });
@@ -1658,8 +1659,25 @@ public partial class TuneView : UserControl
         {
             var file = files[0];
             string filePath = file.Path.LocalPath;
+            if (!ApiService.IsAllowedTuningFile(filePath))
+            {
+                await ShowUnsupportedExtensionAsync(filePath);
+                return;
+            }
             await ProcessAndUploadFileAsync(filePath);
         }
+    }
+
+    private async Task ShowUnsupportedExtensionAsync(string filePath)
+    {
+        if (TopLevel.GetTopLevel(this) is not Window window) return;
+
+        string ext = System.IO.Path.GetExtension(filePath);
+        string supported = string.Join(", ", ApiService.AllowedTuningExtensions.Select(e => "." + e));
+        await MessageBox(window, string.Format(
+            LanguageService.Get("Tune_UnsupportedExtension"),
+            string.IsNullOrEmpty(ext) ? "(none)" : ext,
+            supported));
     }
 
     private void OnFileDragOver(object? sender, DragEventArgs e)
@@ -1713,15 +1731,16 @@ public partial class TuneView : UserControl
         #pragma warning restore CS0618
         if (files != null)
         {
-            var file = files.FirstOrDefault(f =>
-                f.Path.LocalPath.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) ||
-                f.Path.LocalPath.EndsWith(".hex", StringComparison.OrdinalIgnoreCase) ||
-                f.Path.LocalPath.EndsWith(".ori", StringComparison.OrdinalIgnoreCase) ||
-                f.Path.LocalPath.EndsWith(".dec", StringComparison.OrdinalIgnoreCase));
-
+            var file = files.FirstOrDefault();
             if (file != null)
             {
-                await ProcessAndUploadFileAsync(file.Path.LocalPath);
+                string filePath = file.Path.LocalPath;
+                if (!ApiService.IsAllowedTuningFile(filePath))
+                {
+                    await ShowUnsupportedExtensionAsync(filePath);
+                    return;
+                }
+                await ProcessAndUploadFileAsync(filePath);
             }
         }
     }
@@ -1789,6 +1808,12 @@ public partial class TuneView : UserControl
             if (StatusDot != null) StatusDot.Background = Avalonia.Media.Brush.Parse("#FF4D4D");
             SetCardsPendingState(LanguageService.Get("Tune_StatusFailed"));
             if (ServicesContainer != null) ServicesContainer.IsVisible = false;
+
+            if (response.ErrorCode == "unsupported_extension")
+            {
+                await ApiService.FetchAllowedExtensionsAsync();
+                await ShowUnsupportedExtensionAsync(filePath);
+            }
         }
 
         UpdateSummaryAndSaveButton();

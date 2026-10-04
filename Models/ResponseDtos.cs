@@ -129,6 +129,9 @@ public class EcuIdentifyResponse
 
     [JsonPropertyName("data")]
     public EcuIdentifyData? Data { get; set; }
+
+    [JsonPropertyName("error_code")]
+    public string? ErrorCode { get; set; }
 }
 
 public class DatabaseTuneDto
