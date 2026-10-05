@@ -84,7 +84,7 @@ public static class WebSocketManager
                         AuthenticationHeader = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ApiService.AccessToken)
                     };
 
-                    var host = AppConfig.WebSocketHost;
+                    var host = AppConfig.WebsocketPort.Length > 0 ? $"{AppConfig.WebSocketHost}:{AppConfig.WebsocketPort}": AppConfig.WebSocketHost ;
 
                     if (_client != null)
                     {
