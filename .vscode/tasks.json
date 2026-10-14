@@ -9,7 +9,7 @@
                 "build",
                 "${workspaceFolder}/ADIapp.csproj",
                 "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign",
+                "/consoleloggerparameters:NoSummary",
                 "/p:TargetEnvironment=Testing"
             ],
             "problemMatcher": "$msCompile"
@@ -22,7 +22,7 @@
                 "publish",
                 "${workspaceFolder}/ADIapp.csproj",
                 "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+                "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         },

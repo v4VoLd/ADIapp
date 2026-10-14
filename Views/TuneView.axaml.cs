@@ -31,6 +31,8 @@ public partial class TuneView : UserControl
     private string _activeFilter = "ALL";
     private readonly Dictionary<int, bool> _serviceSelectionStates = new();
     private bool _isUpdatingCards;
+    private int _origPageSize = 5;
+    private int _origCurrentPage = 1;
 
     private class ServiceCardHolder
     {
@@ -319,6 +321,13 @@ public partial class TuneView : UserControl
         if (dtcOffBtnText != null) dtcOffBtnText.Text = LanguageService.Get("Tune_DtcOffBtn");
         if (dtcOffBadgeText != null) dtcOffBadgeText.Text = LanguageService.Get("Tune_ComingSoonBadge");
 
+        var workflowTabTuningText = this.FindControl<TextBlock>("WorkflowTabTuningText");
+        if (workflowTabTuningText != null)
+        {
+            string t = LanguageService.Get("Tune_TabTuning");
+            workflowTabTuningText.Text = (t == "Tune_TabTuning" || string.IsNullOrWhiteSpace(t)) ? "🛠️ ECU Tuning & Remap" : t;
+        }
+
         var origBtnText = this.FindControl<TextBlock>("OriginalFilesBtnText");
         if (origBtnText != null)
         {
@@ -327,10 +336,8 @@ public partial class TuneView : UserControl
 
         var origModalTitle = this.FindControl<TextBlock>("OriginalModalTitleText");
         var origModalDesc = this.FindControl<TextBlock>("OriginalModalDescText");
-        var origModalCloseBtn = this.FindControl<Button>("OriginalModalCloseBtn");
         if (origModalTitle != null) origModalTitle.Text = LanguageService.Get("Tune_OriginalModalTitle");
         if (origModalDesc != null) origModalDesc.Text = LanguageService.Get("Tune_OriginalModalDesc");
-        if (origModalCloseBtn != null) origModalCloseBtn.Content = LanguageService.Get("Tune_CloseModal");
 
         UpdateSummaryAndSaveButton();
     }
@@ -570,6 +577,7 @@ public partial class TuneView : UserControl
         }
 
         _currentEcuData = data;
+        _origCurrentPage = 1;
         var origBtn = this.FindControl<Button>("OriginalFilesButton");
         var origBtnText = this.FindControl<TextBlock>("OriginalFilesBtnText");
         int matchCount = data.EffectiveOriginalMatches.Count;
@@ -1582,12 +1590,18 @@ public partial class TuneView : UserControl
             bool hasReachedDailyLimit = ApiService.CurrentUser?.HasReachedDailyLimit == true;
             */
 
+            var dragDropHint = this.FindControl<TextBlock>("DragDropHintText");
+            var dropZone = this.FindControl<Border>("DropZone");
+
             if (_isIdentifying)
             {
                 SaveButton.Content = LanguageService.Get("Tune_IdentifyingEcu");
                 SaveButton.Background = Avalonia.Media.Brush.Parse("#252525");
                 SaveButton.Foreground = Avalonia.Media.Brush.Parse("#888888");
                 SaveButton.IsEnabled = false;
+
+                if (dragDropHint != null) dragDropHint.Text = LanguageService.Get("Tune_StatusChecking");
+                if (dropZone != null) dropZone.Cursor = null;
             }
             else if (string.IsNullOrEmpty(_pendingFileHash) || _currentServices == null || _currentServices.Count == 0)
             {
@@ -1595,6 +1609,9 @@ public partial class TuneView : UserControl
                 SaveButton.Background = Avalonia.Media.Brushes.White;
                 SaveButton.Foreground = Avalonia.Media.Brush.Parse("#141414");
                 SaveButton.IsEnabled = true;
+
+                if (dragDropHint != null) dragDropHint.Text = LanguageService.Get("Tune_DragAndDrop");
+                if (dropZone != null) dropZone.Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand);
             }
             else
             {
@@ -1644,6 +1661,9 @@ public partial class TuneView : UserControl
         var topLevelPicker = TopLevel.GetTopLevel(this);
         if (topLevelPicker == null) return;
 
+        // Pull latest admin-configured list so picker filter matches server settings.
+        await ApiService.FetchAllowedExtensionsAsync();
+
         var files = await topLevelPicker.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = LanguageService.Get("Tune_SelectEcuBinaryFile"),
@@ -1678,6 +1698,12 @@ public partial class TuneView : UserControl
             LanguageService.Get("Tune_UnsupportedExtension"),
             string.IsNullOrEmpty(ext) ? "(none)" : ext,
             supported));
+    }
+
+    private async void DropZone_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        if (_isIdentifying || _isProcessing || OrderProcessingManager.IsProcessing) return;
+        await OpenFilePickerAndUploadAsync();
     }
 
     private void OnFileDragOver(object? sender, DragEventArgs e)
@@ -1735,6 +1761,11 @@ public partial class TuneView : UserControl
             if (file != null)
             {
                 string filePath = file.Path.LocalPath;
+                if (!ApiService.IsAllowedTuningFile(filePath))
+                {
+                    // Cached list may be stale (admin added extension); refresh then recheck.
+                    await ApiService.FetchAllowedExtensionsAsync();
+                }
                 if (!ApiService.IsAllowedTuningFile(filePath))
                 {
                     await ShowUnsupportedExtensionAsync(filePath);
@@ -2033,6 +2064,7 @@ public partial class TuneView : UserControl
         _originalFileName = null;
         _currentServices = null;
         _currentEcuData = null;
+        _origCurrentPage = 1;
         _serviceSelectionStates.Clear();
         _activeFilter = "ALL";
         if (_activeBorder != null)
@@ -2043,8 +2075,7 @@ public partial class TuneView : UserControl
 
         var origBtn = this.FindControl<Button>("OriginalFilesButton");
         if (origBtn != null) origBtn.IsVisible = false;
-        var origOverlay = this.FindControl<Border>("OriginalFilesOverlay");
-        if (origOverlay != null) origOverlay.IsVisible = false;
+        SetActiveWorkflowTab("TUNING");
 
         SetCardsPendingState(LanguageService.Get("Tune_StatusNotLoaded"));
 
@@ -2059,53 +2090,173 @@ public partial class TuneView : UserControl
         UpdateSummaryAndSaveButton();
     }
 
+    private void WorkflowTabTuning_Click(object? sender, RoutedEventArgs e)
+    {
+        SetActiveWorkflowTab("TUNING");
+    }
+
     private void OriginalFilesButton_Click(object? sender, RoutedEventArgs e)
     {
+        _origCurrentPage = 1;
+        SetActiveWorkflowTab("ORIGINAL");
+    }
+
+    private void SetActiveWorkflowTab(string tab)
+    {
+        var tabTuning = this.FindControl<Button>("WorkflowTabTuning");
+        var tabTuningText = this.FindControl<TextBlock>("WorkflowTabTuningText");
+        var tabOrig = this.FindControl<Button>("OriginalFilesButton");
+        var tabOrigText = this.FindControl<TextBlock>("OriginalFilesBtnText");
+        var tabDtc = this.FindControl<Button>("DtcOffButton");
+        var tabDtcText = this.FindControl<TextBlock>("DtcOffBtnText");
+
+        var tuningSec = this.FindControl<StackPanel>("TuningServicesSection");
+        var origSec = this.FindControl<StackPanel>("OriginalFilesSection");
+
+        if (tab == "TUNING")
+        {
+            if (tabTuning != null)
+            {
+                tabTuning.Background = Avalonia.Media.Brush.Parse("#14281E");
+                tabTuning.BorderBrush = Avalonia.Media.Brush.Parse("#4DFF8A");
+            }
+            if (tabTuningText != null) tabTuningText.Foreground = Avalonia.Media.Brush.Parse("#4DFF8A");
+
+            if (tabOrig != null)
+            {
+                tabOrig.Background = Avalonia.Media.Brush.Parse("#1A1D24");
+                tabOrig.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+            }
+            if (tabOrigText != null) tabOrigText.Foreground = Avalonia.Media.Brush.Parse("#9CA3AF");
+
+            if (tabDtc != null)
+            {
+                tabDtc.Background = Avalonia.Media.Brush.Parse("#1A1D24");
+                tabDtc.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+            }
+            if (tabDtcText != null) tabDtcText.Foreground = Avalonia.Media.Brush.Parse("#9CA3AF");
+
+            if (tuningSec != null) tuningSec.IsVisible = true;
+            if (origSec != null) origSec.IsVisible = false;
+            if (SaveButton != null) SaveButton.IsVisible = true;
+        }
+        else if (tab == "ORIGINAL")
+        {
+            if (tabTuning != null)
+            {
+                tabTuning.Background = Avalonia.Media.Brush.Parse("#1A1D24");
+                tabTuning.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+            }
+            if (tabTuningText != null) tabTuningText.Foreground = Avalonia.Media.Brush.Parse("#9CA3AF");
+
+            if (tabOrig != null)
+            {
+                tabOrig.Background = Avalonia.Media.Brush.Parse("#0C2D48");
+                tabOrig.BorderBrush = Avalonia.Media.Brush.Parse("#0284C7");
+            }
+            if (tabOrigText != null) tabOrigText.Foreground = Avalonia.Media.Brush.Parse("#38BDF8");
+
+            if (tabDtc != null)
+            {
+                tabDtc.Background = Avalonia.Media.Brush.Parse("#1A1D24");
+                tabDtc.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+            }
+            if (tabDtcText != null) tabDtcText.Foreground = Avalonia.Media.Brush.Parse("#9CA3AF");
+
+            if (tuningSec != null) tuningSec.IsVisible = false;
+            if (origSec != null) origSec.IsVisible = true;
+            if (SaveButton != null) SaveButton.IsVisible = false;
+
+            var matches = _currentEcuData?.EffectiveOriginalMatches;
+            RenderOriginalMatches(matches);
+        }
+    }
+
+    private void OriginalPrevPage_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_origCurrentPage > 1)
+        {
+            _origCurrentPage--;
+            RenderOriginalMatches(_currentEcuData?.EffectiveOriginalMatches);
+        }
+    }
+
+    private void OriginalNextPage_Click(object? sender, RoutedEventArgs e)
+    {
         var matches = _currentEcuData?.EffectiveOriginalMatches;
-        if (matches == null || matches.Count == 0)
-            return;
-
-        RenderOriginalMatches(matches);
-        var overlay = this.FindControl<Border>("OriginalFilesOverlay");
-        if (overlay != null)
+        if (matches == null) return;
+        int totalPages = Math.Max(1, (int)Math.Ceiling((double)matches.Count / _origPageSize));
+        if (_origCurrentPage < totalPages)
         {
-            overlay.IsVisible = true;
+            _origCurrentPage++;
+            RenderOriginalMatches(matches);
         }
     }
 
-    private void CloseOriginalFilesModal_Click(object? sender, RoutedEventArgs e)
-    {
-        var overlay = this.FindControl<Border>("OriginalFilesOverlay");
-        if (overlay != null)
-        {
-            overlay.IsVisible = false;
-        }
-    }
-
-    private void OriginalFilesOverlay_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        var overlay = this.FindControl<Border>("OriginalFilesOverlay");
-        if (overlay != null)
-        {
-            overlay.IsVisible = false;
-        }
-    }
-
-    private void OriginalFilesCard_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        e.Handled = true;
-    }
-
-    private void RenderOriginalMatches(List<OriginalMatchDto> matches)
+    private void RenderOriginalMatches(List<OriginalMatchDto>? matches)
     {
         var container = this.FindControl<StackPanel>("OriginalMatchesContainer");
         var statusText = this.FindControl<TextBlock>("OriginalModalStatusText");
+        var pageInfoText = this.FindControl<TextBlock>("OriginalFilesPageInfoText");
+        var paginationBar = this.FindControl<Border>("OriginalFilesPaginationBar");
+        var pageNumberText = this.FindControl<TextBlock>("OriginalPageNumberText");
+        var prevBtn = this.FindControl<Button>("OriginalPrevPageBtn");
+        var nextBtn = this.FindControl<Button>("OriginalNextPageBtn");
+
         if (statusText != null) statusText.Text = "";
         if (container == null) return;
 
         container.Children.Clear();
 
-        foreach (var match in matches)
+        if (matches == null || matches.Count == 0)
+        {
+            if (paginationBar != null) paginationBar.IsVisible = false;
+            if (pageInfoText != null) pageInfoText.Text = "";
+            return;
+        }
+
+        int totalCount = matches.Count;
+        int totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / _origPageSize));
+        if (_origCurrentPage < 1) _origCurrentPage = 1;
+        if (_origCurrentPage > totalPages) _origCurrentPage = totalPages;
+
+        int startIndex = (_origCurrentPage - 1) * _origPageSize;
+        var pagedMatches = matches.Skip(startIndex).Take(_origPageSize).ToList();
+
+        int displayStart = startIndex + 1;
+        int displayEnd = Math.Min(startIndex + pagedMatches.Count, totalCount);
+        if (pageInfoText != null)
+        {
+            pageInfoText.Text = totalCount > _origPageSize
+                ? $"Showing {displayStart}-{displayEnd} of {totalCount} files"
+                : $"{totalCount} file{(totalCount == 1 ? "" : "s")} available";
+        }
+
+        if (paginationBar != null)
+        {
+            paginationBar.IsVisible = totalPages > 1;
+        }
+
+        if (pageNumberText != null)
+        {
+            pageNumberText.Text = $"Page {_origCurrentPage} of {totalPages}";
+        }
+
+        if (prevBtn != null)
+        {
+            prevBtn.IsEnabled = _origCurrentPage > 1;
+            prevBtn.Opacity = _origCurrentPage > 1 ? 1.0 : 0.4;
+            prevBtn.Cursor = _origCurrentPage > 1 ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null;
+        }
+
+        if (nextBtn != null)
+        {
+            nextBtn.IsEnabled = _origCurrentPage < totalPages;
+            nextBtn.Opacity = _origCurrentPage < totalPages ? 1.0 : 0.4;
+            nextBtn.Cursor = _origCurrentPage < totalPages ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null;
+        }
+
+        foreach (var match in pagedMatches)
         {
             var card = new Border
             {
@@ -2246,9 +2397,6 @@ public partial class TuneView : UserControl
             var res = await ApiService.CreateOriginalOrderAsync(targetHash, match.ProjectFile, match.ReadHardware, _originalFileName);
             if (res.Success)
             {
-                var overlay = this.FindControl<Border>("OriginalFilesOverlay");
-                if (overlay != null) overlay.IsVisible = false;
-
                 // Start global tracking just like normal orders (handles polling/websocket, persistent indicator, and native Save dialog)
                 OrderProcessingManager.StartTrackingOrder(targetHash, res.OrderId);
 
