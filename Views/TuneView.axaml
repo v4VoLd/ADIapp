@@ -242,7 +242,7 @@
                                         <TextBlock x:Name="EcuSoftwareSizeText" Text="-" FontSize="11" Foreground="#CCCCCC" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="2" Grid.Column="1" Margin="4,0,0,0">
-                                        <TextBlock Text="STATUS" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
+                                        <TextBlock x:Name="LblStatusText" Text="STATUS" FontSize="9" Foreground="#888888" FontWeight="Bold"/>
                                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,2,0,0">
                                             <Border x:Name="StatusDot" Width="8" Height="8" CornerRadius="4" Background="Gray" VerticalAlignment="Center"/>
                                             <TextBlock x:Name="StatusText" Text="Ready" FontSize="11" Foreground="#AAAAAA" VerticalAlignment="Center"/>
@@ -307,8 +307,10 @@
                         </Button>
 
                         <!-- TAB 3: DTC OFF -->
+                        <!-- TAB 3: DTC OFF & DIAGNOSTICS (Gated by AppConfig.EnableDtcFeature) -->
                         <Button x:Name="DtcOffButton"
                                 Click="DtcOffButton_Click"
+                                IsVisible="False"
                                 Padding="16,8"
                                 Background="#1A1D24"
                                 BorderBrush="#262933"
@@ -317,20 +319,23 @@
                                 Cursor="Hand">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <TextBlock x:Name="DtcOffBtnText" 
-                                           Text="⚡ DTC Off" 
+                                           Text="⚡ DTC Off &amp; Diagnostics" 
                                            FontSize="12" 
                                            FontWeight="Bold" 
-                                           Foreground="#FBBF24" 
+                                           Foreground="#9CA3AF" 
                                            VerticalAlignment="Center"/>
-                                <Border Background="#F59E0B" 
+                                <Border x:Name="DtcOffBadgeBorder"
+                                        Background="#332612" 
+                                        BorderBrush="#F59E0B"
+                                        BorderThickness="1"
                                         CornerRadius="4" 
                                         Padding="6,1" 
                                         VerticalAlignment="Center">
                                     <TextBlock x:Name="DtcOffBadgeText" 
-                                               Text="Soon" 
+                                               Text="PRO" 
                                                FontSize="9" 
                                                FontWeight="Bold" 
-                                               Foreground="#1E1B18"/>
+                                               Foreground="#FBBF24"/>
                                 </Border>
                             </StackPanel>
                         </Button>
@@ -338,12 +343,13 @@
                 </Border>
 
                 <!-- DYNAMIC SERVICES / TUNES CONTAINER -->
-                <ScrollViewer x:Name="ServicesContainer"
-                               Grid.Row="2"
-                               IsVisible="False"
-                               VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="12">
-                        <!-- TUNING & REMAP SERVICES SECTION -->
+                <Grid x:Name="ServicesContainer"
+                      Grid.Row="2"
+                      IsVisible="False">
+                    <!-- TUNING & REMAP SERVICES SECTION -->
+                    <ScrollViewer x:Name="TuningServicesScrollViewer"
+                                  VerticalScrollBarVisibility="Auto"
+                                  IsVisible="True">
                         <StackPanel x:Name="TuningServicesSection" Spacing="12">
                             <StackPanel x:Name="ServicesHeaderPanel" Spacing="12">
                                 <!-- HEADER & SUMMARY COUNTER BAR -->
@@ -367,12 +373,12 @@
                                             VerticalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="Selected:" FontSize="11" Foreground="#888888"/>
+                                                <TextBlock x:Name="LblSummarySelectedText" Text="Selected:" FontSize="11" Foreground="#888888"/>
                                                 <TextBlock x:Name="SummarySelectedCountText" Text="0 Tunes" FontSize="11" FontWeight="Bold" Foreground="#4DFF8A"/>
                                             </StackPanel>
                                             <TextBlock Text="•" Foreground="#444444" FontSize="11"/>
                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="Total:" FontSize="11" Foreground="#888888"/>
+                                                <TextBlock x:Name="LblSummaryTotalText" Text="Total:" FontSize="11" Foreground="#888888"/>
                                                 <TextBlock x:Name="SummaryTotalTokensText" Text="0 CBT" FontSize="11" FontWeight="Bold" Foreground="#3B82F6"/>
                                             </StackPanel>
                                         </StackPanel>
@@ -433,9 +439,13 @@
                                        Orientation="Horizontal" 
                                        Margin="0,4,0,6"/>
                         </StackPanel>
+                    </ScrollViewer>
 
-                        <!-- INLINE FACTORY ORIGINAL FILES SECTION -->
-                        <StackPanel x:Name="OriginalFilesSection" Spacing="14" IsVisible="False">
+                    <!-- INLINE FACTORY ORIGINAL FILES SECTION -->
+                    <ScrollViewer x:Name="OriginalFilesScrollViewer"
+                                  VerticalScrollBarVisibility="Auto"
+                                  IsVisible="False">
+                        <StackPanel x:Name="OriginalFilesSection" Spacing="14">
                             <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center" Margin="0,4,0,8">
                                 <StackPanel Grid.Column="0" Spacing="4">
                                     <TextBlock x:Name="OriginalModalTitleText"
@@ -512,8 +522,288 @@
                                        Foreground="#FBBF24"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
+                    </ScrollViewer>
+
+                    <!-- DTC OFF & DIAGNOSTICS SECTION -->
+                    <Grid x:Name="DtcSection"
+                          RowDefinitions="Auto,*,Auto"
+                          IsVisible="False">
+                        <!-- FIXED TOP BAR -->
+                        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,8">
+                            <!-- HEADER ROW WITH TITLE & COUNTER CHIP -->
+                            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock x:Name="DtcSectionTitleText"
+                                               Text="⚡ Diagnostic Trouble Code (DTC) Customization"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="#FBBF24"/>
+                                    <TextBlock x:Name="DtcSectionDescText"
+                                               Text="Select DTC codes to turn OFF or restore to stock factory state for this ECU."
+                                               FontSize="12"
+                                               Foreground="#9CA3AF"/>
+                                </StackPanel>
+
+                                <!-- SELECTION COUNTER BADGE -->
+                                <Border Grid.Column="1" 
+                                        Background="#261E14" 
+                                        BorderBrush="#78350F" 
+                                        BorderThickness="1" 
+                                        CornerRadius="12" 
+                                        Padding="12,6"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock x:Name="LblDtcOffText" Text="OFF:" FontSize="11" Foreground="#F87171" FontWeight="Bold"/>
+                                            <TextBlock x:Name="DtcOffCountText" Text="0" FontSize="11" FontWeight="Bold" Foreground="#F87171"/>
+                                        </StackPanel>
+                                        <TextBlock Text="•" Foreground="#444444" FontSize="11"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock x:Name="LblDtcOnText" Text="ON:" FontSize="11" Foreground="#4ADE80" FontWeight="Bold"/>
+                                            <TextBlock x:Name="DtcOnCountText" Text="0" FontSize="11" FontWeight="Bold" Foreground="#4ADE80"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- SEARCH BAR & MANUAL CUSTOM P-CODE INPUT ROW -->
+                            <Border Background="#14161D"
+                                    BorderBrush="#252A38"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="10,8">
+                                <Grid ColumnDefinitions="*,Auto,Auto" VerticalAlignment="Center">
+                                    <!-- Instant Search Box -->
+                                    <TextBox x:Name="DtcSearchBox"
+                                             Grid.Column="0"
+                                             Watermark="🔍 Filter DTCs by code or description (e.g. P0420, EGR, Catalyst)..."
+                                             Background="#1A1D24"
+                                             Foreground="White"
+                                             BorderBrush="#2E3342"
+                                             CornerRadius="8"
+                                             Padding="10,6"
+                                             FontSize="12"
+                                             Margin="0,0,8,0"/>
+
+                                    <!-- Custom P-Code Input -->
+                                    <TextBox x:Name="DtcCustomInput"
+                                             Grid.Column="1"
+                                             Watermark="Custom P-Code"
+                                             MaxLength="6"
+                                             Width="130"
+                                             Background="#1A1D24"
+                                             Foreground="White"
+                                             BorderBrush="#2E3342"
+                                             CornerRadius="8"
+                                             Padding="10,6"
+                                             FontSize="12"
+                                             Margin="0,0,8,0"/>
+
+                                    <!-- Add Custom DTC Button -->
+                                    <Button x:Name="DtcAddCustomBtn"
+                                            Grid.Column="2"
+                                            Content="+ Add Code"
+                                            Click="DtcAddCustomBtn_Click"
+                                            Background="#1E293B"
+                                            Foreground="#38BDF8"
+                                            BorderBrush="#0284C7"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            FontSize="11"
+                                            FontWeight="Bold"
+                                            Padding="14,6"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- QUICK ACTIONS BAR -->
+                            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center" Margin="0,2,0,2">
+                                <TextBlock x:Name="DtcResultsCountText"
+                                           Grid.Column="0"
+                                           Text="Detected Fault Codes"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#CCCCCC"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="DtcTurnAllOffBtn"
+                                            Content="🔴 Turn All OFF"
+                                            Click="DtcTurnAllOff_Click"
+                                            Background="#2D1515"
+                                            Foreground="#F87171"
+                                            BorderBrush="#7F1D1D"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            FontSize="11"
+                                            Padding="10,4"
+                                            Cursor="Hand"/>
+
+                                    <Button x:Name="DtcResetAllBtn"
+                                            Content="⚪ Reset to Stock"
+                                            Click="DtcResetAll_Click"
+                                            Background="#1E222D"
+                                            Foreground="#9CA3AF"
+                                            BorderBrush="#2E3342"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            FontSize="11"
+                                            Padding="10,4"
+                                            Cursor="Hand"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- SCROLLABLE P-CODES VIEWPORT -->
+                        <ScrollViewer Grid.Row="1"
+                                      VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="8" Margin="0,0,6,0">
+                                <!-- DTC CARDS CONTAINER -->
+                                <StackPanel x:Name="DtcCardsContainer" Spacing="8"/>
+
+                                <!-- EMPTY STATE BLOCK -->
+                                <Border x:Name="DtcEmptyStateBorder"
+                                        Background="#141822"
+                                        BorderBrush="#263147"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="24"
+                                        IsVisible="False"
+                                        HorizontalAlignment="Stretch">
+                                    <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                        <TextBlock x:Name="DtcEmptyStateTitleText"
+                                                   Text="🔍 No diagnostic trouble codes detected or matching search."
+                                                   Foreground="#9CA3AF"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="DtcEmptyStateDescText"
+                                                   Text="You can add any specific OBD-II P-Code manually using the input above."
+                                                   Foreground="#6B7280"
+                                                   FontSize="11"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- FIXED BOTTOM BAR -->
+                        <StackPanel Grid.Row="2" Spacing="6" Margin="0,6,0,0">
+                            <!-- DTC PAGINATION CONTROLS BAR -->
+                            <Border x:Name="DtcPaginationBar"
+                                    Margin="0,0,0,0"
+                                    Padding="14,8"
+                                    Background="#141822"
+                                    BorderBrush="#263147"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    IsVisible="False">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" VerticalAlignment="Center">
+                                    <Button x:Name="DtcFirstPageBtn"
+                                            Grid.Column="0"
+                                            Content="⏮"
+                                            Click="DtcFirstPage_Click"
+                                            Background="#1E293B"
+                                            Foreground="#38BDF8"
+                                            BorderBrush="#0284C7"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            FontSize="11"
+                                            FontWeight="Bold"
+                                            Padding="10,6"
+                                            Margin="0,0,6,0"
+                                            Cursor="Hand"/>
+
+                                    <Button x:Name="DtcPrevPageBtn"
+                                            Grid.Column="1"
+                                            Content="◀ Previous"
+                                            Click="DtcPrevPage_Click"
+                                            Background="#1E293B"
+                                            Foreground="#38BDF8"
+                                            BorderBrush="#0284C7"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            FontSize="11"
+                                            FontWeight="Bold"
+                                            Padding="14,6"
+                                            Cursor="Hand"/>
+
+                                    <TextBlock x:Name="DtcPageNumberText"
+                                               Grid.Column="2"
+                                               Text="Page 1 of 1"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#CCCCCC"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+
+                                    <Button x:Name="DtcNextPageBtn"
+                                            Grid.Column="3"
+                                            Content="Next ▶"
+                                            Click="DtcNextPage_Click"
+                                            Background="#1E293B"
+                                            Foreground="#38BDF8"
+                                            BorderBrush="#0284C7"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            FontSize="11"
+                                            FontWeight="Bold"
+                                            Padding="14,6"
+                                            Margin="0,0,6,0"
+                                            Cursor="Hand"/>
+
+                                    <Button x:Name="DtcLastPageBtn"
+                                            Grid.Column="4"
+                                            Content="⏭"
+                                            Click="DtcLastPage_Click"
+                                            Background="#1E293B"
+                                            Foreground="#38BDF8"
+                                            BorderBrush="#0284C7"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            FontSize="11"
+                                            FontWeight="Bold"
+                                            Padding="10,6"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- DTC SUBMIT ORDER ROW -->
+                            <Border Margin="0,0,0,0"
+                                    Padding="14,10"
+                                    Background="#141822"
+                                    BorderBrush="#263147"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock x:Name="DtcOrderStatusText"
+                                                   Text="Ready to submit DTC modifications"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#9CA3AF"/>
+                                        <TextBlock x:Name="DtcOrderSubHintText"
+                                                   Text="✓ Covered with active tuning subscription"
+                                                   FontSize="11"
+                                                   Foreground="#4DFF8A"/>
+                                    </StackPanel>
+
+                                    <Button x:Name="DtcSubmitOrderBtn"
+                                            Grid.Column="1"
+                                            Content="⚡ Order DTC Modification"
+                                            Click="DtcSubmitOrderBtn_Click"
+                                            Background="#F59E0B"
+                                            Foreground="#141414"
+                                            FontWeight="Bold"
+                                            FontSize="12"
+                                            CornerRadius="8"
+                                            Padding="18,8"
+                                            Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
                 <Border Name="DropZone"
                         Grid.Row="2"
                         IsVisible="{Binding !IsVisible, ElementName=ServicesContainer}"

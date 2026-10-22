@@ -275,6 +275,9 @@ public class EcuIdentifyData
     [JsonPropertyName("originalMatches")]
     public List<OriginalMatchDto>? OriginalMatchesCamel { get; set; }
 
+    [JsonPropertyName("dtcs")]
+    public List<DtcItemDto>? Dtcs { get; set; }
+
     [JsonPropertyName("is_original_available")]
     public bool? RawIsOriginalAvailable { get; set; }
 
@@ -379,6 +382,91 @@ public class ServiceDto
     [JsonIgnore]
     public bool IsCoveredBySubscription =>
         IsIncludedInSubscription && (!RemainingQuota.HasValue || RemainingQuota.Value > 0 || RemainingQuota.Value == -1);
+}
+
+public class DtcItemDto
+{
+    [JsonPropertyName("code")]
+    public string Code { get; set; } = string.Empty;
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("category")]
+    public string? Category { get; set; }
+
+    [JsonPropertyName("is_active")]
+    public bool IsActive { get; set; } = true;
+
+    [JsonPropertyName("translations")]
+    public DtcTranslationsDto? Translations { get; set; }
+
+    public string GetLocalizedDescription(string? langCode)
+    {
+        if (Translations?.Description != null && !string.IsNullOrEmpty(langCode) &&
+            Translations.Description.TryGetValue(langCode, out var trans) && !string.IsNullOrWhiteSpace(trans))
+        {
+            return trans;
+        }
+
+        return ADIapp.Services.DtcTranslationService.GetDescription(Code, Description, langCode);
+    }
+
+    public string? GetLocalizedCategory(string? langCode)
+    {
+        if (Translations?.Category != null && !string.IsNullOrEmpty(langCode) &&
+            Translations.Category.TryGetValue(langCode, out var trans) && !string.IsNullOrWhiteSpace(trans))
+        {
+            return trans;
+        }
+
+        return ADIapp.Services.DtcTranslationService.GetCategory(Category, langCode);
+    }
+}
+
+public class DtcTranslationsDto
+{
+    [JsonPropertyName("description")]
+    public Dictionary<string, string>? Description { get; set; }
+
+    [JsonPropertyName("category")]
+    public Dictionary<string, string>? Category { get; set; }
+}
+
+public class OrderDataBaseDto
+{
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+}
+
+public class OriginalOrderDataDto : OrderDataBaseDto
+{
+    [JsonPropertyName("project_file")]
+    public string? ProjectFile { get; set; }
+
+    [JsonPropertyName("read_hardware")]
+    public string? ReadHardware { get; set; }
+}
+
+public class DtcActionsDto
+{
+    [JsonPropertyName("off")]
+    public List<string> Off { get; set; } = new();
+
+    [JsonPropertyName("on")]
+    public List<string> On { get; set; } = new();
+}
+
+public class DtcOrderDataDto : OrderDataBaseDto
+{
+    [JsonPropertyName("actions")]
+    public DtcActionsDto Actions { get; set; } = new();
+
+    [JsonPropertyName("kp_file")]
+    public string? KpFile { get; set; }
+
+    [JsonPropertyName("report")]
+    public System.Text.Json.JsonElement? Report { get; set; }
 }
 
 public class OriginalMatchDto
@@ -524,6 +612,9 @@ public class OrderHistoryItemDto
 
     [JsonPropertyName("read_hardware")]
     public string? ReadHardware { get; set; }
+
+    [JsonPropertyName("order_data")]
+    public System.Text.Json.JsonElement? OrderData { get; set; }
 
     [JsonPropertyName("file_received")]
     public string? FileReceived { get; set; }

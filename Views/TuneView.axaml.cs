@@ -33,6 +33,11 @@ public partial class TuneView : UserControl
     private bool _isUpdatingCards;
     private int _origPageSize = 5;
     private int _origCurrentPage = 1;
+    private int _dtcPageSize = 25;
+    private int _dtcCurrentPage = 1;
+    private readonly Dictionary<string, string> _dtcSelections = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<DtcItemDto> _customDtcs = new();
+    private string _dtcFilterQuery = "";
 
     private class ServiceCardHolder
     {
@@ -59,6 +64,20 @@ public partial class TuneView : UserControl
         SavedText = this.FindControl<TextBlock>("SavedText");
         AddHandler(DragDrop.DropEvent, OnFileDrop);
         AddHandler(DragDrop.DragOverEvent, OnFileDragOver);
+
+        var dtcSearchBox = this.FindControl<TextBox>("DtcSearchBox");
+        if (dtcSearchBox != null)
+        {
+            dtcSearchBox.PropertyChanged += (s, e) =>
+            {
+                if (e.Property == TextBox.TextProperty)
+                {
+                    _dtcFilterQuery = dtcSearchBox.Text ?? "";
+                    _dtcCurrentPage = 1;
+                    RenderDtcList();
+                }
+            };
+        }
     }
 
     protected override async void OnInitialized()
@@ -74,6 +93,13 @@ public partial class TuneView : UserControl
         UpdateLocalizedText();
         UpdateDailyQuotaUi();
         UpdateOrderProgressModal();
+
+        var dtcBtn = this.FindControl<Button>("DtcOffButton");
+        if (dtcBtn != null)
+        {
+            dtcBtn.IsVisible = AppConfig.EnableDtcFeature;
+        }
+
         _ = ApiService.FetchAllowedExtensionsAsync();
         await LoadProcessingFilesAsync();
         _ = CheckActiveOrderOnStartupAsync();
@@ -216,6 +242,10 @@ public partial class TuneView : UserControl
             {
                 RenderServicesList();
             }
+            if ((_currentEcuData?.Dtcs != null && _currentEcuData.Dtcs.Count > 0) || _customDtcs.Count > 0)
+            {
+                RenderDtcList();
+            }
         });
     }
 
@@ -318,8 +348,12 @@ public partial class TuneView : UserControl
 
         var dtcOffBtnText = this.FindControl<TextBlock>("DtcOffBtnText");
         var dtcOffBadgeText = this.FindControl<TextBlock>("DtcOffBadgeText");
-        if (dtcOffBtnText != null) dtcOffBtnText.Text = LanguageService.Get("Tune_DtcOffBtn");
-        if (dtcOffBadgeText != null) dtcOffBadgeText.Text = LanguageService.Get("Tune_ComingSoonBadge");
+        if (dtcOffBtnText != null) dtcOffBtnText.Text = LanguageService.Get("Tune_TabDtc");
+        if (dtcOffBadgeText != null)
+        {
+            int dtcCount = _currentEcuData?.Dtcs?.Count ?? 0;
+            dtcOffBadgeText.Text = dtcCount > 0 ? $"{dtcCount}" : "PRO";
+        }
 
         var workflowTabTuningText = this.FindControl<TextBlock>("WorkflowTabTuningText");
         if (workflowTabTuningText != null)
@@ -339,20 +373,66 @@ public partial class TuneView : UserControl
         if (origModalTitle != null) origModalTitle.Text = LanguageService.Get("Tune_OriginalModalTitle");
         if (origModalDesc != null) origModalDesc.Text = LanguageService.Get("Tune_OriginalModalDesc");
 
+        var dtcTitle = this.FindControl<TextBlock>("DtcSectionTitleText");
+        var dtcDesc = this.FindControl<TextBlock>("DtcSectionDescText");
+        var dtcSearch = this.FindControl<TextBox>("DtcSearchBox");
+        var dtcCustom = this.FindControl<TextBox>("DtcCustomInput");
+        var dtcAddBtn = this.FindControl<Button>("DtcAddCustomBtn");
+        var dtcTurnAllOffBtn = this.FindControl<Button>("DtcTurnAllOffBtn");
+        var dtcResetAllBtn = this.FindControl<Button>("DtcResetAllBtn");
+        var dtcSubmitOrderBtn = this.FindControl<Button>("DtcSubmitOrderBtn");
+        var dtcSubHintText = this.FindControl<TextBlock>("DtcOrderSubHintText");
+
+        if (dtcTitle != null) dtcTitle.Text = LanguageService.Get("Tune_DtcTitle");
+        if (dtcDesc != null) dtcDesc.Text = LanguageService.Get("Tune_DtcDesc");
+        if (dtcSearch != null) dtcSearch.Watermark = LanguageService.Get("Tune_DtcSearchWatermark");
+        if (dtcCustom != null) dtcCustom.Watermark = LanguageService.Get("Tune_DtcCustomWatermark");
+        if (dtcAddBtn != null) dtcAddBtn.Content = LanguageService.Get("Tune_DtcAddCustomBtn");
+        if (dtcTurnAllOffBtn != null) dtcTurnAllOffBtn.Content = LanguageService.Get("Tune_DtcTurnAllOff");
+        if (dtcResetAllBtn != null) dtcResetAllBtn.Content = LanguageService.Get("Tune_DtcResetAll");
+        if (dtcSubmitOrderBtn != null) dtcSubmitOrderBtn.Content = LanguageService.Get("Tune_DtcSubmitBtn");
+        if (dtcSubHintText != null) dtcSubHintText.Text = LanguageService.Get("Tune_DtcSubHint");
+
+        var lblStatus = this.FindControl<TextBlock>("LblStatusText");
+        if (lblStatus != null) lblStatus.Text = LanguageService.Get("Tune_StatusLabel");
+
+        var lblSelected = this.FindControl<TextBlock>("LblSummarySelectedText");
+        if (lblSelected != null) lblSelected.Text = LanguageService.Get("Tune_SelectedLabel");
+
+        var lblTotal = this.FindControl<TextBlock>("LblSummaryTotalText");
+        if (lblTotal != null) lblTotal.Text = LanguageService.Get("Tune_TotalLabel");
+
+        var lblDtcOff = this.FindControl<TextBlock>("LblDtcOffText");
+        if (lblDtcOff != null) lblDtcOff.Text = LanguageService.Get("Tune_DtcOffLabel");
+
+        var lblDtcOn = this.FindControl<TextBlock>("LblDtcOnText");
+        if (lblDtcOn != null) lblDtcOn.Text = LanguageService.Get("Tune_DtcOnLabel");
+
+        var dtcEmptyTitle = this.FindControl<TextBlock>("DtcEmptyStateTitleText");
+        if (dtcEmptyTitle != null) dtcEmptyTitle.Text = LanguageService.Get("Tune_DtcEmptyTitle");
+
+        var dtcEmptyDesc = this.FindControl<TextBlock>("DtcEmptyStateDescText");
+        if (dtcEmptyDesc != null) dtcEmptyDesc.Text = LanguageService.Get("Tune_DtcEmptyDesc");
+
+        var orderProgTitle = this.FindControl<TextBlock>("OrderProgressTitle");
+        if (orderProgTitle != null) orderProgTitle.Text = LanguageService.Get("Tune_ProcessingOrderTitle");
+
+        var orderProgStatus = this.FindControl<TextBlock>("OrderProgressStatus");
+        if (orderProgStatus != null) orderProgStatus.Text = LanguageService.Get("Tune_ProcessingOrderDesc");
+
+        var dtcPrevBtn = this.FindControl<Button>("DtcPrevPageBtn");
+        var dtcNextBtn = this.FindControl<Button>("DtcNextPageBtn");
+        if (dtcPrevBtn != null) dtcPrevBtn.Content = LanguageService.Get("Tune_DtcPrevPage");
+        if (dtcNextBtn != null) dtcNextBtn.Content = LanguageService.Get("Tune_DtcNextPage");
+
         UpdateSummaryAndSaveButton();
+        UpdateDtcCounters();
     }
 
-    private async void DtcOffButton_Click(object? sender, RoutedEventArgs e)
+    private void DtcOffButton_Click(object? sender, RoutedEventArgs e)
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel is Window window)
-        {
-            await MessageDialog.ShowAsync(
-                window,
-                LanguageService.Get("Tune_DtcOffMessage"),
-                LanguageService.Get("Tune_DtcOffTitle")
-            );
-        }
+        if (!AppConfig.EnableDtcFeature) return;
+        SetActiveWorkflowTab("DTC");
     }
 
     private CancellationTokenSource? _identPollCts;
@@ -578,6 +658,20 @@ public partial class TuneView : UserControl
 
         _currentEcuData = data;
         _origCurrentPage = 1;
+        _dtcCurrentPage = 1;
+        _customDtcs.Clear();
+        _dtcSelections.Clear();
+        _dtcFilterQuery = "";
+        var dtcSearchBox = this.FindControl<TextBox>("DtcSearchBox");
+        if (dtcSearchBox != null) dtcSearchBox.Text = "";
+        UpdateDtcCounters();
+
+        var dtcSec = this.FindControl<Border>("DtcOffSection");
+        if (dtcSec != null && dtcSec.IsVisible)
+        {
+            RenderDtcList();
+        }
+
         var origBtn = this.FindControl<Button>("OriginalFilesButton");
         var origBtnText = this.FindControl<TextBlock>("OriginalFilesBtnText");
         int matchCount = data.EffectiveOriginalMatches.Count;
@@ -588,6 +682,19 @@ public partial class TuneView : UserControl
         if (origBtnText != null)
         {
             origBtnText.Text = string.Format(LanguageService.Get("Tune_OriginalFilesBtn"), matchCount);
+        }
+
+        var dtcBtn = this.FindControl<Button>("DtcOffButton");
+        if (dtcBtn != null)
+        {
+            dtcBtn.IsVisible = AppConfig.EnableDtcFeature;
+        }
+
+        var dtcBadgeText = this.FindControl<TextBlock>("DtcOffBadgeText");
+        int dtcCount = data.Dtcs?.Count ?? 0;
+        if (dtcBadgeText != null)
+        {
+            dtcBadgeText.Text = dtcCount > 0 ? $"{dtcCount}" : "PRO";
         }
     }
 
@@ -661,7 +768,7 @@ public partial class TuneView : UserControl
         {
             sidebar.Children.Add(new TextBlock
             {
-                Text = "No active tasks",
+                Text = LanguageService.Get("Tune_NoActiveTasks"),
                 Foreground = Avalonia.Media.Brushes.Gray,
                 FontSize = 12,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
@@ -1213,7 +1320,7 @@ public partial class TuneView : UserControl
         {
             panel.Children.Add(new TextBlock
             {
-                Text = "No services available for this ECU.",
+                Text = LanguageService.Get("Tune_NoServicesAvailable"),
                 Foreground = Avalonia.Media.Brushes.Gray,
                 FontSize = 13,
                 Margin = new Thickness(0, 15)
@@ -1581,7 +1688,11 @@ public partial class TuneView : UserControl
         var selectedText = this.FindControl<TextBlock>("SummarySelectedCountText");
         var totalText = this.FindControl<TextBlock>("SummaryTotalTokensText");
 
-        if (selectedText != null) selectedText.Text = $"{selectedCount} Tune{(selectedCount == 1 ? "" : "s")}";
+        if (selectedText != null)
+        {
+            string suffix = selectedCount == 1 ? LanguageService.Get("Tune_TuneSingular") : LanguageService.Get("Tune_TunePlural");
+            selectedText.Text = $"{selectedCount} {suffix}";
+        }
         if (totalText != null) totalText.Text = $"{totalTokens} CBT";
 
         if (SaveButton != null)
@@ -1641,7 +1752,7 @@ public partial class TuneView : UserControl
                 var topLevel = TopLevel.GetTopLevel(this);
                 if (topLevel is Window window)
                 {
-                    await MessageBox(window, "An order is currently being processed. Please wait for it to complete before uploading a new file.");
+                    await MessageBox(window, LanguageService.Get("Tune_OrderProcessingWait"));
                 }
             }
             return;
@@ -1735,7 +1846,7 @@ public partial class TuneView : UserControl
                 var topLevel = TopLevel.GetTopLevel(this);
                 if (topLevel is Window window)
                 {
-                    await MessageBox(window, "An order is currently being processed. Please wait for it to complete before uploading a new file.");
+                    await MessageBox(window, LanguageService.Get("Tune_OrderProcessingWait"));
                 }
             }
             return;
@@ -2065,6 +2176,12 @@ public partial class TuneView : UserControl
         _currentServices = null;
         _currentEcuData = null;
         _origCurrentPage = 1;
+        _dtcCurrentPage = 1;
+        _dtcSelections.Clear();
+        _customDtcs.Clear();
+        _dtcFilterQuery = "";
+        var dtcSearchBox = this.FindControl<TextBox>("DtcSearchBox");
+        if (dtcSearchBox != null) dtcSearchBox.Text = "";
         _serviceSelectionStates.Clear();
         _activeFilter = "ALL";
         if (_activeBorder != null)
@@ -2103,6 +2220,11 @@ public partial class TuneView : UserControl
 
     private void SetActiveWorkflowTab(string tab)
     {
+        if (tab == "DTC" && !AppConfig.EnableDtcFeature)
+        {
+            tab = "TUNING";
+        }
+
         var tabTuning = this.FindControl<Button>("WorkflowTabTuning");
         var tabTuningText = this.FindControl<TextBlock>("WorkflowTabTuningText");
         var tabOrig = this.FindControl<Button>("OriginalFilesButton");
@@ -2110,8 +2232,9 @@ public partial class TuneView : UserControl
         var tabDtc = this.FindControl<Button>("DtcOffButton");
         var tabDtcText = this.FindControl<TextBlock>("DtcOffBtnText");
 
-        var tuningSec = this.FindControl<StackPanel>("TuningServicesSection");
-        var origSec = this.FindControl<StackPanel>("OriginalFilesSection");
+        var tuningSec = this.FindControl<Control>("TuningServicesScrollViewer") ?? this.FindControl<Control>("TuningServicesSection");
+        var origSec = this.FindControl<Control>("OriginalFilesScrollViewer") ?? this.FindControl<Control>("OriginalFilesSection");
+        var dtcSec = this.FindControl<Control>("DtcSection");
 
         if (tab == "TUNING")
         {
@@ -2138,6 +2261,7 @@ public partial class TuneView : UserControl
 
             if (tuningSec != null) tuningSec.IsVisible = true;
             if (origSec != null) origSec.IsVisible = false;
+            if (dtcSec != null) dtcSec.IsVisible = false;
             if (SaveButton != null) SaveButton.IsVisible = true;
         }
         else if (tab == "ORIGINAL")
@@ -2165,10 +2289,41 @@ public partial class TuneView : UserControl
 
             if (tuningSec != null) tuningSec.IsVisible = false;
             if (origSec != null) origSec.IsVisible = true;
+            if (dtcSec != null) dtcSec.IsVisible = false;
             if (SaveButton != null) SaveButton.IsVisible = false;
 
             var matches = _currentEcuData?.EffectiveOriginalMatches;
             RenderOriginalMatches(matches);
+        }
+        else if (tab == "DTC")
+        {
+            if (tabTuning != null)
+            {
+                tabTuning.Background = Avalonia.Media.Brush.Parse("#1A1D24");
+                tabTuning.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+            }
+            if (tabTuningText != null) tabTuningText.Foreground = Avalonia.Media.Brush.Parse("#9CA3AF");
+
+            if (tabOrig != null)
+            {
+                tabOrig.Background = Avalonia.Media.Brush.Parse("#1A1D24");
+                tabOrig.BorderBrush = Avalonia.Media.Brush.Parse("#262933");
+            }
+            if (tabOrigText != null) tabOrigText.Foreground = Avalonia.Media.Brush.Parse("#9CA3AF");
+
+            if (tabDtc != null)
+            {
+                tabDtc.Background = Avalonia.Media.Brush.Parse("#332612");
+                tabDtc.BorderBrush = Avalonia.Media.Brush.Parse("#F59E0B");
+            }
+            if (tabDtcText != null) tabDtcText.Foreground = Avalonia.Media.Brush.Parse("#FBBF24");
+
+            if (tuningSec != null) tuningSec.IsVisible = false;
+            if (origSec != null) origSec.IsVisible = false;
+            if (dtcSec != null) dtcSec.IsVisible = true;
+            if (SaveButton != null) SaveButton.IsVisible = false;
+
+            RenderDtcList();
         }
     }
 
@@ -2388,7 +2543,7 @@ public partial class TuneView : UserControl
         triggerBtn.IsEnabled = false;
         if (statusText != null)
         {
-            statusText.Text = "Submitting request for original file...";
+            statusText.Text = LanguageService.Get("Tune_SubmittingOriginalRequest");
             statusText.Foreground = Avalonia.Media.Brush.Parse("#38BDF8");
         }
 
@@ -2408,7 +2563,7 @@ public partial class TuneView : UserControl
             {
                 if (statusText != null)
                 {
-                    statusText.Text = $"⚠️ {res.Message ?? "Failed to request original file."}";
+                    statusText.Text = $"⚠️ {res.Message ?? LanguageService.Get("Tune_FailedOriginalOrder")}";
                     statusText.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
                 }
                 triggerBtn.IsEnabled = true;
@@ -2425,8 +2580,548 @@ public partial class TuneView : UserControl
         }
     }
 
+    private void DtcAddCustomBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        var input = this.FindControl<TextBox>("DtcCustomInput");
+        if (input == null || string.IsNullOrWhiteSpace(input.Text)) return;
+
+        string code = input.Text.Trim().ToUpperInvariant();
+        if (!code.StartsWith("P") && !code.StartsWith("U") && !code.StartsWith("B") && !code.StartsWith("C"))
+        {
+            code = "P" + code.PadLeft(4, '0');
+        }
+
+        if (!_customDtcs.Any(d => string.Equals(d.Code, code, StringComparison.OrdinalIgnoreCase)))
+        {
+            _customDtcs.Add(new DtcItemDto
+            {
+                Code = code,
+                Description = $"Custom Fault Code {code}",
+                Category = "Manual User Entry",
+                IsActive = true
+            });
+        }
+
+        _dtcSelections[code] = "OFF";
+        input.Text = "";
+        _dtcCurrentPage = 1;
+        RenderDtcList();
+    }
+
+    private void DtcTurnAllOff_Click(object? sender, RoutedEventArgs e)
+    {
+        var allDtcs = new List<DtcItemDto>();
+        if (_currentEcuData?.Dtcs != null) allDtcs.AddRange(_currentEcuData.Dtcs);
+        allDtcs.AddRange(_customDtcs);
+
+        foreach (var dtc in allDtcs)
+        {
+            if (dtc.IsActive)
+            {
+                _dtcSelections[dtc.Code] = "OFF";
+            }
+            else
+            {
+                _dtcSelections.Remove(dtc.Code);
+            }
+        }
+        RenderDtcList();
+        UpdateDtcCounters();
+    }
+
+    private void DtcResetAll_Click(object? sender, RoutedEventArgs e)
+    {
+        _dtcSelections.Clear();
+        RenderDtcList();
+        UpdateDtcCounters();
+    }
+
+    private void DtcFirstPage_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_dtcCurrentPage > 1)
+        {
+            _dtcCurrentPage = 1;
+            RenderDtcList();
+        }
+    }
+
+    private void DtcPrevPage_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_dtcCurrentPage > 1)
+        {
+            _dtcCurrentPage--;
+            RenderDtcList();
+        }
+    }
+
+    private void DtcNextPage_Click(object? sender, RoutedEventArgs e)
+    {
+        int totalPages = GetDtcTotalPages();
+        if (_dtcCurrentPage < totalPages)
+        {
+            _dtcCurrentPage++;
+            RenderDtcList();
+        }
+    }
+
+    private void DtcLastPage_Click(object? sender, RoutedEventArgs e)
+    {
+        int totalPages = GetDtcTotalPages();
+        if (_dtcCurrentPage < totalPages)
+        {
+            _dtcCurrentPage = totalPages;
+            RenderDtcList();
+        }
+    }
+
+    private List<DtcItemDto> GetFilteredDtcs()
+    {
+        var allDtcs = new List<DtcItemDto>();
+        if (_currentEcuData?.Dtcs != null)
+        {
+            allDtcs.AddRange(_currentEcuData.Dtcs);
+        }
+        foreach (var custom in _customDtcs)
+        {
+            if (!allDtcs.Any(d => string.Equals(d.Code, custom.Code, StringComparison.OrdinalIgnoreCase)))
+            {
+                allDtcs.Add(custom);
+            }
+        }
+
+        var lang = LanguageService.CurrentLanguage;
+        var query = _dtcFilterQuery.Trim();
+        return string.IsNullOrEmpty(query)
+            ? allDtcs
+            : allDtcs.Where(d =>
+                d.Code.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                d.GetLocalizedDescription(lang).Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                (d.GetLocalizedCategory(lang) != null && d.GetLocalizedCategory(lang)!.Contains(query, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+    }
+
+    private int GetDtcTotalPages()
+    {
+        var filtered = GetFilteredDtcs();
+        return Math.Max(1, (int)Math.Ceiling((double)filtered.Count / _dtcPageSize));
+    }
+
+    private void RenderDtcList()
+    {
+        var container = this.FindControl<StackPanel>("DtcCardsContainer");
+        var emptyBorder = this.FindControl<Border>("DtcEmptyStateBorder");
+        var resultsCountText = this.FindControl<TextBlock>("DtcResultsCountText");
+        var paginationBar = this.FindControl<Border>("DtcPaginationBar");
+        var pageNumberText = this.FindControl<TextBlock>("DtcPageNumberText");
+        var firstBtn = this.FindControl<Button>("DtcFirstPageBtn");
+        var prevBtn = this.FindControl<Button>("DtcPrevPageBtn");
+        var nextBtn = this.FindControl<Button>("DtcNextPageBtn");
+        var lastBtn = this.FindControl<Button>("DtcLastPageBtn");
+
+        if (container == null) return;
+
+        container.Children.Clear();
+
+        var filtered = GetFilteredDtcs();
+        int totalCount = filtered.Count;
+        int totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / _dtcPageSize));
+
+        if (_dtcCurrentPage < 1) _dtcCurrentPage = 1;
+        if (_dtcCurrentPage > totalPages) _dtcCurrentPage = totalPages;
+
+        if (resultsCountText != null)
+        {
+            resultsCountText.Text = totalCount > 0
+                ? string.Format(LanguageService.Get("Tune_DtcResultsCount"), totalCount, totalCount == 1 ? "" : "s")
+                : LanguageService.Get("Tune_DtcNoCodesFound");
+        }
+
+        if (totalCount == 0)
+        {
+            if (emptyBorder != null) emptyBorder.IsVisible = true;
+            if (paginationBar != null) paginationBar.IsVisible = false;
+            UpdateDtcCounters();
+            return;
+        }
+
+        if (emptyBorder != null) emptyBorder.IsVisible = false;
+
+        int startIndex = (_dtcCurrentPage - 1) * _dtcPageSize;
+        var pagedDtcs = filtered.Skip(startIndex).Take(_dtcPageSize).ToList();
+
+        foreach (var dtc in pagedDtcs)
+        {
+            var card = CreateDtcCard(dtc);
+            container.Children.Add(card);
+        }
+
+        if (paginationBar != null)
+        {
+            paginationBar.IsVisible = totalPages > 1;
+        }
+
+        if (pageNumberText != null)
+        {
+            pageNumberText.Text = string.Format(LanguageService.Get("Tune_DtcPageInfo"), _dtcCurrentPage, totalPages, totalCount);
+        }
+
+        if (firstBtn != null)
+        {
+            firstBtn.IsEnabled = _dtcCurrentPage > 1;
+            firstBtn.Opacity = _dtcCurrentPage > 1 ? 1.0 : 0.4;
+            firstBtn.Cursor = _dtcCurrentPage > 1 ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null;
+        }
+
+        if (prevBtn != null)
+        {
+            prevBtn.IsEnabled = _dtcCurrentPage > 1;
+            prevBtn.Opacity = _dtcCurrentPage > 1 ? 1.0 : 0.4;
+            prevBtn.Cursor = _dtcCurrentPage > 1 ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null;
+            prevBtn.Content = LanguageService.Get("Tune_DtcPrevPage");
+        }
+
+        if (nextBtn != null)
+        {
+            nextBtn.IsEnabled = _dtcCurrentPage < totalPages;
+            nextBtn.Opacity = _dtcCurrentPage < totalPages ? 1.0 : 0.4;
+            nextBtn.Cursor = _dtcCurrentPage < totalPages ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null;
+            nextBtn.Content = LanguageService.Get("Tune_DtcNextPage");
+        }
+
+        if (lastBtn != null)
+        {
+            lastBtn.IsEnabled = _dtcCurrentPage < totalPages;
+            lastBtn.Opacity = _dtcCurrentPage < totalPages ? 1.0 : 0.4;
+            lastBtn.Cursor = _dtcCurrentPage < totalPages ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : null;
+        }
+
+        UpdateDtcCounters();
+    }
+
+    private Border CreateDtcCard(DtcItemDto dtc)
+    {
+        var card = new Border
+        {
+            Background = Avalonia.Media.Brush.Parse("#141822"),
+            BorderBrush = Avalonia.Media.Brush.Parse("#263147"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(14, 10)
+        };
+
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto")
+        };
+
+        // Col 0: Code Badge & Current ECU Status
+        var codeStack = new StackPanel
+        {
+            Spacing = 4,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 14, 0)
+        };
+
+        var codeBadge = new Border
+        {
+            Background = Avalonia.Media.Brush.Parse("#1E293B"),
+            BorderBrush = Avalonia.Media.Brush.Parse("#0284C7"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(10, 5),
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+            Child = new TextBlock
+            {
+                Text = dtc.Code,
+                FontSize = 13,
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Foreground = Avalonia.Media.Brush.Parse("#38BDF8"),
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+            }
+        };
+        codeStack.Children.Add(codeBadge);
+
+        // Status badge showing current status in file
+        var statusBadge = new Border
+        {
+            Background = dtc.IsActive ? Avalonia.Media.Brush.Parse("#064E3B") : Avalonia.Media.Brush.Parse("#450A0A"),
+            BorderBrush = dtc.IsActive ? Avalonia.Media.Brush.Parse("#059669") : Avalonia.Media.Brush.Parse("#DC2626"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(5),
+            Padding = new Thickness(6, 2),
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            Child = new TextBlock
+            {
+                Text = dtc.IsActive ? "● Active (ON)" : "○ Disabled (OFF)",
+                FontSize = 10,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                Foreground = dtc.IsActive ? Avalonia.Media.Brush.Parse("#6EE7B7") : Avalonia.Media.Brush.Parse("#FCA5A5"),
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+            }
+        };
+        codeStack.Children.Add(statusBadge);
+
+        Grid.SetColumn(codeStack, 0);
+        grid.Children.Add(codeStack);
+
+        // Col 1: Description & Category
+        var infoStack = new StackPanel
+        {
+            Spacing = 4,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 16, 0)
+        };
+
+        var lang = LanguageService.CurrentLanguage;
+        var localizedDesc = dtc.GetLocalizedDescription(lang);
+        var localizedCat = dtc.GetLocalizedCategory(lang);
+
+        var descText = new TextBlock
+        {
+            Text = localizedDesc,
+            FontSize = 13,
+            FontWeight = Avalonia.Media.FontWeight.Bold,
+            Foreground = Avalonia.Media.Brushes.White,
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+        };
+        infoStack.Children.Add(descText);
+
+        var catRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8 };
+        if (!string.IsNullOrWhiteSpace(localizedCat))
+        {
+            catRow.Children.Add(new TextBlock
+            {
+                Text = $"📁 {localizedCat}",
+                FontSize = 11,
+                Foreground = Avalonia.Media.Brush.Parse("#9CA3AF")
+            });
+        }
+        infoStack.Children.Add(catRow);
+
+        Grid.SetColumn(infoStack, 1);
+        grid.Children.Add(infoStack);
+
+        // Col 2: 2-Way Action Segment (ON / OFF)
+        var actionPanel = new Border
+        {
+            Background = Avalonia.Media.Brush.Parse("#0F131C"),
+            BorderBrush = Avalonia.Media.Brush.Parse("#252A38"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(3),
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+        };
+
+        var btnStack = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 4 };
+
+        string currentChoice = _dtcSelections.TryGetValue(dtc.Code, out var val)
+            ? val
+            : (dtc.IsActive ? "ON" : "OFF");
+
+        var onBtn = new Button
+        {
+            Content = $"🟢 {LanguageService.Get("Tune_DtcOn")}",
+            FontSize = 11,
+            FontWeight = Avalonia.Media.FontWeight.Bold,
+            Padding = new Thickness(12, 6),
+            CornerRadius = new CornerRadius(6),
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+        };
+
+        var offBtn = new Button
+        {
+            Content = $"🔴 {LanguageService.Get("Tune_DtcOff")}",
+            FontSize = 11,
+            FontWeight = Avalonia.Media.FontWeight.Bold,
+            Padding = new Thickness(12, 6),
+            CornerRadius = new CornerRadius(6),
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
+        };
+
+        void ApplySegmentStyles(string choice)
+        {
+            bool isModified = (choice == "OFF" && dtc.IsActive) || (choice == "ON" && !dtc.IsActive);
+
+            if (choice == "OFF")
+            {
+                offBtn.Background = Avalonia.Media.Brush.Parse("#7F1D1D");
+                offBtn.Foreground = Avalonia.Media.Brush.Parse("#FCA5A5");
+                onBtn.Background = Avalonia.Media.Brushes.Transparent;
+                onBtn.Foreground = Avalonia.Media.Brush.Parse("#64748B");
+            }
+            else // ON
+            {
+                onBtn.Background = Avalonia.Media.Brush.Parse("#14532D");
+                onBtn.Foreground = Avalonia.Media.Brush.Parse("#86EFAC");
+                offBtn.Background = Avalonia.Media.Brushes.Transparent;
+                offBtn.Foreground = Avalonia.Media.Brush.Parse("#64748B");
+            }
+
+            if (isModified)
+            {
+                card.BorderBrush = choice == "OFF"
+                    ? Avalonia.Media.Brush.Parse("#EF4444")
+                    : Avalonia.Media.Brush.Parse("#10B981");
+                card.BorderThickness = new Thickness(1.5);
+            }
+            else
+            {
+                card.BorderBrush = Avalonia.Media.Brush.Parse("#263147");
+                card.BorderThickness = new Thickness(1);
+            }
+        }
+
+        ApplySegmentStyles(currentChoice);
+
+        onBtn.Click += (_, _) =>
+        {
+            if (!dtc.IsActive)
+            {
+                _dtcSelections[dtc.Code] = "ON";
+            }
+            else
+            {
+                _dtcSelections.Remove(dtc.Code);
+            }
+            ApplySegmentStyles("ON");
+            UpdateDtcCounters();
+        };
+
+        offBtn.Click += (_, _) =>
+        {
+            if (dtc.IsActive)
+            {
+                _dtcSelections[dtc.Code] = "OFF";
+            }
+            else
+            {
+                _dtcSelections.Remove(dtc.Code);
+            }
+            ApplySegmentStyles("OFF");
+            UpdateDtcCounters();
+        };
+
+        btnStack.Children.Add(onBtn);
+        btnStack.Children.Add(offBtn);
+        actionPanel.Child = btnStack;
+
+        Grid.SetColumn(actionPanel, 2);
+        grid.Children.Add(actionPanel);
+
+        card.Child = grid;
+        return card;
+    }
+
+    private void UpdateDtcCounters()
+    {
+        int offCount = _dtcSelections.Values.Count(v => v == "OFF");
+        int onCount = _dtcSelections.Values.Count(v => v == "ON");
+
+        var offText = this.FindControl<TextBlock>("DtcOffCountText");
+        var onText = this.FindControl<TextBlock>("DtcOnCountText");
+        var submitBtn = this.FindControl<Button>("DtcSubmitOrderBtn");
+        var statusText = this.FindControl<TextBlock>("DtcOrderStatusText");
+
+        if (offText != null) offText.Text = offCount.ToString();
+        if (onText != null) onText.Text = onCount.ToString();
+
+        int totalSelected = offCount + onCount;
+        if (submitBtn != null)
+        {
+            if (totalSelected > 0)
+            {
+                var parts = new List<string>();
+                if (offCount > 0) parts.Add($"{offCount} {LanguageService.Get("Tune_DtcOff")}");
+                if (onCount > 0) parts.Add($"{onCount} {LanguageService.Get("Tune_DtcOn")}");
+                submitBtn.Content = $"{LanguageService.Get("Tune_DtcSubmitBtn")} ({string.Join(", ", parts)})";
+                submitBtn.IsEnabled = true;
+                submitBtn.Opacity = 1.0;
+            }
+            else
+            {
+                submitBtn.Content = LanguageService.Get("Tune_DtcSubmitBtn");
+                submitBtn.IsEnabled = false;
+                submitBtn.Opacity = 0.5;
+            }
+        }
+
+        if (statusText != null)
+        {
+            statusText.Text = totalSelected > 0
+                ? string.Format(LanguageService.Get("Tune_DtcActionsReady"), totalSelected, totalSelected == 1 ? "" : "s")
+                : LanguageService.Get("Tune_DtcSelectPrompt");
+        }
+    }
+
+    private async void DtcSubmitOrderBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_renderedFileHash) && string.IsNullOrEmpty(_pendingFileHash))
+            return;
+
+        string targetHash = !string.IsNullOrEmpty(_renderedFileHash) ? _renderedFileHash : _pendingFileHash!;
+
+        var offList = _dtcSelections.Where(kvp => kvp.Value == "OFF").Select(kvp => kvp.Key).ToList();
+        var onList = _dtcSelections.Where(kvp => kvp.Value == "ON").Select(kvp => kvp.Key).ToList();
+
+        if (offList.Count == 0 && onList.Count == 0)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window win)
+            {
+                await MessageDialog.ShowAsync(win, LanguageService.Get("Tune_DtcSelectPrompt"), LanguageService.Get("Dialog_Notice"));
+            }
+            return;
+        }
+
+        var statusText = this.FindControl<TextBlock>("DtcOrderStatusText");
+        var submitBtn = this.FindControl<Button>("DtcSubmitOrderBtn");
+
+        if (submitBtn != null) submitBtn.IsEnabled = false;
+        if (statusText != null)
+        {
+            statusText.Text = LanguageService.Get("Tune_SubmittingDtcOrder");
+            statusText.Foreground = Avalonia.Media.Brush.Parse("#38BDF8");
+        }
+
+        try
+        {
+            var actions = new Dictionary<string, List<string>>
+            {
+                ["off"] = offList,
+                ["on"] = onList
+            };
+
+            var res = await ApiService.CreateDtcOrderAsync(targetHash, actions, _originalFileName);
+            if (res.Success)
+            {
+                OrderProcessingManager.StartTrackingOrder(targetHash, res.OrderId);
+                ResetWorkspace();
+                _ = ApiService.FetchProfileAsync();
+                _ = LoadProcessingFilesAsync();
+            }
+            else
+            {
+                if (statusText != null)
+                {
+                    statusText.Text = $"⚠️ {res.Message ?? LanguageService.Get("Tune_FailedDtcOrder")}";
+                    statusText.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
+                }
+                if (submitBtn != null) submitBtn.IsEnabled = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (statusText != null)
+            {
+                statusText.Text = $"⚠️ Error: {ex.Message}";
+                statusText.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
+            }
+            if (submitBtn != null) submitBtn.IsEnabled = true;
+        }
+    }
+
     private async Task MessageBox(Window window, string message)
     {
-        await MessageDialog.ShowAsync(window, message, "Notice");
+        await MessageDialog.ShowAsync(window, message, LanguageService.Get("Dialog_Notice"));
     }
 }

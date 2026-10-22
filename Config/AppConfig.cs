@@ -46,6 +46,12 @@ public static class AppConfig
             ? $"{v.Major}.{v.Minor}.{v.Build}"
             : "1.0.4";
 
+    /// <summary>
+    /// Feature flag controlling DTC (Diagnostic Trouble Codes) customization tab and workflows.
+    /// Default is false to hold back until production-ready. Can be enabled via ADI_ENABLE_DTC=true in .env.
+    /// </summary>
+    public static bool EnableDtcFeature { get; }
+
     static AppConfig()
     {
         // 1. Attempt to load local .env file if it exists
@@ -69,6 +75,16 @@ public static class AppConfig
         else
         {
             WebsocketEncrypted = BuildDefaultWebsocketEncrypted;
+        }
+
+        string? dtcEnv = GetEnv("ADI_ENABLE_DTC", "ENABLE_DTC");
+        if (!string.IsNullOrWhiteSpace(dtcEnv) && bool.TryParse(dtcEnv, out bool parsedDtc))
+        {
+            EnableDtcFeature = parsedDtc;
+        }
+        else
+        {
+            EnableDtcFeature = false;
         }
     }
 
