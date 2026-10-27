@@ -2491,7 +2491,7 @@ public partial class TuneView : UserControl
 
             // Subscription status indicator
             bool isAvailable = (_currentEcuData != null && _currentEcuData.IsOriginalAvailable)
-                || (ApiService.CurrentUser != null && (ApiService.CurrentUser.IsOriginalAvailable || ApiService.CurrentUser.HasActiveSubscription));
+                || (ApiService.CurrentUser != null && ApiService.CurrentUser.HasActiveSubscription && ApiService.CurrentUser.IsOriginalAvailable);
             var subBadge = new TextBlock
             {
                 Text = isAvailable ? "✓ Included with Subscription" : "🔒 Subscription Required",

@@ -83,6 +83,12 @@ public class UserDto
     [JsonIgnore]
     public bool IsOriginalAvailable => RawIsOriginalAvailable == true;
 
+    [JsonPropertyName("is_dtc_available")]
+    public bool? RawIsDtcAvailable { get; set; }
+
+    [JsonIgnore]
+    public bool IsDtcAvailable => RawIsDtcAvailable == true;
+
     [JsonIgnore]
     public bool HasActiveSubscription
     {
