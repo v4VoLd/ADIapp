@@ -405,9 +405,6 @@ public partial class TuneView : UserControl
         var lblDtcOff = this.FindControl<TextBlock>("LblDtcOffText");
         if (lblDtcOff != null) lblDtcOff.Text = LanguageService.Get("Tune_DtcOffLabel");
 
-        var lblDtcOn = this.FindControl<TextBlock>("LblDtcOnText");
-        if (lblDtcOn != null) lblDtcOn.Text = LanguageService.Get("Tune_DtcOnLabel");
-
         var dtcEmptyTitle = this.FindControl<TextBlock>("DtcEmptyStateTitleText");
         if (dtcEmptyTitle != null) dtcEmptyTitle.Text = LanguageService.Get("Tune_DtcEmptyTitle");
 
@@ -2610,19 +2607,17 @@ public partial class TuneView : UserControl
 
     private void DtcTurnAllOff_Click(object? sender, RoutedEventArgs e)
     {
+        _dtcSelections.Clear();
+
         var allDtcs = new List<DtcItemDto>();
         if (_currentEcuData?.Dtcs != null) allDtcs.AddRange(_currentEcuData.Dtcs);
         allDtcs.AddRange(_customDtcs);
 
         foreach (var dtc in allDtcs)
         {
-            if (dtc.IsActive)
+            if (dtc.IsStockActive && dtc.IsActive)
             {
                 _dtcSelections[dtc.Code] = "OFF";
-            }
-            else
-            {
-                _dtcSelections.Remove(dtc.Code);
             }
         }
         RenderDtcList();
@@ -2632,6 +2627,21 @@ public partial class TuneView : UserControl
     private void DtcResetAll_Click(object? sender, RoutedEventArgs e)
     {
         _dtcSelections.Clear();
+
+        var allDtcs = new List<DtcItemDto>();
+        if (_currentEcuData?.Dtcs != null) allDtcs.AddRange(_currentEcuData.Dtcs);
+        allDtcs.AddRange(_customDtcs);
+
+        foreach (var dtc in allDtcs)
+        {
+            // If the DTC is enabled in factory stock, but disabled in this binary:
+            // resetting to stock queues it to be restored!
+            if (dtc.IsStockActive && !dtc.IsActive)
+            {
+                _dtcSelections[dtc.Code] = "STOCK";
+            }
+        }
+
         RenderDtcList();
         UpdateDtcCounters();
     }
@@ -2841,25 +2851,122 @@ public partial class TuneView : UserControl
         };
         codeStack.Children.Add(codeBadge);
 
-        // Status badge showing current status in file
-        var statusBadge = new Border
+        // Status badge: In case it is disabled on the stock file (original), show "Disabled in Stock" and grey it.
+        // Otherwise show "Active" or "Disabled" based on the loaded binary file.
+        if (!dtc.IsStockActive)
         {
-            Background = dtc.IsActive ? Avalonia.Media.Brush.Parse("#064E3B") : Avalonia.Media.Brush.Parse("#450A0A"),
-            BorderBrush = dtc.IsActive ? Avalonia.Media.Brush.Parse("#059669") : Avalonia.Media.Brush.Parse("#DC2626"),
+            // Grey out the card
+            card.Opacity = 0.45;
+            card.Background = Avalonia.Media.Brush.Parse("#0E121B");
+            card.BorderBrush = Avalonia.Media.Brush.Parse("#1E2433");
+            codeBadge.Background = Avalonia.Media.Brush.Parse("#141926");
+            codeBadge.BorderBrush = Avalonia.Media.Brush.Parse("#334155");
+
+            var statusBadge = new Border
+            {
+                Background = Avalonia.Media.Brush.Parse("#1C2333"),
+                BorderBrush = Avalonia.Media.Brush.Parse("#334155"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Padding = new Thickness(6, 2),
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = $"🔒 {LanguageService.Get("Tune_DtcDisabledInStock")}",
+                    FontSize = 10,
+                    FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                    Foreground = Avalonia.Media.Brush.Parse("#94A3B8"),
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+                }
+            };
+            codeStack.Children.Add(statusBadge);
+
+            Grid.SetColumn(codeStack, 0);
+            grid.Children.Add(codeStack);
+
+            // Col 1: Description & Category
+            var infoStackLocked = new StackPanel
+            {
+                Spacing = 4,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 16, 0)
+            };
+
+            var langLocked = LanguageService.CurrentLanguage;
+            infoStackLocked.Children.Add(new TextBlock
+            {
+                Text = dtc.GetLocalizedDescription(langLocked),
+                FontSize = 13,
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Foreground = Avalonia.Media.Brush.Parse("#94A3B8"),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            });
+
+            var catLocked = dtc.GetLocalizedCategory(langLocked);
+            if (!string.IsNullOrWhiteSpace(catLocked))
+            {
+                infoStackLocked.Children.Add(new TextBlock
+                {
+                    Text = $"📁 {catLocked}",
+                    FontSize = 11,
+                    Foreground = Avalonia.Media.Brush.Parse("#64748B")
+                });
+            }
+
+            Grid.SetColumn(infoStackLocked, 1);
+            grid.Children.Add(infoStackLocked);
+
+            // Col 2: Locked Badge (Non-interactive)
+            var disabledNotice = new Border
+            {
+                Background = Avalonia.Media.Brush.Parse("#141824"),
+                BorderBrush = Avalonia.Media.Brush.Parse("#232B3E"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(10, 6),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = $"🔒 {LanguageService.Get("Tune_DtcDisabledInStock")}",
+                    FontSize = 11,
+                    FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                    Foreground = Avalonia.Media.Brush.Parse("#64748B"),
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                }
+            };
+            Grid.SetColumn(disabledNotice, 2);
+            grid.Children.Add(disabledNotice);
+
+            card.Child = grid;
+            return card;
+        }
+
+        // Active in stock: evaluate state in current binary
+        string statusText = dtc.IsActive
+            ? $"● {LanguageService.Get("Tune_DtcActive")}"
+            : $"○ {LanguageService.Get("Tune_DtcDisabled")}";
+        string statusBg = dtc.IsActive ? "#064E3B" : "#450A0A";
+        string statusBorder = dtc.IsActive ? "#059669" : "#DC2626";
+        string statusFg = dtc.IsActive ? "#6EE7B7" : "#FCA5A5";
+
+        var activeStatusBadge = new Border
+        {
+            Background = Avalonia.Media.Brush.Parse(statusBg),
+            BorderBrush = Avalonia.Media.Brush.Parse(statusBorder),
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(5),
             Padding = new Thickness(6, 2),
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             Child = new TextBlock
             {
-                Text = dtc.IsActive ? "● Active (ON)" : "○ Disabled (OFF)",
+                Text = statusText,
                 FontSize = 10,
                 FontWeight = Avalonia.Media.FontWeight.SemiBold,
-                Foreground = dtc.IsActive ? Avalonia.Media.Brush.Parse("#6EE7B7") : Avalonia.Media.Brush.Parse("#FCA5A5"),
+                Foreground = Avalonia.Media.Brush.Parse(statusFg),
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             }
         };
-        codeStack.Children.Add(statusBadge);
+        codeStack.Children.Add(activeStatusBadge);
 
         Grid.SetColumn(codeStack, 0);
         grid.Children.Add(codeStack);
@@ -2901,7 +3008,7 @@ public partial class TuneView : UserControl
         Grid.SetColumn(infoStack, 1);
         grid.Children.Add(infoStack);
 
-        // Col 2: 2-Way Action Segment (ON / OFF)
+        // Col 2: 2-Way Action Segment (STOCK / OFF)
         var actionPanel = new Border
         {
             Background = Avalonia.Media.Brush.Parse("#0F131C"),
@@ -2914,13 +3021,13 @@ public partial class TuneView : UserControl
 
         var btnStack = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 4 };
 
-        string currentChoice = _dtcSelections.TryGetValue(dtc.Code, out var val)
-            ? val
-            : (dtc.IsActive ? "ON" : "OFF");
+        bool isOff = _dtcSelections.TryGetValue(dtc.Code, out var val)
+            ? (val == "OFF")
+            : (!dtc.IsActive);
 
-        var onBtn = new Button
+        var stockBtn = new Button
         {
-            Content = $"🟢 {LanguageService.Get("Tune_DtcOn")}",
+            Content = $"⚪ {LanguageService.Get("Tune_DtcStock")}",
             FontSize = 11,
             FontWeight = Avalonia.Media.FontWeight.Bold,
             Padding = new Thickness(12, 6),
@@ -2938,30 +3045,30 @@ public partial class TuneView : UserControl
             Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
         };
 
-        void ApplySegmentStyles(string choice)
+        void ApplySegmentStyles(bool selectedOff)
         {
-            bool isModified = (choice == "OFF" && dtc.IsActive) || (choice == "ON" && !dtc.IsActive);
-
-            if (choice == "OFF")
+            if (selectedOff)
             {
                 offBtn.Background = Avalonia.Media.Brush.Parse("#7F1D1D");
                 offBtn.Foreground = Avalonia.Media.Brush.Parse("#FCA5A5");
-                onBtn.Background = Avalonia.Media.Brushes.Transparent;
-                onBtn.Foreground = Avalonia.Media.Brush.Parse("#64748B");
+                stockBtn.Background = Avalonia.Media.Brushes.Transparent;
+                stockBtn.Foreground = Avalonia.Media.Brush.Parse("#64748B");
             }
-            else // ON
+            else
             {
-                onBtn.Background = Avalonia.Media.Brush.Parse("#14532D");
-                onBtn.Foreground = Avalonia.Media.Brush.Parse("#86EFAC");
+                stockBtn.Background = Avalonia.Media.Brush.Parse("#1E293B");
+                stockBtn.Foreground = Avalonia.Media.Brush.Parse("#CBD5E1");
                 offBtn.Background = Avalonia.Media.Brushes.Transparent;
                 offBtn.Foreground = Avalonia.Media.Brush.Parse("#64748B");
             }
 
+            // A card is modified if its selection differs from the loaded file's state
+            bool isModified = (selectedOff && dtc.IsActive) || (!selectedOff && !dtc.IsActive);
             if (isModified)
             {
-                card.BorderBrush = choice == "OFF"
-                    ? Avalonia.Media.Brush.Parse("#EF4444")
-                    : Avalonia.Media.Brush.Parse("#10B981");
+                card.BorderBrush = selectedOff
+                    ? Avalonia.Media.Brush.Parse("#EF4444")  // Modified to OFF
+                    : Avalonia.Media.Brush.Parse("#10B981"); // Modified to Stock
                 card.BorderThickness = new Thickness(1.5);
             }
             else
@@ -2971,19 +3078,21 @@ public partial class TuneView : UserControl
             }
         }
 
-        ApplySegmentStyles(currentChoice);
+        ApplySegmentStyles(isOff);
 
-        onBtn.Click += (_, _) =>
+        stockBtn.Click += (_, _) =>
         {
-            if (!dtc.IsActive)
+            if (dtc.IsActive)
             {
-                _dtcSelections[dtc.Code] = "ON";
+                // Binary was already active (stock). Selecting Stock clears any modification.
+                _dtcSelections.Remove(dtc.Code);
             }
             else
             {
-                _dtcSelections.Remove(dtc.Code);
+                // Binary was disabled. Selecting Stock queues it to be restored!
+                _dtcSelections[dtc.Code] = "STOCK";
             }
-            ApplySegmentStyles("ON");
+            ApplySegmentStyles(false);
             UpdateDtcCounters();
         };
 
@@ -2991,17 +3100,19 @@ public partial class TuneView : UserControl
         {
             if (dtc.IsActive)
             {
+                // Binary was active. Selecting OFF queues it to be disabled!
                 _dtcSelections[dtc.Code] = "OFF";
             }
             else
             {
+                // Binary was already disabled. Selecting OFF clears any modification.
                 _dtcSelections.Remove(dtc.Code);
             }
-            ApplySegmentStyles("OFF");
+            ApplySegmentStyles(true);
             UpdateDtcCounters();
         };
 
-        btnStack.Children.Add(onBtn);
+        btnStack.Children.Add(stockBtn);
         btnStack.Children.Add(offBtn);
         actionPanel.Child = btnStack;
 
@@ -3015,24 +3126,22 @@ public partial class TuneView : UserControl
     private void UpdateDtcCounters()
     {
         int offCount = _dtcSelections.Values.Count(v => v == "OFF");
-        int onCount = _dtcSelections.Values.Count(v => v == "ON");
+        int stockCount = _dtcSelections.Values.Count(v => v == "STOCK");
 
         var offText = this.FindControl<TextBlock>("DtcOffCountText");
-        var onText = this.FindControl<TextBlock>("DtcOnCountText");
         var submitBtn = this.FindControl<Button>("DtcSubmitOrderBtn");
         var statusText = this.FindControl<TextBlock>("DtcOrderStatusText");
 
         if (offText != null) offText.Text = offCount.ToString();
-        if (onText != null) onText.Text = onCount.ToString();
 
-        int totalSelected = offCount + onCount;
+        int totalActions = offCount + stockCount;
         if (submitBtn != null)
         {
-            if (totalSelected > 0)
+            if (totalActions > 0)
             {
                 var parts = new List<string>();
                 if (offCount > 0) parts.Add($"{offCount} {LanguageService.Get("Tune_DtcOff")}");
-                if (onCount > 0) parts.Add($"{onCount} {LanguageService.Get("Tune_DtcOn")}");
+                if (stockCount > 0) parts.Add($"{stockCount} {LanguageService.Get("Tune_DtcStock")}");
                 submitBtn.Content = $"{LanguageService.Get("Tune_DtcSubmitBtn")} ({string.Join(", ", parts)})";
                 submitBtn.IsEnabled = true;
                 submitBtn.Opacity = 1.0;
@@ -3047,8 +3156,8 @@ public partial class TuneView : UserControl
 
         if (statusText != null)
         {
-            statusText.Text = totalSelected > 0
-                ? string.Format(LanguageService.Get("Tune_DtcActionsReady"), totalSelected, totalSelected == 1 ? "" : "s")
+            statusText.Text = totalActions > 0
+                ? string.Format(LanguageService.Get("Tune_DtcActionsReady"), totalActions, totalActions == 1 ? "" : "s")
                 : LanguageService.Get("Tune_DtcSelectPrompt");
         }
     }
@@ -3061,9 +3170,9 @@ public partial class TuneView : UserControl
         string targetHash = !string.IsNullOrEmpty(_renderedFileHash) ? _renderedFileHash : _pendingFileHash!;
 
         var offList = _dtcSelections.Where(kvp => kvp.Value == "OFF").Select(kvp => kvp.Key).ToList();
-        var onList = _dtcSelections.Where(kvp => kvp.Value == "ON").Select(kvp => kvp.Key).ToList();
+        var stockList = _dtcSelections.Where(kvp => kvp.Value == "STOCK").Select(kvp => kvp.Key).ToList();
 
-        if (offList.Count == 0 && onList.Count == 0)
+        if (offList.Count == 0 && stockList.Count == 0)
         {
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel is Window win)
@@ -3088,7 +3197,7 @@ public partial class TuneView : UserControl
             var actions = new Dictionary<string, List<string>>
             {
                 ["off"] = offList,
-                ["on"] = onList
+                ["on"] = stockList
             };
 
             var res = await ApiService.CreateDtcOrderAsync(targetHash, actions, _originalFileName);

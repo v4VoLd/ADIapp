@@ -404,6 +404,15 @@ public class DtcItemDto
     [JsonPropertyName("is_active")]
     public bool IsActive { get; set; } = true;
 
+    [JsonPropertyName("is_stock_active")]
+    public bool IsStockActive { get; set; } = true;
+
+    [JsonPropertyName("current_value")]
+    public object? CurrentValue { get; set; }
+
+    [JsonPropertyName("stock_value")]
+    public object? StockValue { get; set; }
+
     [JsonPropertyName("translations")]
     public DtcTranslationsDto? Translations { get; set; }
 

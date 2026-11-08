@@ -552,16 +552,9 @@
                                         CornerRadius="12" 
                                         Padding="12,6"
                                         VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock x:Name="LblDtcOffText" Text="OFF:" FontSize="11" Foreground="#F87171" FontWeight="Bold"/>
-                                            <TextBlock x:Name="DtcOffCountText" Text="0" FontSize="11" FontWeight="Bold" Foreground="#F87171"/>
-                                        </StackPanel>
-                                        <TextBlock Text="•" Foreground="#444444" FontSize="11"/>
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock x:Name="LblDtcOnText" Text="ON:" FontSize="11" Foreground="#4ADE80" FontWeight="Bold"/>
-                                            <TextBlock x:Name="DtcOnCountText" Text="0" FontSize="11" FontWeight="Bold" Foreground="#4ADE80"/>
-                                        </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock x:Name="LblDtcOffText" Text="OFF:" FontSize="11" Foreground="#F87171" FontWeight="Bold"/>
+                                        <TextBlock x:Name="DtcOffCountText" Text="0" FontSize="11" FontWeight="Bold" Foreground="#F87171"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>
