@@ -14,9 +14,15 @@ The **ADI Desktop Application** serves as the primary workbench for professional
 1. **ECU Binary Ingestion & Auto-Identification**:
    - Drag-and-drop vehicle ECU binaries (`.bin`, `.ori`, `.hex`).
    - Automated file hashing, size validation, and engine/ECU identification.
+   - **Isolation & Gating for Unsupported Files**: Strict UI isolation when an ECU is unidentified or unsupported (`isUnsupportedOrFailed`), hiding DTC and original file tabs and defaulting workflows to standard tuning requests.
 2. **On-Demand Chiptuning Services**:
-   - Request Stage 1 / Stage 2 power calibrations, DPF / EGR / DTC / AdBlue removals, Pop & Bang crackle maps, launch control, and speed limiter adjustments.
-3. **Token & Subscription Accounting**:
+   - Request Stage 1 / Stage 2 power calibrations, DPF / EGR / AdBlue removals, Pop & Bang crackle maps, launch control, and speed limiter adjustments.
+3. **Map-Driven DTC Switchboard & Restoration**:
+   - Interactive diagnostic fault code switchboard with instant search and category filtering.
+   - **Two-State Action Toggle**: Switches seamlessly between `⚪ STOCK` and `🔴 OFF`.
+   - **Factory Deactivation Safeguard (`🔒 Disabled in Stock`)**: Automatically detects codes already turned off in OEM calibration and locks them to prevent invalid toggling.
+   - **Dynamic DTC Ordering**: Computes actions (`{ off: [...], on: [...] }`) and updates order button count dynamically.
+4. **Token & Subscription Accounting**:
    - Real-time token credit management displaying **Available Balance**, **Reserved Tokens** (held during pending order processing), and **Effective Balance**.
    - Desktop license validation and subscription expiration monitoring.
 4. **Real-Time Reactive Order Tracking**:
@@ -38,6 +44,42 @@ The **ADI Desktop Application** serves as the primary workbench for professional
 * **API Integration**: RESTful communication with Sanctum Bearer token authentication via `ApiService`
 * **Real-time Engine**: WebSocket Client (`PusherClient`) for bidirectional live events
 * **Cross-Platform Target**: macOS (Apple Silicon & Intel), Windows 10/11 (x64), Linux (x64/ARM64)
+
+---
+
+## 🔧 ECU Identification & DTC Workflow (`TuneView.axaml.cs`)
+
+```mermaid
+flowchart TD
+    Binary[ECU Binary Dropped] --> Upload[Upload & Identify: /desktop/file/identify]
+    Upload --> Poll[Wait for EcuIdentifiedEvent / Polling]
+    Poll --> Eval{Identified & Supported?}
+
+    Eval -->|No: isUnsupportedOrFailed| LockUI[Render Unsupported State]
+    LockUI --> HideDTC[Hide DTC Button]
+    LockUI --> HideOrig[Hide Original Button]
+    LockUI --> ForceTune[Lock Tab to Tuning Only]
+
+    Eval -->|Yes: Supported| RenderUI[Populate ECU Info]
+    RenderUI --> CheckDTC{AppConfig.EnableDtcFeature & dtcs > 0?}
+    CheckDTC -->|Yes| ShowDTC[Show DTC Switchboard Tab]
+    CheckDTC -->|No| HideDTC2[Hide DTC Tab]
+
+    ShowDTC --> DTCView[DTC Switchboard]
+    DTCView --> StateStock[State: STOCK ⚪]
+    DTCView --> StateOff[State: OFF 🔴]
+    DTCView --> StateDisabled[State: Disabled in Stock 🔒]
+    StateStock & StateOff --> SubmitDTC[Submit DTC Order: /desktop/order/dtc]
+```
+
+### Key Workflow Rules:
+1. **Unidentified / Unsupported ECU Isolation**:
+   - When an ECU binary has no matching database or similarity profile (`isUnsupportedOrFailed == true`), the DTC tab and Original File tab are hidden.
+   - Any attempt to navigate to the DTC or Original tab automatically redirects to the Tuning workflow.
+2. **Interactive Fault Code Management**:
+   - Real-time search and filter by DTC prefix or code string.
+   - Dynamic button counter displays total modifications ready for order submission (e.g. `Order DTC Off (2)`).
+   - Prevents toggling codes that are already deactivated in the factory stock file.
 
 ---
 
